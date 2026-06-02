@@ -1,0 +1,1064 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+// Importiamo i nostri dati
+import { PLANETS, ORBITAL_ELEMENTS, ASTEROIDS_SETTINGS } from './data/celestialData.js';
+
+// Ora nel resto del codice userai PLANETS.MERCURY invece di definire tutto qui
+
+// ══════════════════════════════════════════════════════════════════
+// COSTANTI
+// ══════════════════════════════════════════════════════════════════
+const AU   = 80;
+const SEG  = 360;
+const DEG  = Math.PI / 180;
+const SUN_R     = 18;
+const SUN_OCC_R = 24;
+
+// ══════════════════════════════════════════════════════════════════
+// LOADING MANAGER
+// ══════════════════════════════════════════════════════════════════
+const loadingScreen = document.getElementById('loadingScreen');
+const loadingBar    = document.getElementById('loadingBar');
+const loadingText   = document.getElementById('loadingText');
+
+const manager = new THREE.LoadingManager();
+manager.onProgress = (_u, loaded, total) => {
+  const p = Math.round((loaded / total) * 100);
+  if (loadingBar)  loadingBar.style.width = p + '%';
+  if (loadingText) loadingText.textContent = 'Caricamento... ' + p + '%';
+};
+manager.onLoad = () => {
+  if (loadingBar)  loadingBar.style.width = '100%';
+  if (loadingText) loadingText.textContent = 'Pronto!';
+  setTimeout(() => {
+    if (loadingScreen) {
+      loadingScreen.style.transition = 'opacity 0.8s ease';
+      loadingScreen.style.opacity = '0';
+      setTimeout(() => { loadingScreen.style.display = 'none'; }, 850);
+    }
+    startApp();
+  }, 300);
+};
+manager.onError = url => console.warn('Texture non trovata:', url);
+const TL = new THREE.TextureLoader(manager);
+
+// ══════════════════════════════════════════════════════════════════
+// RENDERER & SCENE
+// ══════════════════════════════════════════════════════════════════
+const scene    = new THREE.Scene();
+const camera   = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 500000);
+const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace    = THREE.SRGBColorSpace;
+renderer.toneMapping         = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.4;
+document.body.appendChild(renderer.domElement);
+
+const mwTex = TL.load('./assets/textures/8k_stars_milky_way.jpg');
+mwTex.mapping         = THREE.EquirectangularReflectionMapping;
+mwTex.minFilter       = THREE.LinearFilter;
+mwTex.magFilter       = THREE.LinearFilter;
+mwTex.generateMipmaps = false;
+scene.background = mwTex;
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ══════════════════════════════════════════════════════════════════
+// STATO SIMULAZIONE
+// ══════════════════════════════════════════════════════════════════
+let paused        = false;
+let timeOffsetMs  = 0;
+let lastPerf      = performance.now();
+let selectedBody  = null;
+
+function simDate()  { return new Date(Date.now() + timeOffsetMs); }
+function julianDate(d) {
+  let Y = d.getUTCFullYear(), M = d.getUTCMonth() + 1;
+  const D = d.getUTCDate() + (d.getUTCHours() + (d.getUTCMinutes() + (d.getUTCSeconds() + d.getUTCMilliseconds()/1000)/60)/60)/24;
+  if (M <= 2) { Y--; M += 12; }
+  const A = Math.floor(Y/100), B = 2 - A + Math.floor(A/4);
+  return Math.floor(365.25*(Y+4716)) + Math.floor(30.6001*(M+1)) + D + B - 1524.5;
+}
+function currentT() { return (julianDate(simDate()) - 2451545.0) / 36525.0; }
+
+function timeMultiplier() {
+  const v = ui.speed ? parseFloat(ui.speed.value) : 0;
+  return v < 0 ? -Math.pow(10, -v) : Math.pow(10, v);
+}
+function speedText(m) {
+  if (Math.abs(m - 1) < 1e-9) return '1x';
+  if (Math.abs(m + 1) < 1e-9) return '-1x';
+  if (m > 0) return m >= 1 ? m.toFixed(m < 10 ? 1 : 0) + 'x' : '/' + (1/m).toFixed(1);
+  return '-' + (Math.abs(m) >= 1 ? Math.abs(m).toFixed(Math.abs(m)<10?1:0) : '1/'+Math.round(1/Math.abs(m))) + 'x';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI REFS
+// ══════════════════════════════════════════════════════════════════
+const ui = {
+  clock:       document.getElementById('clock'),
+  toggle:      document.getElementById('toggle'),
+  now:         document.getElementById('now'),
+  resetCam:    document.getElementById('resetCam'),
+  speed:       document.getElementById('speed'),
+  speedLabel:  document.getElementById('speedLabel'),
+  orbits:      document.getElementById('orbits'),
+  labels:      document.getElementById('labels'),
+  labelsLayer: document.getElementById('labelsLayer'),
+  infoPanel:   document.getElementById('infoPanel'),
+  infoClose:   document.getElementById('infoClose'),
+  infoName:    document.getElementById('infoName'),
+  infoBody:    document.getElementById('infoBody'),
+  modeHint:    document.getElementById('modeHint'),
+  invPanel:    document.getElementById('inventoryPanel'),
+  invList:     document.getElementById('inventoryList'),
+  invSearch:   document.getElementById('inventorySearch'),
+  invToggle:   document.getElementById('inventoryToggle'),
+  camLabel:    document.getElementById('camModeLabel'),
+};
+
+if (ui.toggle)    ui.toggle.onclick    = () => { paused = !paused; ui.toggle.textContent = paused ? '▶ Riprendi' : '⏸ Pausa'; lastPerf = performance.now(); };
+if (ui.now)       ui.now.onclick       = () => { timeOffsetMs = 0; };
+if (ui.resetCam)  ui.resetCam.onclick  = () => { exitFly(); CAM.zoomTarget = null; CAM.tRadius = 1400; CAM.tTheta = 0.9; CAM.tPhi = 1.05; CAM.tPivot.set(0,0,0); CAM.followBody = null; setCamLabel('orbit'); };
+if (ui.infoClose) ui.infoClose.onclick = () => { if (ui.infoPanel) ui.infoPanel.classList.remove('visible'); };
+if (ui.invToggle) ui.invToggle.onclick = () => { if (ui.invPanel) ui.invPanel.classList.toggle('open'); };
+
+// Inventario search
+if (ui.invSearch) ui.invSearch.addEventListener('input', () => filterInventory(ui.invSearch.value));
+
+// ── Mode hint ────────────────────────────────────────────────
+let hintTimer = null;
+function showHint(msg) {
+  if (!ui.modeHint) return;
+  ui.modeHint.textContent = msg;
+  ui.modeHint.style.opacity = '1';
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => { ui.modeHint.style.opacity = '0'; }, 4000);
+}
+function setCamLabel(mode) {
+  if (!ui.camLabel) return;
+  const labels = { orbit: '🌐 Orbita', fly: '🚀 Volo libero', follow: '🔭 Segui' };
+  ui.camLabel.textContent = labels[mode] || mode;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CAMERA — 3 modalità: orbit / fly / follow
+// ══════════════════════════════════════════════════════════════════
+const CAM = {
+  mode:      'orbit',
+  // Orbit
+  radius:    1400, tRadius: 1400,
+  theta:     0.9,  tTheta:  0.9,
+  phi:       1.05, tPhi:    1.05,
+  pivot:     new THREE.Vector3(),
+  tPivot:    new THREE.Vector3(),
+  DAMP:      0.08,
+  // Fly
+  flyPos:    new THREE.Vector3(0, 200, 1400),
+  flyYaw:    0,  flyPitch: 0,
+  flySpeed:  300,
+  flyBoost:  false,
+  // Follow
+  followBody:  null,
+  followDist:  null,
+  followTheta: 0.9,
+  followPhi:   1.2,
+  // Drag
+  dragging: false, isDragging: false,
+  lastX: 0, lastY: 0,
+  downPos: new THREE.Vector2(),
+  pointerLocked: false,
+  zoomTarget: null,
+};
+
+function enterFly() {
+  if (CAM.mode === 'fly') return;
+  CAM.mode = 'fly';
+  CAM.flyPos.copy(camera.position);
+  const dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  CAM.flyPitch = Math.asin(Math.max(-1, Math.min(1, dir.y)));
+  CAM.flyYaw   = Math.atan2(-dir.x, -dir.z);
+  CAM.followBody = null;
+  setCamLabel('fly');
+  showHint('🚀 Volo libero — WASD muovi · Q/E su/giù · Shift boost · ESC torna in orbita');
+  renderer.domElement.requestPointerLock?.();
+}
+function exitFly() {
+  if (CAM.mode === 'orbit') return;
+  CAM.mode = 'orbit';
+  CAM.followBody = null;
+  document.exitPointerLock?.();
+  const p = camera.position;
+  CAM.radius = CAM.tRadius = p.length();
+  CAM.phi    = CAM.tPhi    = Math.acos(Math.max(-1, Math.min(1, p.y / CAM.radius)));
+  CAM.theta  = CAM.tTheta  = Math.atan2(p.z, p.x);
+  CAM.pivot.set(0,0,0); CAM.tPivot.set(0,0,0);
+  setCamLabel('orbit');
+  showHint('🌐 Modalità orbita — trascina · scroll · Shift+trascina per pan');
+}
+function enterFollow(body) {
+  CAM.followBody = body;
+  CAM.mode = 'follow';
+  document.exitPointerLock?.();
+  CAM.followDist  = Math.max(body.visualR * 10, 40);
+  CAM.followTheta = CAM.theta;
+  CAM.followPhi   = 1.2;
+  setCamLabel('follow');
+  showHint('🔭 Segui ' + body.label + ' — trascina per orbitare · scroll per zoom · ESC per uscire');
+}
+
+document.addEventListener('pointerlockchange', () => {
+  CAM.pointerLocked = document.pointerLockElement === renderer.domElement;
+});
+
+// ── Input ─────────────────────────────────────────────────────
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === 'Escape') {
+    if (CAM.mode !== 'orbit') exitFly();
+    if (ui.infoPanel) ui.infoPanel.classList.remove('visible');
+  }
+  if (e.key === 'f' || e.key === 'F') { CAM.mode === 'fly' ? exitFly() : enterFly(); }
+  if (e.key === '1') { exitFly(); }
+  if (e.key === '2') { if (selectedBody) enterFollow(selectedBody); }
+  if (e.key === '3') { enterFly(); }
+  if (e.key === 'Tab') { e.preventDefault(); if (ui.invPanel) ui.invPanel.classList.toggle('open'); }
+  if (e.key === 'Shift') CAM.flyBoost = true;
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; if (e.key === 'Shift') CAM.flyBoost = false; });
+
+window.addEventListener('mousedown', e => {
+  if (CAM.pointerLocked) return;
+  CAM.dragging = true; CAM.isDragging = false;
+  CAM.lastX = e.clientX; CAM.lastY = e.clientY;
+  CAM.downPos.set(e.clientX, e.clientY);
+  CAM.zoomTarget = null;
+});
+window.addEventListener('mouseleave', () => { CAM.dragging = false; });
+window.addEventListener('mousemove', e => {
+  if (CAM.pointerLocked && CAM.mode === 'fly') {
+    CAM.flyYaw   -= e.movementX * 0.002;
+    CAM.flyPitch -= e.movementY * 0.002;
+    CAM.flyPitch  = Math.max(-Math.PI/2+0.01, Math.min(Math.PI/2-0.01, CAM.flyPitch));
+    return;
+  }
+  if (!CAM.dragging) {
+    // Hover tooltip
+    mouseMove.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
+    raycaster.setFromCamera(mouseMove, camera);
+    const hits = raycaster.intersectObjects([...meshList, ...hitboxList]).filter(h => h.object.userData.bodyKey);
+    if (hits.length > 0) {
+      const b = allBodies.find(x => x.key === hits[0].object.userData.bodyKey);
+      hoveredBody = b || null;
+      renderer.domElement.style.cursor = 'pointer';
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top  = (e.clientY - 10) + 'px';
+      if (b) tooltip.textContent = b.icon + ' ' + b.label;
+    } else {
+      hoveredBody = null;
+      renderer.domElement.style.cursor = CAM.pointerLocked ? 'none' : 'default';
+      tooltip.style.display = 'none';
+    }
+    return;
+  }
+  const dx = e.clientX - CAM.lastX, dy = e.clientY - CAM.lastY;
+  if (Math.hypot(e.clientX - CAM.downPos.x, e.clientY - CAM.downPos.y) > 5) CAM.isDragging = true;
+
+  if (CAM.mode === 'orbit') {
+    if (e.shiftKey) {
+      const right = new THREE.Vector3(), up = new THREE.Vector3();
+      right.setFromMatrixColumn(camera.matrix, 0);
+      up.setFromMatrixColumn(camera.matrix, 1);
+      const ps = CAM.radius * 0.001;
+      CAM.tPivot.addScaledVector(right, -dx * ps);
+      CAM.tPivot.addScaledVector(up,     dy * ps);
+    } else {
+      CAM.tTheta -= dx * 0.005;
+      CAM.tPhi   += dy * 0.005;
+      CAM.tPhi    = Math.max(0.05, Math.min(Math.PI - 0.05, CAM.tPhi));
+    }
+  }
+  if (CAM.mode === 'follow') {
+    CAM.followTheta -= dx * 0.005;
+    CAM.followPhi   += dy * 0.005;
+    CAM.followPhi    = Math.max(0.1, Math.min(Math.PI - 0.1, CAM.followPhi));
+  }
+  CAM.lastX = e.clientX; CAM.lastY = e.clientY;
+});
+window.addEventListener('mouseup', e => {
+  const was = CAM.isDragging;
+  CAM.dragging = CAM.isDragging = false;
+  if (was) return;
+  _handleClick(e.clientX, e.clientY);
+});
+window.addEventListener('dblclick', e => {
+  if (CAM.mode !== 'orbit') { exitFly(); return; }
+  mouse.set((e.clientX/innerWidth)*2-1, -(e.clientY/innerHeight)*2+1);
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects([...meshList, ...hitboxList]).filter(h => h.object.userData.bodyKey);
+  if (hits.length === 0) enterFly();
+});
+window.addEventListener('wheel', e => {
+  CAM.zoomTarget = null;
+  if (CAM.mode === 'fly') {
+    CAM.flySpeed = Math.max(5, Math.min(100000, CAM.flySpeed * (1 + e.deltaY * 0.001)));
+    return;
+  }
+  if (CAM.mode === 'follow') {
+    CAM.followDist = Math.max(5, Math.min(50000, CAM.followDist * (1 + e.deltaY * 0.001)));
+    return;
+  }
+  CAM.tRadius *= 1 + e.deltaY * 0.001;
+  CAM.tRadius  = Math.max(20, Math.min(300000, CAM.tRadius));
+}, { passive: true });
+
+// Touch
+let touchStartDist = 0;
+window.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    CAM.dragging=true; CAM.isDragging=false;
+    CAM.lastX=e.touches[0].clientX; CAM.lastY=e.touches[0].clientY;
+    CAM.downPos.set(CAM.lastX, CAM.lastY); CAM.zoomTarget=null;
+  }
+  if (e.touches.length === 2) {
+    CAM.dragging=false;
+    touchStartDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+  }
+}, {passive:true});
+window.addEventListener('touchmove', e => {
+  if (e.touches.length===1 && CAM.dragging) {
+    const dx=e.touches[0].clientX-CAM.lastX, dy=e.touches[0].clientY-CAM.lastY;
+    if (Math.hypot(e.touches[0].clientX-CAM.downPos.x,e.touches[0].clientY-CAM.downPos.y)>5) CAM.isDragging=true;
+    CAM.tTheta-=dx*0.005; CAM.tPhi+=dy*0.005;
+    CAM.tPhi=Math.max(0.05,Math.min(Math.PI-0.05,CAM.tPhi));
+    CAM.lastX=e.touches[0].clientX; CAM.lastY=e.touches[0].clientY;
+  }
+  if (e.touches.length===2) {
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    if (CAM.mode==='follow') CAM.followDist*=touchStartDist/d;
+    else { CAM.tRadius*=touchStartDist/d; CAM.tRadius=Math.max(20,Math.min(300000,CAM.tRadius)); }
+    touchStartDist=d;
+  }
+}, {passive:true});
+window.addEventListener('touchend', e => {
+  const was=CAM.isDragging; CAM.dragging=CAM.isDragging=false;
+  if (was||e.changedTouches.length!==1) return;
+  const t=e.changedTouches[0]; _handleClick(t.clientX,t.clientY);
+});
+
+function _handleClick(cx, cy) {
+  // Ignora click su elementi UI
+  const el = document.elementFromPoint(cx, cy);
+  if (el && el !== renderer.domElement && !el.classList.contains('label')) return;
+
+  mouse.set((cx/innerWidth)*2-1, -(cy/innerHeight)*2+1);
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects([...meshList, ...hitboxList]).filter(h => h.object.userData.bodyKey);
+  if (hits.length > 0) {
+    const body = allBodies.find(b => b.key === hits[0].object.userData.bodyKey);
+    if (body) selectBody(body);
+  } else {
+    if (ui.infoPanel) ui.infoPanel.classList.remove('visible');
+    selectedBody = null;
+    highlightInventory(null);
+  }
+}
+
+function selectBody(body) {
+  selectedBody = body;
+  showInfo(body);
+  highlightInventory(body.key);
+  if (CAM.mode === 'orbit') {
+    CAM.zoomTarget = { body, finalRadius: Math.max(body.visualR * 10, 30) };
+  } else if (CAM.mode === 'follow') {
+    enterFollow(body);
+  }
+}
+
+// ── Update Camera ─────────────────────────────────────────────
+function updateCamera(dt) {
+  const sp = 1 - Math.pow(1 - CAM.DAMP, dt * 60);
+
+  if (CAM.mode === 'orbit') {
+    if (CAM.zoomTarget) {
+      const pos = CAM.zoomTarget.body.pivot?.position;
+      if (pos) {
+        CAM.tRadius = CAM.zoomTarget.finalRadius;
+        CAM.tPhi    = Math.atan2(Math.sqrt(pos.x*pos.x+pos.z*pos.z), pos.y);
+        CAM.tTheta  = Math.atan2(pos.z, pos.x);
+        CAM.tPivot.copy(pos);
+        if (Math.abs(CAM.radius-CAM.tRadius)<0.5) CAM.zoomTarget=null;
+      }
+    }
+    CAM.radius += (CAM.tRadius - CAM.radius) * sp;
+    CAM.phi    += (CAM.tPhi    - CAM.phi)    * sp;
+    CAM.theta  += (CAM.tTheta  - CAM.theta)  * sp;
+    CAM.pivot.lerp(CAM.tPivot, sp);
+    camera.position.set(
+      CAM.pivot.x + CAM.radius*Math.sin(CAM.phi)*Math.cos(CAM.theta),
+      CAM.pivot.y + CAM.radius*Math.cos(CAM.phi),
+      CAM.pivot.z + CAM.radius*Math.sin(CAM.phi)*Math.sin(CAM.theta)
+    );
+    camera.lookAt(CAM.pivot);
+
+  } else if (CAM.mode === 'fly') {
+    const speed = CAM.flySpeed * (CAM.flyBoost ? 5 : 1) * dt;
+    const fwd   = new THREE.Vector3(-Math.sin(CAM.flyYaw)*Math.cos(CAM.flyPitch), Math.sin(CAM.flyPitch), -Math.cos(CAM.flyYaw)*Math.cos(CAM.flyPitch));
+    const right = new THREE.Vector3(Math.cos(CAM.flyYaw), 0, -Math.sin(CAM.flyYaw));
+    const up    = new THREE.Vector3(0, 1, 0);
+    if (keys['w']||keys['W']||keys['ArrowUp'])    CAM.flyPos.addScaledVector(fwd,   speed);
+    if (keys['s']||keys['S']||keys['ArrowDown'])  CAM.flyPos.addScaledVector(fwd,  -speed);
+    if (keys['a']||keys['A']||keys['ArrowLeft'])  CAM.flyPos.addScaledVector(right,-speed);
+    if (keys['d']||keys['D']||keys['ArrowRight']) CAM.flyPos.addScaledVector(right, speed);
+    if (keys['q']||keys['Q'])                     CAM.flyPos.addScaledVector(up,    speed);
+    if (keys['e']||keys['E'])                     CAM.flyPos.addScaledVector(up,   -speed);
+    camera.position.copy(CAM.flyPos);
+    camera.rotation.order='YXZ';
+    camera.rotation.y=CAM.flyYaw;
+    camera.rotation.x=CAM.flyPitch;
+
+  } else if (CAM.mode === 'follow' && CAM.followBody) {
+    const target = CAM.followBody.pivot?.position || new THREE.Vector3();
+    CAM.followDist += ((Math.max(CAM.followBody.visualR*10,40)) - CAM.followDist) * 0.001;
+    const offset = new THREE.Vector3(
+      CAM.followDist * Math.sin(CAM.followPhi) * Math.cos(CAM.followTheta),
+      CAM.followDist * Math.cos(CAM.followPhi),
+      CAM.followDist * Math.sin(CAM.followPhi) * Math.sin(CAM.followTheta)
+    );
+    camera.position.lerp(target.clone().add(offset), sp * 2);
+    camera.lookAt(target);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LUCI
+// ══════════════════════════════════════════════════════════════════
+scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+const sunLight = new THREE.PointLight(0xfff4e0, 8.0, 0);
+scene.add(sunLight);
+
+// ══════════════════════════════════════════════════════════════════
+// UTILITY
+// ══════════════════════════════════════════════════════════════════
+function makeCanvasSprite(drawFn, size, scale) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  drawFn(c.getContext('2d'), size);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  sp.scale.set(scale, scale, 1);
+  return sp;
+}
+function makeGlow(radius, color) {
+  const hex = new THREE.Color(color), r = Math.round(hex.r*255), g = Math.round(hex.g*255), b = Math.round(hex.b*255);
+  return makeCanvasSprite((ctx, s) => {
+    const gr = ctx.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+    gr.addColorStop(0, `rgba(${r},${g},${b},0.7)`);
+    gr.addColorStop(0.35, `rgba(${r},${g},${b},0.25)`);
+    gr.addColorStop(0.7, `rgba(${r},${g},${b},0.07)`);
+    gr.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gr; ctx.fillRect(0,0,s,s);
+  }, 256, radius * 7);
+}
+
+// Tooltip
+const tooltip = document.createElement('div');
+tooltip.style.cssText = 'position:fixed;pointer-events:none;display:none;background:rgba(0,0,0,0.82);color:#fff;padding:5px 12px;border-radius:20px;font-size:13px;font-family:sans-serif;border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(6px);z-index:200;';
+document.body.appendChild(tooltip);
+const mouseMove = new THREE.Vector2();
+let hoveredBody = null;
+
+// ══════════════════════════════════════════════════════════════════
+// SOLE
+// ══════════════════════════════════════════════════════════════════
+const sunTex = TL.load('./assets/textures/2k_sun.jpg');
+const sun = new THREE.Mesh(new THREE.SphereGeometry(SUN_R,64,64),
+  new THREE.MeshStandardMaterial({ map:sunTex, emissiveMap:sunTex, emissive:new THREE.Color(0xffaa00), emissiveIntensity:2.5, roughness:1, metalness:0 }));
+scene.add(sun);
+[[8,128,'rgba(255,200,50,0.9)','rgba(255,120,0,0.4)',SUN_R*6],[2,128,'rgba(255,240,100,0.5)','rgba(255,160,0,0.1)',SUN_R*14],[0,128,'rgba(255,180,30,0.18)','rgba(255,80,0,0)',SUN_R*30]].forEach(([iR,,cIn,cOut,sc])=>{
+  const sp = makeCanvasSprite((ctx,s)=>{ const g=ctx.createRadialGradient(s/2,s/2,iR,s/2,s/2,128); g.addColorStop(0,cIn); g.addColorStop(0.45,cOut); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,s,s); },256,sc);
+  scene.add(sp); sp._isSunGlow=true;
+});
+
+// ══════════════════════════════════════════════════════════════════
+// KEPLERIANA
+// ══════════════════════════════════════════════════════════════════
+const EL = {
+  Mercury:{a0:.38709927,a1:.00000037,e0:.20563593,e1:.00001906,I0:7.00497902,I1:-.00594749,L0:252.25032350,L1:149472.67411175,p0:77.45779628,p1:.16047689,n0:48.33076593,n1:-.12534081},
+  Venus:  {a0:.72333566,a1:.00000390,e0:.00677672,e1:-.00004107,I0:3.39467605,I1:-.00078890,L0:181.97909950,L1:58517.81538729,p0:131.60246718,p1:.00268329,n0:76.67984255,n1:-.27769418},
+  Earth:  {a0:1.00000261,a1:.00000562,e0:.01671123,e1:-.00004392,I0:-.00001531,I1:-.01294668,L0:100.46457166,L1:35999.37244981,p0:102.93768193,p1:.32327364,n0:0,n1:0},
+  Mars:   {a0:1.52371034,a1:.00001847,e0:.09339410,e1:.00007882,I0:1.84969142,I1:-.00813131,L0:-4.55343205,L1:19140.30268499,p0:-23.94362959,p1:.44441088,n0:49.55953891,n1:-.29257343},
+  Jupiter:{a0:5.20288700,a1:-.00011607,e0:.04838624,e1:-.00013253,I0:1.30439695,I1:-.00183714,L0:34.39644051,L1:3034.74612775,p0:14.72847983,p1:.21252668,n0:100.47390909,n1:.20469106},
+  Saturn: {a0:9.53667594,a1:-.00125060,e0:.05386179,e1:-.00050991,I0:2.48599187,I1:.00193609,L0:49.95424423,L1:1222.49362201,p0:92.59887831,p1:-.41897216,n0:113.66242448,n1:-.28867794},
+  Uranus: {a0:19.18916464,a1:-.00196176,e0:.04725744,e1:-.00004397,I0:.77263783,I1:-.00242939,L0:313.23810451,L1:428.48202785,p0:170.95427630,p1:.40805281,n0:74.01692503,n1:.04240589},
+  Neptune:{a0:30.06992276,a1:.00026291,e0:.00859048,e1:.00005105,I0:1.77004347,I1:.00035372,L0:-55.12002969,L1:218.45945325,p0:44.96476227,p1:-.32241464,n0:131.78422574,n1:-.00508664},
+  Pluto:  {a0:39.48,a1:0,e0:.2488,e1:0,I0:17.14,I1:0,L0:238.9,L1:.00397,p0:224.07,p1:0,n0:110.3,n1:0},
+  Ceres:  {a0:2.767,a1:0,e0:.0758,e1:0,I0:10.59,I1:0,L0:95.99,L1:.21408,p0:73.6,p1:0,n0:80.3,n1:0},
+  Eris:   {a0:67.67,a1:0,e0:.4417,e1:0,I0:44.04,I1:0,L0:204.16,L1:.000173,p0:150.98,p1:0,n0:35.96,n1:0},
+  Makemake:{a0:45.79,a1:0,e0:.1559,e1:0,I0:29.0,I1:0,L0:174.5,L1:.000267,p0:298.2,p1:0,n0:79.6,n1:0},
+  Haumea: {a0:43.13,a1:0,e0:.1912,e1:0,I0:28.21,I1:0,L0:198.0,L1:.000282,p0:239.5,p1:0,n0:122.1,n1:0},
+  Vesta:  {a0:2.3615,a1:0,e0:.0887,e1:0,I0:7.14,I1:0,L0:103.9,L1:.27127,p0:151.2,p1:0,n0:103.8,n1:0},
+  Pallas: {a0:2.7724,a1:0,e0:.2299,e1:0,I0:34.84,I1:0,L0:78.2,L1:.21340,p0:310.1,p1:0,n0:173.1,n1:0},
+  Hygiea: {a0:3.1399,a1:0,e0:.1125,e1:0,I0:3.83,I1:0,L0:42.6,L1:.17524,p0:316.0,p1:0,n0:283.2,n1:0},
+  Eros:   {a0:1.4579,a1:0,e0:.2228,e1:0,I0:10.83,I1:0,L0:207.5,L1:.55961,p0:178.9,p1:0,n0:304.3,n1:0},
+  Apophis:{a0:.9224,a1:0,e0:.1912,e1:0,I0:3.34,I1:0,L0:327.2,L1:1.11168,p0:126.4,p1:0,n0:204.5,n1:0},
+  Itokawa:{a0:1.3240,a1:0,e0:.2801,e1:0,I0:1.62,I1:0,L0:165.0,L1:.65107,p0:162.8,p1:0,n0:69.1,n1:0},
+  Bennu:  {a0:1.1264,a1:0,e0:.2037,e1:0,I0:6.03,I1:0,L0:290.8,L1:.81984,p0:66.2,p1:0,n0:2.1,n1:0},
+};
+
+function wrapDeg180(d) { let x=d%360; if(x>180)x-=360; if(x<-180)x+=360; return x; }
+function solveKepler(M, e) { let E=M; for(let i=0;i<12;i++){const dE=(E-e*Math.sin(E)-M)/(1-e*Math.cos(E));E-=dE;if(Math.abs(dE)<1e-10)break;} return E; }
+function keplerPos(name, T) {
+  const el=EL[name];
+  const a=el.a0+el.a1*T, e=el.e0+el.e1*T;
+  const I=(el.I0+el.I1*T)*DEG, L=el.L0+el.L1*T, lp=el.p0+el.p1*T, ln=el.n0+el.n1*T;
+  const w=(lp-ln)*DEG, O=ln*DEG, Mv=wrapDeg180(L-lp)*DEG;
+  const E=solveKepler(Mv,e);
+  const xP=a*(Math.cos(E)-e), yP=a*(Math.sqrt(1-e*e)*Math.sin(E));
+  const ci=Math.cos(I),si=Math.sin(I),cO=Math.cos(O),sO=Math.sin(O),cw=Math.cos(w),sw=Math.sin(w);
+  return new THREE.Vector3(
+    (cw*cO-sw*sO*ci)*xP+(-sw*cO-cw*sO*ci)*yP,
+    (sw*si)*xP+(cw*si)*yP,
+    (cw*sO+sw*cO*ci)*xP+(-sw*sO+cw*cO*ci)*yP
+  ).multiplyScalar(AU);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DATI CORPI
+// ══════════════════════════════════════════════════════════════════
+const PLANETS = [
+  {key:'Mercury',label:'Mercurio',icon:'☿',color:0xb5a99a,radius:2.2,type:'planet',tex:'./assets/textures/2k_mercury.jpg',tilt:0.03,distAU:'0.39 AU',period:'88 giorni',moons:0,day:1407.6,desc:'Il pianeta più piccolo e più vicino al Sole. Temperature da -180 a +430°C.'},
+  {key:'Venus',label:'Venere',icon:'♀',color:0xf0c060,radius:3.5,type:'planet',tex:'./assets/textures/2k_venus_surface.jpg',tilt:177.3,distAU:'0.72 AU',period:'225 giorni',moons:0,day:-5832.5,desc:'Il pianeta più caldo (465°C). Ruota in senso retrogrado.'},
+  {key:'Earth',label:'Terra',icon:'🌍',color:0x3a8fff,radius:3.6,type:'planet',tex:'./assets/textures/2k_earth_daymap.jpg',tilt:23.44,distAU:'1.00 AU',period:'365 giorni',moons:1,day:23.93,desc:"L'unico pianeta con vita conosciuta. 71% coperto d'acqua.",hasAtmosphere:true},
+  {key:'Mars',label:'Marte',icon:'♂',color:0xff5533,radius:2.8,type:'planet',tex:'./assets/textures/2k_mars.jpg',tilt:25.19,distAU:'1.52 AU',period:'687 giorni',moons:2,day:24.62,desc:'Il Pianeta Rosso. Ospita Olympus Mons, il vulcano più alto del sistema solare.'},
+  {key:'Jupiter',label:'Giove',icon:'♃',color:0xd4956a,radius:8.5,type:'planet',tex:'./assets/textures/2k_jupiter.jpg',tilt:3.13,distAU:'5.20 AU',period:'11.9 anni',moons:95,day:9.93,desc:'Il pianeta più grande. La Grande Macchia Rossa è attiva da oltre 350 anni.'},
+  {key:'Saturn',label:'Saturno',icon:'♄',color:0xe8d080,radius:7.5,type:'planet',tex:'./assets/textures/2k_saturn.jpg',tilt:26.73,distAU:'9.54 AU',period:'29.5 anni',moons:146,day:10.66,desc:"Il pianeta degli anelli. Così poco denso che galleggerebbe sull'acqua."},
+  {key:'Uranus',label:'Urano',icon:'⛢',color:0x55ddcc,radius:5.5,type:'planet',tex:'./assets/textures/2k_uranus.jpg',tilt:97.77,distAU:'19.2 AU',period:'84 anni',moons:28,day:-17.24,desc:'Asse inclinato di 98° a causa di una probabile antica collisione.'},
+  {key:'Neptune',label:'Nettuno',icon:'♆',color:0x2255ff,radius:5.2,type:'planet',tex:'./assets/textures/2k_neptune.jpg',tilt:28.32,distAU:'30.1 AU',period:'165 anni',moons:16,day:16.11,desc:'Venti fino a 2100 km/h. Triton orbita in senso retrogrado.'},
+  {key:'Ceres',label:'Cerere',icon:'⚳',color:0x998877,radius:1.5,type:'dwarf',tilt:4.0,distAU:'2.77 AU',period:'4.6 anni',moons:0,day:9.07,desc:'Il pianeta nano più grande della fascia asteroidale. Diametro 945 km.'},
+  {key:'Pluto',label:'Plutone',icon:'♇',color:0xddbb99,radius:1.4,type:'dwarf',tilt:122.5,distAU:'39.5 AU',period:'248 anni',moons:5,day:153.3,desc:"Pianeta nano nella fascia di Kuiper. Ha un'atmosfera tenue di azoto."},
+  {key:'Eris',label:'Eris',icon:'⊕',color:0xddddcc,radius:1.3,type:'dwarf',tilt:44.0,distAU:'67.7 AU',period:'559 anni',moons:1,day:25.9,desc:'Il pianeta nano più massiccio. Quasi della dimensione di Plutone.'},
+  {key:'Makemake',label:'Makemake',icon:'🥚',color:0xffccaa,radius:1.2,type:'dwarf',tilt:29.0,distAU:'45.8 AU',period:'309 anni',moons:1,day:22.5,desc:'Pianeta nano nella fascia di Kuiper, privo di atmosfera rilevante.'},
+  {key:'Haumea',label:'Haumea',icon:'🏉',color:0xeeddcc,radius:1.1,type:'dwarf',tilt:28.2,distAU:'43.1 AU',period:'283 anni',moons:2,day:3.9,desc:'Forma ellissoidale per la sua rotazione rapidissima (3.9 ore).'},
+];
+const MOONS = [
+  {key:'Moon',label:'Luna',icon:'🌑',color:0xbbbbaa,radius:1.0,parent:'Earth',dist:8,period:2361600,type:'moon',tex:'./assets/textures/2k_moon.jpg',desc:"L'unico satellite naturale della Terra. Influenza le maree."},
+  {key:'Phobos',label:'Phobos',icon:'🌑',color:0xaa9988,radius:0.55,parent:'Mars',dist:3.8,period:27553,type:'moon',desc:'La luna più grande di Marte. Si avvicina lentamente al pianeta.'},
+  {key:'Deimos',label:'Deimos',icon:'🌑',color:0x998877,radius:0.45,parent:'Mars',dist:5.5,period:109123,type:'moon',desc:'La luna più piccola di Marte. Probabilmente un asteroide catturato.'},
+  {key:'Io',label:'Io',icon:'🌋',color:0xffdd44,radius:1.1,parent:'Jupiter',dist:15,period:152853,type:'moon',desc:'Il corpo con la maggiore attività vulcanica del sistema solare.'},
+  {key:'Europa',label:'Europa',icon:'🧊',color:0xaaccff,radius:1.0,parent:'Jupiter',dist:20,period:306822,type:'moon',desc:'Sotto la superficie ghiacciata potrebbe esserci un oceano liquido.'},
+  {key:'Ganymede',label:'Ganimede',icon:'🌑',color:0x998866,radius:1.3,parent:'Jupiter',dist:28,period:618153,type:'moon',desc:'Il satellite più grande del sistema solare, più grande di Mercurio.'},
+  {key:'Callisto',label:'Callisto',icon:'🌑',color:0x776655,radius:1.2,parent:'Jupiter',dist:38,period:1441931,type:'moon',desc:'La luna più craterizzata del sistema solare.'},
+  {key:'Titan',label:'Titano',icon:'🟠',color:0xff9944,radius:1.3,parent:'Saturn',dist:20,period:1377648,type:'moon',desc:'Ha una densa atmosfera di azoto e laghi di metano liquido.'},
+  {key:'Triton',label:'Tritone',icon:'🌑',color:0x88bbff,radius:1.0,parent:'Neptune',dist:16,period:507773,type:'moon',desc:'Orbita in senso retrogrado. Si avvicina lentamente a Nettuno.'},
+];
+const ASTEROIDS = [
+  {key:'Vesta',label:'Vesta',icon:'🪨',color:0x998888,radius:1.3,type:'asteroid',distAU:'2.36 AU',period:'3.6 anni',moons:0,day:5.34,desc:'Il secondo asteroide più massiccio. Esplorato da Dawn (2011). Diametro ~525 km.'},
+  {key:'Pallas',label:'Pallas',icon:'🪨',color:0x887799,radius:1.2,type:'asteroid',distAU:'2.77 AU',period:'4.6 anni',moons:0,day:7.81,desc:'Alta inclinazione orbitale (34°). Diametro ~512 km.'},
+  {key:'Hygiea',label:'Hygiea',icon:'🪨',color:0x778877,radius:1.1,type:'asteroid',distAU:'3.14 AU',period:'5.6 anni',moons:0,day:27.6,desc:'Il quarto asteroide per massa. Diametro ~430 km.'},
+  {key:'Eros',label:'Eros',icon:'🪨',color:0xaa8866,radius:0.9,type:'asteroid',distAU:'1.46 AU',period:'1.76 anni',moons:0,day:5.27,desc:'Primo asteroide orbitato da una sonda (NEAR, 2000). Forma allungata.'},
+  {key:'Apophis',label:'Apophis',icon:'🪨',color:0xcc7755,radius:0.8,type:'asteroid',distAU:'0.92 AU',period:'0.89 anni',moons:0,day:30.4,desc:'Passerà a ~31.000 km dalla Terra il 13 aprile 2029. Diametro ~340 m.'},
+  {key:'Itokawa',label:'Itokawa',icon:'🪨',color:0x997755,radius:0.7,type:'asteroid',distAU:'1.32 AU',period:'1.52 anni',moons:0,day:12.13,desc:'Campioni portati a Terra da Hayabusa (JAXA, 2010). Solo 540×270 m.'},
+  {key:'Bennu',label:'Bennu',icon:'🪨',color:0x886644,radius:0.7,type:'asteroid',distAU:'1.13 AU',period:'1.20 anni',moons:0,day:4.3,desc:'Campioni raccolti da OSIRIS-REx (NASA, 2020). Diametro ~490 m.'},
+];
+const COMETS = [
+  {key:'Halley',   label:'Halley',       icon:'☄️',a:17.834,e:0.96714,I:162.26,w:111.33,O:58.42,  color:0x88ddff,tailColor:0x44aaff,period:'~75 anni',  perielio:'0.586 AU',scoperta:'antichità',desc:'La cometa più famosa. Ultima visita 1986, prossima 2061.'},
+  {key:'HaleBopp', label:'Hale-Bopp',    icon:'☄️',a:186.5, e:0.9951, I:89.43, w:130.59,O:282.47, color:0xaaeeff,tailColor:0x66ccff,period:'~2520 anni', perielio:'0.914 AU',scoperta:'1995',desc:'Visibile ad occhio nudo per 18 mesi nel 1997.'},
+  {key:'Churyumov',label:'67P/Chury.',   icon:'☄️',a:3.463, e:0.6410, I:7.04,  w:12.78, O:50.15,  color:0xffddaa,tailColor:0xffaa44,period:'6.44 anni', perielio:'1.243 AU',scoperta:'1969',desc:'Esplorata da Rosetta ESA (2014-2016). Philae fu il primo lander su cometa.'},
+  {key:'Tempel1',  label:'Tempel 1',     icon:'☄️',a:3.123, e:0.5175, I:10.47, w:178.84,O:68.93,  color:0xffcc88,tailColor:0xff9933,period:'5.52 anni', perielio:'1.500 AU',scoperta:'1867',desc:'Impattata da Deep Impact NASA (2005).'},
+  {key:'Encke',    label:'Encke',        icon:'☄️',a:2.215, e:0.8482, I:11.78, w:186.54,O:334.57, color:0xffeeaa,tailColor:0xffcc66,period:'3.30 anni', perielio:'0.336 AU',scoperta:'1786',desc:'Periodo orbitale più breve conosciuto.'},
+  {key:'Borrelly', label:'Borrelly',     icon:'☄️',a:3.611, e:0.6241, I:30.32, w:353.36,O:75.42,  color:0xddffcc,tailColor:0x99ee77,period:'6.86 anni', perielio:'1.358 AU',scoperta:'1904',desc:'Visitata da Deep Space 1 nel 2001.'},
+];
+
+// ══════════════════════════════════════════════════════════════════
+// COMETE — scala visiva corretta
+// ══════════════════════════════════════════════════════════════════
+function cometVisualA(def) {
+  const q = def.a * (1 - def.e);
+  return Math.min(q * AU * (1/(1 - def.e)), 1200);
+}
+function cometPosFromAngle(def, angle) {
+  const a=cometVisualA(def), e=def.e, b=a*Math.sqrt(Math.max(0,1-e*e));
+  const xP=a*(Math.cos(angle)-e), yP=b*Math.sin(angle);
+  const wR=def.w*DEG, OR=def.O*DEG, IR=def.I*DEG;
+  const cw=Math.cos(wR),sw=Math.sin(wR),cO=Math.cos(OR),sO=Math.sin(OR),ci=Math.cos(IR),si=Math.sin(IR);
+  return new THREE.Vector3(
+    (cw*cO-sw*sO*ci)*xP+(-sw*cO-cw*sO*ci)*yP,
+    (sw*si)*xP+(cw*si)*yP,
+    (cw*sO+sw*cO*ci)*xP+(-sw*sO+cw*cO*ci)*yP
+  );
+}
+function buildCometOrbit(def) {
+  const pts = [];
+  for (let i=0;i<=SEG;i++) pts.push(cometPosFromAngle(def,(i/SEG)*Math.PI*2));
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineDashedMaterial({color:new THREE.Color(def.color),dashSize:6,gapSize:10,transparent:true,opacity:0.35}));
+  line.computeLineDistances();
+  return line;
+}
+function cometAngSpeed(def, angle) {
+  const a=cometVisualA(def), e=def.e, r=a*(1-e*Math.cos(angle));
+  return (0.00006*a*a)/(r*r);
+}
+const TAIL_OFF = Array.from({length:80},()=>({ox:(Math.random()-.5)*2,oz:(Math.random()-.5)*2,oy:(Math.random()-.5)*.5}));
+
+// ══════════════════════════════════════════════════════════════════
+// COSTRUZIONE SCENA
+// ══════════════════════════════════════════════════════════════════
+const allBodies  = [];
+const meshList   = [];
+const hitboxList = [];
+const pGroup = new THREE.Group(); scene.add(pGroup);
+const oGroup = new THREE.Group(); scene.add(oGroup);
+const cGroup = new THREE.Group(); scene.add(cGroup);
+const aGroup = new THREE.Group(); scene.add(aGroup);
+
+function makePlanetMesh(radius, texPath, color) {
+  const segs = texPath ? 48 : 24;
+  const mat = new THREE.MeshStandardMaterial({roughness:0.75,metalness:0.05});
+  if (texPath) mat.map = TL.load(texPath);
+  else { mat.color=new THREE.Color(color); mat.emissive=new THREE.Color(color); mat.emissiveIntensity=0.25; }
+  return new THREE.Mesh(new THREE.SphereGeometry(radius, segs, segs), mat);
+}
+
+function buildPlanet(def) {
+  const pivot = new THREE.Group();
+  const tiltGroup = new THREE.Group();
+  tiltGroup.rotation.z = (def.tilt || 0) * DEG;
+  const mesh = makePlanetMesh(def.radius, def.tex||null, def.color);
+  mesh.userData.bodyKey = def.key;
+  tiltGroup.add(mesh);
+  pivot.add(tiltGroup);
+  pGroup.add(pivot);
+  meshList.push(mesh);
+
+  const glow = makeGlow(def.radius, def.color);
+  pivot.add(glow);
+
+  let atmosphere = null;
+  if (def.hasAtmosphere) {
+    atmosphere = makeCanvasSprite((ctx,s)=>{
+      const g=ctx.createRadialGradient(s/2,s/2,s*.28,s/2,s/2,s/2);
+      g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(.65,'rgba(50,120,255,0)');
+      g.addColorStop(.80,'rgba(60,140,255,.28)'); g.addColorStop(.90,'rgba(80,160,255,.18)'); g.addColorStop(1,'rgba(0,60,200,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,s,s);
+    }, 256, def.radius*2.85);
+    pivot.add(atmosphere);
+  }
+
+  if (def.key === 'Saturn') {
+    const ri=def.radius*1.4, ro=def.radius*2.7;
+    const rGeo=new THREE.RingGeometry(ri,ro,256);
+    const pos=rGeo.attributes.position, uv=rGeo.attributes.uv, v3=new THREE.Vector3();
+    for(let i=0;i<pos.count;i++){v3.fromBufferAttribute(pos,i);uv.setXY(i,(v3.length()-ri)/(ro-ri),0);}
+    const rt=TL.load('./assets/textures/2k_saturn_ring_alpha.png');
+    const ring=new THREE.Mesh(rGeo,new THREE.MeshBasicMaterial({map:rt,alphaMap:rt,color:0xd4c070,side:THREE.DoubleSide,transparent:true,opacity:0.88,depthWrite:false}));
+    ring.rotation.x=Math.PI/2; pivot.add(ring);
+  }
+  if (def.key === 'Uranus') {
+    const ur=new THREE.Mesh(new THREE.RingGeometry(def.radius*1.5,def.radius*1.9,64),
+      new THREE.MeshBasicMaterial({color:0x88eedd,side:THREE.DoubleSide,transparent:true,opacity:0.25}));
+    ur.rotation.x=Math.PI/2; pivot.add(ur);
+  }
+
+  let labelEl = null;
+  if (ui.labelsLayer) {
+    labelEl = document.createElement('div');
+    labelEl.className = 'label';
+    labelEl.textContent = def.label;
+    if (def.type==='dwarf') labelEl.style.opacity='0.7';
+    labelEl.style.pointerEvents = 'auto';
+    labelEl.style.cursor = 'pointer';
+    labelEl.addEventListener('click', () => selectBody(body));
+    ui.labelsLayer.appendChild(labelEl);
+  }
+
+  const body = {...def, pivot, mesh, glow, atmosphere, labelEl, visualR: def.radius,
+    getPos: def.type==='moon' ? null : T => keplerPos(def.key, T)};
+  allBodies.push(body);
+  return body;
+}
+PLANETS.forEach(buildPlanet);
+
+// Lune
+MOONS.forEach(def => {
+  const parentFn = () => allBodies.find(b => b.key === def.parent);
+  const pivot = new THREE.Group();
+  const mesh = makePlanetMesh(def.radius, def.tex||null, def.color);
+  mesh.userData.bodyKey = def.key;
+  pivot.add(mesh); pGroup.add(pivot); meshList.push(mesh);
+  const glow = makeGlow(def.radius, def.color); pivot.add(glow);
+  let labelEl = null;
+  if (ui.labelsLayer) {
+    labelEl = document.createElement('div');
+    labelEl.className = 'label';
+    labelEl.textContent = def.label;
+    labelEl.style.opacity = '0.65';
+    labelEl.style.pointerEvents = 'auto';
+    labelEl.style.cursor = 'pointer';
+    const capturedDef = def;
+    labelEl.addEventListener('click', () => { const b = allBodies.find(x => x.key === capturedDef.key); if (b) selectBody(b); });
+    ui.labelsLayer.appendChild(labelEl);
+  }
+  const body = {...def, pivot, mesh, glow, labelEl, visualR: def.radius,
+    getPos: () => {
+      const pb = parentFn(); if (!pb) return new THREE.Vector3();
+      const ms = Date.now() + timeOffsetMs;
+      const angle = ((ms / (def.period * 1000)) * Math.PI * 2) % (Math.PI * 2);
+      // Inclinazione orbitale realistica per luna
+      const incl = (def.inclination || 5) * DEG;
+      return pb.pivot.position.clone().add(new THREE.Vector3(
+        Math.cos(angle) * def.dist,
+        Math.sin(angle) * def.dist * Math.sin(incl),
+        Math.sin(angle) * def.dist * Math.cos(incl * 0.3)
+      ));
+    }
+  };
+  allBodies.push(body);
+});
+
+// Asteroidi
+function buildAsteroid(def) {
+  const pivot = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:new THREE.Color(def.color),roughness:0.9,metalness:0.1,emissive:new THREE.Color(def.color),emissiveIntensity:0.15});
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(def.radius,16,16), mat);
+  mesh.userData.bodyKey = def.key;
+  aGroup.add(pivot); pivot.add(mesh); meshList.push(mesh);
+  const hitbox = new THREE.Mesh(new THREE.SphereGeometry(def.radius*3,8,8), new THREE.MeshBasicMaterial({visible:false}));
+  hitbox.userData.bodyKey = def.key;
+  pivot.add(hitbox); hitboxList.push(hitbox);
+  const glow = makeGlow(def.radius, def.color); pivot.add(glow);
+  let labelEl = null;
+  if (ui.labelsLayer) {
+    labelEl = document.createElement('div');
+    labelEl.className = 'label';
+    labelEl.textContent = def.label;
+    labelEl.style.color = '#ccbbaa';
+    labelEl.style.opacity = '0.75';
+    labelEl.style.pointerEvents = 'auto';
+    labelEl.style.cursor = 'pointer';
+    const capturedDef = def;
+    labelEl.addEventListener('click', () => { const b = allBodies.find(x => x.key === capturedDef.key); if (b) selectBody(b); });
+    ui.labelsLayer.appendChild(labelEl);
+  }
+  const body = {...def, pivot, mesh, glow, labelEl, visualR: def.radius, getPos: T => keplerPos(def.key, T)};
+  allBodies.push(body);
+  return body;
+}
+ASTEROIDS.forEach(buildAsteroid);
+
+// Comete
+const cometObjects = COMETS.map(def => {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(2.2,16,16),
+    new THREE.MeshStandardMaterial({color:new THREE.Color(def.color),emissive:new THREE.Color(def.color),emissiveIntensity:2.5,roughness:0.3}));
+  mesh.userData.bodyKey = def.key;
+  cGroup.add(mesh);
+  const hitbox = new THREE.Mesh(new THREE.SphereGeometry(8,8,8), new THREE.MeshBasicMaterial({visible:false}));
+  hitbox.userData.bodyKey = def.key;
+  cGroup.add(hitbox); hitboxList.push(hitbox);
+  const cHex=new THREE.Color(def.color), cr=Math.round(cHex.r*255), cg=Math.round(cHex.g*255), cb=Math.round(cHex.b*255);
+  const glow = makeCanvasSprite((ctx,s)=>{const g=ctx.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);g.addColorStop(0,`rgba(${cr},${cg},${cb},0.9)`);g.addColorStop(.4,`rgba(${cr},${cg},${cb},0.3)`);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,s,s);},128,18);
+  cGroup.add(glow);
+  const tailCount=80, tailPos=new Float32Array(tailCount*3), tailGeo=new THREE.BufferGeometry();
+  tailGeo.setAttribute('position', new THREE.BufferAttribute(tailPos,3));
+  const tC=new THREE.Color(def.tailColor), tailCol=new Float32Array(tailCount*3);
+  for(let i=0;i<tailCount;i++){const t=i/tailCount;tailCol[i*3]=tC.r*(1-t*.8);tailCol[i*3+1]=tC.g*(1-t*.7);tailCol[i*3+2]=tC.b;}
+  tailGeo.setAttribute('color', new THREE.BufferAttribute(tailCol,3));
+  const tail=new THREE.Points(tailGeo, new THREE.PointsMaterial({size:1.8,sizeAttenuation:true,vertexColors:true,transparent:true,opacity:0.75}));
+  cGroup.add(tail);
+  const orbitLine = buildCometOrbit(def);
+  cGroup.add(orbitLine);
+  const pivot = new THREE.Group(); cGroup.add(pivot);
+  let labelEl = null;
+  if (ui.labelsLayer) {
+    labelEl = document.createElement('div');
+    labelEl.className = 'label';
+    labelEl.style.color = '#aaddff';
+    labelEl.textContent = def.label;
+    labelEl.style.pointerEvents = 'auto';
+    labelEl.style.cursor = 'pointer';
+    const capturedDef = def;
+    labelEl.addEventListener('click', () => { const b = allBodies.find(x => x.key === capturedDef.key); if (b) selectBody(b); });
+    ui.labelsLayer.appendChild(labelEl);
+  }
+  const body = {...def, type:'comet', pivot, mesh, glow, labelEl, visualR:4, moons:0, day:null, distAU:def.perielio};
+  allBodies.push(body);
+  return {def, mesh, hitbox, glow, tail, tailGeo, tailPos, orbitLine, labelEl, pivot, body, angle: Math.random()*Math.PI*2};
+});
+
+// ══════════════════════════════════════════════════════════════════
+// FASCE
+// ══════════════════════════════════════════════════════════════════
+(function(){
+  const N=6000,pos=new Float32Array(N*3),col=new Float32Array(N*3);
+  const ang=new Float32Array(N),rad=new Float32Array(N),spd=new Float32Array(N),yy=new Float32Array(N);
+  for(let i=0;i<N;i++){const r=(2.1+Math.random()*1.2)*AU,a=Math.random()*Math.PI*2;ang[i]=a;rad[i]=r;spd[i]=(6e-5+Math.random()*1e-4)*(Math.random()<.5?1:-1);yy[i]=(Math.random()-.5)*14;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=yy[i];pos[i*3+2]=Math.sin(a)*r;const w=Math.random()>.5;col[i*3]=w?.9:(.6+Math.random()*.2);col[i*3+1]=w?.7:(.65+Math.random()*.2);col[i*3+2]=w?.3:(.8+Math.random()*.2);}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  scene.add(new THREE.Points(geo,new THREE.PointsMaterial({size:2.2,sizeAttenuation:true,vertexColors:true,transparent:true,opacity:.85})));
+  scene.userData.belt={geo,ang,rad,spd,yy,N,pos};
+})();
+(function(){
+  const N=3500,pos=new Float32Array(N*3),col=new Float32Array(N*3);
+  const ang=new Float32Array(N),rad=new Float32Array(N),spd=new Float32Array(N),yy=new Float32Array(N);
+  for(let i=0;i<N;i++){const r=(30+Math.random()*20)*AU,a=Math.random()*Math.PI*2;ang[i]=a;rad[i]=r;spd[i]=(5e-6+Math.random()*1e-5)*(Math.random()<.5?1:-1);yy[i]=(Math.random()-.5)*AU*3;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=yy[i];pos[i*3+2]=Math.sin(a)*r;col[i*3]=.4+Math.random()*.2;col[i*3+1]=.6+Math.random()*.2;col[i*3+2]=1;}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  scene.add(new THREE.Points(geo,new THREE.PointsMaterial({size:1.8,sizeAttenuation:true,vertexColors:true,transparent:true,opacity:.55})));
+  scene.userData.kuiper={geo,ang,rad,spd,yy,N,pos};
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// ORBITE
+// ══════════════════════════════════════════════════════════════════
+const OCOLS={Mercury:0xff8855,Venus:0xffcc44,Earth:0x44aaff,Mars:0xff4422,Jupiter:0xffaa66,Saturn:0xeedd77,Uranus:0x44ffee,Neptune:0x2266ff,Pluto:0xddaa88,Ceres:0xbbaa99,Eris:0xddddcc,Makemake:0xffccaa,Haumea:0xeeddcc,Vesta:0xbb9988,Pallas:0x9988bb,Hygiea:0x88bb99,Eros:0xccaa88,Apophis:0xee9966,Itokawa:0xbb9977,Bennu:0xaa8866};
+let lastOrbitT = null;
+function rebuildOrbits(T) {
+  if (lastOrbitT!==null && Math.abs(T-lastOrbitT)<0.01) return;
+  lastOrbitT = T;
+  oGroup.children.forEach(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
+  oGroup.clear();
+  [...PLANETS,...ASTEROIDS].filter(b=>b.type!=='moon').forEach(b=>{
+    const el=EL[b.key]; if(!el)return;
+    const a=el.a0+el.a1*T, e=el.e0+el.e1*T;
+    const I=(el.I0+el.I1*T)*DEG, lp=el.p0+el.p1*T, ln=el.n0+el.n1*T;
+    const w=(lp-ln)*DEG, O=ln*DEG;
+    const ci=Math.cos(I),si=Math.sin(I),cO=Math.cos(O),sO=Math.sin(O),cw=Math.cos(w),sw=Math.sin(w);
+    const pts=[];
+    for(let i=0;i<=SEG;i++){const E=(i/SEG)*Math.PI*2,xP=a*(Math.cos(E)-e),yP=a*(Math.sqrt(1-e*e)*Math.sin(E));pts.push(new THREE.Vector3(((cw*cO-sw*sO*ci)*xP+(-sw*cO-cw*sO*ci)*yP)*AU,((sw*si)*xP+(cw*si)*yP)*AU,((cw*sO+sw*cO*ci)*xP+(-sw*sO+cw*cO*ci)*yP)*AU));}
+    const isDwarf=b.type==='dwarf',isAst=b.type==='asteroid';
+    const opacity=isDwarf?0.18:isAst?0.22:0.32;
+    oGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:OCOLS[b.key]||0x666666,transparent:true,opacity})));
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INVENTARIO
+// ══════════════════════════════════════════════════════════════════
+const invSections = [
+  { title: '🪐 Pianeti',        filter: b => b.type==='planet' },
+  { title: '🌑 Lune',           filter: b => b.type==='moon' },
+  { title: '⚳ Pianeti Nani',    filter: b => b.type==='dwarf' },
+  { title: '☄️ Comete',         filter: b => b.type==='comet' },
+  { title: '🪨 Asteroidi',      filter: b => b.type==='asteroid' },
+];
+
+let invDistTimer = null;
+function buildInventory() {
+  if (!ui.invList) return;
+  ui.invList.innerHTML = '';
+  invSections.forEach(sec => {
+    const bodies = allBodies.filter(sec.filter);
+    if (!bodies.length) return;
+    const header = document.createElement('div');
+    header.className = 'inv-section-header';
+    header.textContent = sec.title;
+    ui.invList.appendChild(header);
+    bodies.forEach(body => {
+      const item = document.createElement('div');
+      item.className = 'inv-item';
+      item.dataset.key = body.key;
+      item.innerHTML = `<span class="inv-icon">${body.icon}</span><span class="inv-name">${body.label}</span><span class="inv-dist" id="idist_${body.key}">--</span>`;
+      item.addEventListener('click', () => selectBody(body));
+      ui.invList.appendChild(item);
+    });
+  });
+}
+
+function updateInventoryDistances() {
+  allBodies.forEach(b => {
+    const el = document.getElementById('idist_' + b.key);
+    if (!el || !b.pivot) return;
+    const distAU = b.pivot.position.length() / AU;
+    el.textContent = distAU < 0.01 ? '★' : distAU.toFixed(2) + ' AU';
+  });
+}
+
+function filterInventory(q) {
+  if (!ui.invList) return;
+  const query = q.toLowerCase();
+  ui.invList.querySelectorAll('.inv-item').forEach(item => {
+    const name = item.querySelector('.inv-name')?.textContent.toLowerCase() || '';
+    item.style.display = name.includes(query) ? '' : 'none';
+  });
+  ui.invList.querySelectorAll('.inv-section-header').forEach(h => {
+    const next = h.nextElementSibling;
+    h.style.display = (next && next.style.display !== 'none') ? '' : 'none';
+  });
+}
+
+function highlightInventory(key) {
+  if (!ui.invList) return;
+  ui.invList.querySelectorAll('.inv-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.key === key);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INFO PANEL
+// ══════════════════════════════════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+const mouse     = new THREE.Vector2();
+
+function showInfo(body) {
+  if (!ui.infoPanel) return;
+  if (ui.infoName) ui.infoName.textContent = body.icon + ' ' + body.label;
+  const typeLabel = {planet:'Pianeta',dwarf:'Pianeta nano',moon:'Luna',comet:'Cometa',asteroid:'Asteroide'}[body.type]||body.type;
+  let rows = `<div class="info-row"><span>Tipo</span><strong>${typeLabel}</strong></div>`;
+  if (body.type === 'comet') {
+    rows += `<div class="info-row"><span>Periodo</span><strong>${body.period}</strong></div>`;
+    rows += `<div class="info-row"><span>Perielio</span><strong>${body.perielio}</strong></div>`;
+    rows += `<div class="info-row"><span>Scoperta</span><strong>${body.scoperta}</strong></div>`;
+    rows += `<div class="info-row"><span>Eccentricità</span><strong>${body.e.toFixed(4)}</strong></div>`;
+  } else {
+    if (body.distAU) rows += `<div class="info-row"><span>Distanza dal Sole</span><strong>${body.distAU}</strong></div>`;
+    if (body.period) rows += `<div class="info-row"><span>Periodo orbitale</span><strong>${body.period}</strong></div>`;
+    if (body.type !== 'asteroid') rows += `<div class="info-row"><span>Lune</span><strong>${body.moons||0}</strong></div>`;
+    if (body.day) rows += `<div class="info-row"><span>Durata giorno</span><strong>${Math.abs(body.day).toFixed(1)}h${body.day<0?' <em>(retrogrado)</em>':''}</strong></div>`;
+  }
+  rows += `<p class="info-desc">${body.desc||''}</p>`;
+  rows += `<div class="info-actions">`;
+  rows += `<button class="zoom-btn" id="zoomBtn">🔭 Zoom</button>`;
+  rows += `<button class="follow-btn" id="followBtn">🛸 Segui</button>`;
+  rows += `</div>`;
+  if (ui.infoBody) ui.infoBody.innerHTML = rows;
+  ui.infoPanel.classList.add('visible');
+  const zBtn = document.getElementById('zoomBtn');
+  if (zBtn) zBtn.onclick = () => { CAM.mode='orbit'; CAM.zoomTarget={body,finalRadius:body.visualR*10}; CAM.tPivot.set(0,0,0); document.exitPointerLock?.(); };
+  const fBtn = document.getElementById('followBtn');
+  if (fBtn) fBtn.onclick = () => enterFollow(body);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ETICHETTE
+// ══════════════════════════════════════════════════════════════════
+const proj = new THREE.Vector3();
+function isOccluded(wp) {
+  const C=camera.position.clone(), v=wp.clone().sub(C);
+  const vv=v.dot(v); if(vv<1e-12)return false;
+  const t=-(C.dot(v))/vv; if(t<=0||t>=1)return false;
+  return C.clone().add(v.multiplyScalar(t)).length()<SUN_OCC_R;
+}
+function updateLabels() {
+  const show = ui.labels ? ui.labels.checked : true;
+  if (ui.labelsLayer) ui.labelsLayer.style.display = show ? 'block' : 'none';
+  if (!show) return;
+  allBodies.forEach(b => {
+    if (!b.labelEl || !b.pivot) return;
+    proj.copy(b.pivot.position).project(camera);
+    const inV = proj.z<1 && proj.z>-1 && Math.abs(proj.x)<1 && Math.abs(proj.y)<1;
+    const occ = isOccluded(b.pivot.position.clone());
+    b.labelEl.style.display = (inV && !occ) ? 'block' : 'none';
+    if (inV && !occ) {
+      b.labelEl.style.left = ((proj.x*.5+.5)*innerWidth)+'px';
+      b.labelEl.style.top  = ((-.5*proj.y+.5)*innerHeight-20)+'px';
+      b.labelEl.classList.toggle('label-selected', selectedBody?.key === b.key);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LOOP PRINCIPALE
+// ══════════════════════════════════════════════════════════════════
+let invDistFrame = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now(), dt = Math.min((now - lastPerf) / 1000, .1);
+  lastPerf = now;
+
+  updateCamera(dt);
+
+  const mult = timeMultiplier();
+  if (ui.speedLabel) ui.speedLabel.textContent = speedText(mult);
+  if (!paused) timeOffsetMs += dt * 1000 * (mult - 1);
+
+  const d = simDate();
+  if (ui.clock) ui.clock.textContent = d.toLocaleString('it-IT',{hour12:false});
+  const T = (julianDate(d) - 2451545.0) / 36525.0;
+
+  // Pianeti, lune, asteroidi
+  allBodies.forEach(b => {
+    if (b.type==='comet' || !b.pivot) return;
+    const pos = b.getPos ? b.getPos(T) : null;
+    if (pos) b.pivot.position.copy(pos);
+    if (b.mesh) b.mesh.rotation.y += .002 * dt * 60;
+    if (b.glow) b.glow.quaternion.copy(camera.quaternion);
+    if (b.atmosphere) b.atmosphere.quaternion.copy(camera.quaternion);
+    const isH = hoveredBody?.key===b.key || selectedBody?.key===b.key;
+    if (b.glow?.material) { b.glow.material.opacity=isH?.95:.72; const sc=b.radius*(isH?9:7); b.glow.scale.set(sc,sc,1); }
+  });
+
+  // Comete — rispettano la pausa
+  if (!paused) {
+    const cSpeed = Math.max(mult * .00003, .00003) * Math.sign(mult || 1);
+    cometObjects.forEach(c => {
+      c.angle = (c.angle + cometAngSpeed(c.def, c.angle) * dt * 60 * Math.abs(cSpeed) * 500) % (Math.PI * 2);
+    });
+  }
+  cometObjects.forEach(c => {
+    const pos = cometPosFromAngle(c.def, c.angle);
+    c.mesh.position.copy(pos);
+    c.hitbox.position.copy(pos);
+    c.pivot.position.copy(pos);
+    c.glow.position.copy(pos);
+    c.glow.quaternion.copy(camera.quaternion);
+    const a=cometVisualA(c.def), distSun=pos.length();
+    const tailLen=Math.max(4, a*.6*(1-distSun/(a*3)));
+    const toSun=pos.clone().negate().normalize();
+    for(let i=0;i<80;i++){const t=i/80;c.tailPos[i*3]=pos.x+toSun.x*t*tailLen+TAIL_OFF[i].ox*t*4;c.tailPos[i*3+1]=pos.y+toSun.y*t*tailLen+TAIL_OFF[i].oy*t*4;c.tailPos[i*3+2]=pos.z+toSun.z*t*tailLen+TAIL_OFF[i].oz*t*4;}
+    c.tailGeo.attributes.position.array.set(c.tailPos);
+    c.tailGeo.attributes.position.needsUpdate=true;
+    c.orbitLine.visible=ui.orbits?ui.orbits.checked:true;
+    if (c.labelEl) {
+      proj.copy(pos).project(camera);
+      const inV=proj.z<1&&proj.z>-1&&Math.abs(proj.x)<1&&Math.abs(proj.y)<1;
+      const show=ui.labels?ui.labels.checked:true;
+      c.labelEl.style.display=(inV&&show)?'block':'none';
+      if(inV&&show){c.labelEl.style.left=((proj.x*.5+.5)*innerWidth)+'px';c.labelEl.style.top=((-.5*proj.y+.5)*innerHeight-20)+'px';}
+      c.labelEl.classList.toggle('label-selected', selectedBody?.key===c.def.key);
+    }
+  });
+
+  // Fasce
+  const belt=scene.userData.belt;
+  if(belt){for(let i=0;i<belt.N;i++){belt.ang[i]+=belt.spd[i]*dt*mult;belt.pos[i*3]=Math.cos(belt.ang[i])*belt.rad[i];belt.pos[i*3+1]=belt.yy[i];belt.pos[i*3+2]=Math.sin(belt.ang[i])*belt.rad[i];}belt.geo.attributes.position.needsUpdate=true;}
+  const kuiper=scene.userData.kuiper;
+  if(kuiper){for(let i=0;i<kuiper.N;i++){kuiper.ang[i]+=kuiper.spd[i]*dt*mult;kuiper.pos[i*3]=Math.cos(kuiper.ang[i])*kuiper.rad[i];kuiper.pos[i*3+1]=kuiper.yy[i];kuiper.pos[i*3+2]=Math.sin(kuiper.ang[i])*kuiper.rad[i];}kuiper.geo.attributes.position.needsUpdate=true;}
+
+  if (ui.orbits) oGroup.visible = ui.orbits.checked;
+  rebuildOrbits(T);
+
+  sun.rotation.y += .0006;
+  scene.children.forEach(c => { if (c._isSunGlow) c.quaternion.copy(camera.quaternion); });
+
+  // Inventario distanze — aggiorna ogni 60 frame (~1s)
+  invDistFrame++;
+  if (invDistFrame % 60 === 0) updateInventoryDistances();
+
+  updateLabels();
+  renderer.render(scene, camera);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AVVIO
+// ══════════════════════════════════════════════════════════════════
+function startApp() {
+  if (window.__solarStarted) return;
+  window.__solarStarted = true;
+  rebuildOrbits(currentT());
+  buildInventory();
+  setCamLabel('orbit');
+  showHint('🪐 Trascina per orbitare · Scroll per zoom · Shift+trascina per pan · F per volare · TAB per inventario');
+  animate();
+}
+
+setTimeout(() => { if (!window.__solarStarted) { if (loadingScreen) loadingScreen.style.display='none'; startApp(); } }, 8000);
+
+window.allBodies = allBodies;
+window.CAM = CAM;
+window.selectBody = selectBody;
+window.setView = (r,phi,theta) => { exitFly(); CAM.tRadius=r; CAM.tPhi=phi; CAM.tTheta=theta; CAM.tPivot.set(0,0,0); };

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Solare</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="loadingScreen" style="position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:16px;">
+    <div style="color:#fff;font-size:1.4rem;font-weight:700;">🪐 Sistema Solare</div>
+    <div style="width:260px;height:6px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;">
+      <div id="loadingBar" style="height:100%;width:0%;background:#5bc4cf;transition:width 0.2s;border-radius:99px;"></div>
+    </div>
+    <div id="loadingText" style="color:rgba(255,255,255,0.5);font-size:13px;">Caricamento texture... 0%</div>
+  </div>
+
+  <div id="labelsLayer"></div>
+
+  <div id="ui">
+    <div class="row">
+      <span class="title">🪐 Sistema Solare</span>
+      <span class="pill" id="clock">--</span>
+    </div>
+    
+    <!-- Minimap Galattica -->
+    <div id="minimapContainer" style="position: fixed; bottom: 20px; right: 20px; width: 200px; height: 200px; background: rgba(0,0,0,0.7); border: 2px solid rgba(100,150,255,0.5); border-radius: 8px; overflow: hidden; display: none;">
+      <canvas id="minimapCanvas" width="200" height="200"></canvas>
+      <div id="minimapLabel" style="position: absolute; top: 5px; left: 5px; color: rgba(255,255,255,0.7); font-size: 10px; pointer-events: none;">Minimap</div>
+    </div>
+    <div class="row">
+      <button id="toggle">⏸ Pausa</button>
+      <button id="now">⏱ Adesso</button>
+      <button id="resetCam">🎯 Reset Cam</button>
+    </div>
+    <div class="row">
+      <span style="font-size:12px;white-space:nowrap">Velocita</span>
+      <input id="speed" type="range" min="-2" max="7" step="0.01" value="0" />
+      <span class="pill" id="speedLabel">1x</span>
+    </div>
+    <div class="row">
+      <button id="yearBack">◀ -1 Anno</button>
+      <button id="yearFwd">+1 Anno ▶</button>
+    </div>
+    <div class="row">
+      <button id="decBack">◀ -10 Anni</button>
+      <button id="decFwd">+10 Anni ▶</button>
+    </div>
+    <div class="row">
+      <label><input id="orbits" type="checkbox" checked /> Orbite</label>
+      <label><input id="labels" type="checkbox" checked /> Etichette</label>
+    </div>
+    <div class="row">
+      <button id="menuToggle">📋 Menù Oggetti</button>
+      <button id="galaxyMapBtn">🌌 Mappa Galattica</button>
+    </div>
+    <p class="hint">WASD/Frecce muovi - Scroll zoom - [ / ] ±1 anno - R reset - H home</p>
+  </div>
+
+  <div id="celestialMenu" class="celestial-menu">
+    <div class="menu-header">
+      <h3>🌌 Oggetti Celesti</h3>
+      <button id="menuClose">✕</button>
+    </div>
+    <div class="menu-content" id="menuContent"></div>
+  </div>
+
+  <div id="galaxyGuide" class="galaxy-guide">
+    <div class="guide-header">
+      <h3>🗺️ Mappa Galattica</h3>
+      <button id="guideClose">✕</button>
+    </div>
+    <div class="guide-content">
+      <p><strong>Sistema Solare</strong> al centro (giallo)</p>
+      <p><strong>Stelle vicine</strong> (punti colorati)</p>
+      <p><strong>Hyperlanes</strong> (linee blu tra stelle)</p>
+      <p><strong>Click su stella</strong> per zoomare</p>
+      <p><strong>WASD/Frecce</strong> per muovere la vista</p>
+      <p><strong>Scroll</strong> per zoom in/out</p>
+      <hr style="margin: 12px 0; border-color: rgba(255,255,255,0.2);">
+      <div style="margin-bottom: 8px;"><strong>📍 Vai a sistema stellare:</strong></div>
+      <input type="text" id="starSearch" placeholder="Cerca stella..." style="width: 100%; padding: 8px; margin-bottom: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; color: white;">
+      <div id="starList" style="max-height: 200px; overflow-y: auto; font-size: 12px;"></div>
+      <hr style="margin: 12px 0; border-color: rgba(255,255,255,0.2);">
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="showHyperlanes" checked>
+        <span>Mostra Hyperlanes</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="infoPanel">
+    <div class="info-header">
+      <h2 id="infoName">--</h2>
+      <button id="infoClose">X</button>
+    </div>
+    <div id="infoBody"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

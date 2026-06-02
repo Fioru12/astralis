@@ -1,0 +1,48 @@
+{
+  "name": "Sistema Solare 3D Interattivo",
+  "short_name": "Solar System",
+  "description": "Visualizzatore 3D interattivo del Sistema Solare con orbite kepleriane accurate basate su dati NASA/JPL",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#000814",
+  "theme_color": "#5bc4cf",
+  "orientation": "any",
+  "lang": "it",
+  "categories": ["education", "science", "entertainment"],
+  "icons": [
+    {
+      "src": "./solar-system-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./solar-system-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Vista Terra",
+      "short_name": "Terra",
+      "url": "./?view=earth",
+      "description": "Vai direttamente alla vista Terra"
+    },
+    {
+      "name": "Mappa Galattica",
+      "short_name": "Galassia",
+      "url": "./?view=galaxy",
+      "description": "Apri la mappa galattica"
+    },
+    {
+      "name": "Time Travel",
+      "short_name": "Time",
+      "url": "./?view=timetravel",
+      "description": "Viaggia nel tempo"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
