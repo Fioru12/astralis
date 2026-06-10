@@ -65,6 +65,9 @@ const allBodies = [];
 const meshList = [];
 const hitboxList = [];
 const lodList = [];
+let mainBelt = null;
+let kuiperBelt = null;
+let cometObjects = null;
 
 function getTimeOffset() { return timeOffsetMs; }
 function getSelectedBody() { return selectedBody; }
@@ -804,14 +807,14 @@ MOONS.forEach(def => {
 
 ASTEROIDS.forEach(def => buildAsteroidBody(def, aGroup, meshList, hitboxList, ui, allBodies, selectBody, getTimeOffset));
 
-const mainBelt = generateAsteroidBelt(180, 280, 1000, 0x887766);
+mainBelt = generateAsteroidBelt(180, 280, 1000, 0x887766);
 mainBelt.userData.name = 'mainBelt';
 scene.add(mainBelt);
-const kuiperBelt = generateAsteroidBelt(350, 450, 3000, 0x776655);
+kuiperBelt = generateAsteroidBelt(350, 450, 3000, 0x776655);
 kuiperBelt.userData.name = 'kuiperBelt';
 scene.add(kuiperBelt);
 
-const cometObjects = createComets(COMETS, cGroup, hitboxList, ui, allBodies, meshList, selectBody);
+cometObjects = createComets(COMETS, cGroup, hitboxList, ui, allBodies, meshList, selectBody);
 createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList, selectBody);
 createHyperlanes(allBodies, hyperlaneGroup);
 createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBody);
