@@ -3,6 +3,7 @@
 // FUNZIONI ORBITALI KEPLERIANE
 // ══════════════════════════════════════════════════════════════════
 
+import * as THREE from 'three';
 import { DEG, AU } from './constants.js';
 
 /**
