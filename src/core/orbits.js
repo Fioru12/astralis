@@ -2,23 +2,8 @@ import * as THREE from 'three';
 import { AU, DEG, SEG } from '../utils/constants.js';
 import { ORBITAL_ELEMENTS, ORBIT_COLORS, PLANETS, ASTEROIDS } from '../data/celestialData.js';
 
-// Create gradient texture for orbit glow
-function createOrbitGlowTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 1;
-  const ctx = canvas.getContext('2d');
-  const gradient = ctx.createLinearGradient(0, 0, 256, 0);
-  gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.6)');
-  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 256, 1);
-  return new THREE.CanvasTexture(canvas);
-}
-
 // Create gradient color with fade effect
-function createOrbitMaterial(color, isDwarf, isAst, timeOffset = 0) {
+function createOrbitMaterial(color, isDwarf, isAst) {
   const baseOpacity = isDwarf ? 0.16 : isAst ? 0.20 : 0.28;
 
   return new THREE.LineBasicMaterial({

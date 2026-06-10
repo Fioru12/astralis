@@ -4,8 +4,8 @@
 // ══════════════════════════════════════════════════════════════════
 
 import * as THREE from 'three';
-import { SUN_R, SUN_OCC_R, SEG } from '../utils/constants.js';
-import { makeCanvasSprite, makeGlow } from '../utils/helpers.js';
+import { SUN_R, SEG } from '../utils/constants.js';
+import { makeCanvasSprite } from '../utils/helpers.js';
 import { textureLoader as defaultTextureLoader } from '../utils/textureLoader.js';
 
 /**
@@ -99,7 +99,7 @@ export function createOrbit(key, color, scene, radius) {
 /**
  * Crea una luna
  */
-export function createMoon(data, parentMesh, textureLoader, scene) {
+export function createMoon(data, parentMesh, textureLoader) {
   const texL = textureLoader || defaultTextureLoader;
   const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
   const material = new THREE.MeshStandardMaterial({

@@ -29,7 +29,7 @@ class AchievementManager {
   constructor() { this.unlocked = this._load(); this.stats = this._loadStats(); }
   _load() { try { return JSON.parse(localStorage.getItem(ACH_KEY) || '[]'); } catch { return []; } }
   _loadStats() { try { return JSON.parse(localStorage.getItem(ACH_KEY + '.stats') || '{}'); } catch { return {}; } }
-  _save() { try { localStorage.setItem(ACH_KEY, JSON.stringify(this.unlocked)); localStorage.setItem(ACH_KEY + '.stats', JSON.stringify(this.stats)); } catch {} }
+  _save() { try { localStorage.setItem(ACH_KEY, JSON.stringify(this.unlocked)); localStorage.setItem(ACH_KEY + '.stats', JSON.stringify(this.stats)); } catch (e) { void e; } }
   unlock(id) {
     if (this.unlocked.includes(id)) return null;
     const ach = ACHIEVEMENTS.find(a => a.id === id);

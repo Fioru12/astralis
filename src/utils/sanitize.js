@@ -17,7 +17,7 @@ const HTML_ESCAPE_MAP = {
 export function escapeHtml(str) {
   if (str === null || str === undefined) return '';
   if (typeof str !== 'string') return String(str);
-  return str.replace(/[&<>"'`=\/]/g, (s) => HTML_ESCAPE_MAP[s]);
+  return str.replace(/[&<>"'`=/]/g, (s) => HTML_ESCAPE_MAP[s]);
 }
 
 export function escapeAttr(str) {

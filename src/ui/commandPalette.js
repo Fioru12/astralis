@@ -198,7 +198,7 @@ export class CommandPalette {
     items.forEach((it, idx) => sections[it.type]?.push({ ...it, _idx: idx }));
 
     const sectionLabels = { action: t('cmd_section_actions'), view: t('cmd_section_nav'), body: t('cmd_section_nav') };
-    const html = Object.entries(sections).filter(([_, arr]) => arr.length).map(([key, arr]) => `
+    const html = Object.entries(sections).filter(([, arr]) => arr.length).map(([key, arr]) => `
       <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;color:rgba(228,234,248,0.4);
         text-transform:uppercase;letter-spacing:1px;">${sectionLabels[key]}</div>
       ${arr.map(it => `

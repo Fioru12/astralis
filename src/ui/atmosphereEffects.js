@@ -261,7 +261,7 @@ export function addAtmosphereEffects(body, planetKey) {
  * @param {Object} body - Corpo celeste
  * @param {number} dt - Delta time
  */
-export function updateAtmosphereEffects(body, dt) {
+export function updateAtmosphereEffects(body) {
   const time = performance.now() / 1000;
   
   if (body.clouds && body.clouds.userData.material) {

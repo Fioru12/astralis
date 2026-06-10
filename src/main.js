@@ -1,9 +1,5 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 
 import { AU, DEG, SUN_R } from './utils/constants.js';
 import { julianDate, makeCanvasSprite, makeGlow, createTooltip } from './utils/helpers.js';
@@ -110,7 +106,7 @@ mwTex.magFilter = THREE.LinearFilter;
 mwTex.generateMipmaps = false;
 scene.background = mwTex;
 
-const { composer, bloomPass, outlinePass, toneMappingPass } = setupPostProcessing(renderer, scene, camera);
+const { composer, bloomPass, outlinePass } = setupPostProcessing(renderer, scene, camera);
 
 // Create dynamic starfield
 const starfield = createStarfield(scene);
@@ -418,7 +414,6 @@ if (ui.minimapCanvas) {
     const width = canvas.width, height = canvas.height;
     
     const scale = (val, mn, mx, tMin, tMax) => tMin + ((val - mn) / (mx - mn)) * (tMax - tMin);
-    const unscale = (val, mn, mx, tMin, tMax) => mn + ((val - tMin) / (tMax - tMin)) * (mx - mn);
     
     // Find nearest star to click position
     let nearestStar = null;
@@ -498,7 +493,7 @@ function updateStarSelectionVisuals() {
   });
 }
 
-setupControls(CAM, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef), selectBody, (key) => highlightInventory(ui.invList, key));
+setupControls(CAM, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef), selectBody);
 
 const keys = {};
 window.addEventListener('keydown', e => {
@@ -818,7 +813,7 @@ const cometObjects = createComets(COMETS, cGroup, hitboxList, ui, allBodies, mes
 createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList, selectBody);
 createHyperlanes(allBodies, hyperlaneGroup);
 createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBody);
-createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, getTimeOffset, meshList);
+createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, getTimeOffset);
 createDustBelts(scene);
 
 // Create Local Bubble graph connections and axes
@@ -1023,7 +1018,7 @@ function animate() {
   updateComets(cometObjects, dt, mult, paused, ui, camera);
   updateDustBelts(scene, dt, mult);
   // ═══ Atmosphere effects update ═══
-  allBodies.forEach(b => { if (b.clouds || b.aurora) updateAtmosphereEffects(b, dt); });
+  allBodies.forEach(b => { if (b.clouds || b.aurora) updateAtmosphereEffects(b); });
 
   if (ui.orbits) oGroup.visible = ui.orbits.checked;
   rebuildOrbits(T, oGroup, lastOrbitTRef);

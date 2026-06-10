@@ -228,7 +228,7 @@ export function createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBod
   });
 }
 
-export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, timeOffsetMsFn, meshList) {
+export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, timeOffsetMsFn) {
   EXOPLANETS.forEach(def => {
     const parentStar = allBodies.find(b => b.key === def.parent);
     if (!parentStar) return;
@@ -413,7 +413,6 @@ export function createLocalBubbleAxes(localBubbleGroup) {
   
   for (let i = 1; i <= markerCount; i++) {
     const dist = i * markerInterval;
-    const distLY = i * 10;
     
     // X-axis marker (red)
     const xMarker = new THREE.Mesh(

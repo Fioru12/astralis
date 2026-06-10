@@ -6,8 +6,8 @@ const NEO = 'https://api.nasa.gov/neo/rest/v1/feed/today?api_key=DEMO_KEY';
 const KEY = 'solar-system.nasa-cache';
 const TTL = 12 * 60 * 60 * 1000;
 
-function readCache() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } }
-function writeCache(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} }
+function readCache() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { void e; return {}; } }
+function writeCache(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { void e; } }
 
 async function fetchWithCache(k, url) {
   const c = readCache();

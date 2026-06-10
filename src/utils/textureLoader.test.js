@@ -1,5 +1,5 @@
 // Comprehensive texture loading test
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // Mock document before any import that needs it
 const mockCreateElementNS = () => ({

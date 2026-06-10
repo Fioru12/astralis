@@ -2,7 +2,7 @@
  * Onboarding interattivo al primo avvio
  * Tour guidato in 4 step con overlay trasparente
  */
-import { t, onLangChange, applyI18nToDOM } from '../i18n/index.js';
+import { t } from '../i18n/index.js';
 
 const STORAGE_KEY = 'solar-system.onboarded';
 const STEPS = [

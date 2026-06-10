@@ -4,9 +4,9 @@
 // ══════════════════════════════════════════════════════════════════
 
 import * as THREE from 'three';
-import { enterFly, exitFly, enterFollow } from './camera.js';
+import { enterFly, exitFly } from './camera.js';
 
-export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, setCamLabel, showHint, selectBody, highlightInventory) {
+export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, setCamLabel, showHint, selectBody) {
   // Mouse
   window.addEventListener('mousedown', e => {
     if (cam.pointerLocked) return;

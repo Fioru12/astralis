@@ -3,8 +3,6 @@
  * Pannello impostazioni con theme, lingua e accessibilità
  */
 
-import { themeManager } from '../core/theme.js';
-import { a11y } from '../core/a11y.js';
 import { getLang, setLang, applyI18nToDOM } from '../i18n/index.js';
 
 class SettingsPanel {

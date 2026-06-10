@@ -56,7 +56,7 @@ export class URLState {
     ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); } catch (e) {}
+    try { document.execCommand('copy'); } catch (e) { void e; }
     document.body.removeChild(ta);
   }
 

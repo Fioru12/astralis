@@ -153,7 +153,6 @@ export class GravitySandbox {
         const a = this.bodies[i], b = this.bodies[j];
         const dir = new THREE.Vector3().subVectors(b.pos, a.pos);
         const distSq = dir.lengthSq() + 0.5; // softening
-        const dist = Math.sqrt(distSq);
         const f = (G * a.mass * b.mass) / distSq;
         const fv = dir.normalize().multiplyScalar(f);
         forces[i].add(fv);

@@ -199,7 +199,7 @@ export class MissionsSystem {
    * @param {Function} selectBodyFn - Funzione per selezionare un corpo celeste
    * @param {Function} jumpToDateFn - Funzione per saltare a una data
    */
-  onBodyVisited(bodyKey, selectBodyFn, jumpToDateFn) {
+  onBodyVisited(bodyKey) {
     MISSIONS.forEach(mission => {
       if (this.completedMissions.includes(mission.id)) return;
       
@@ -210,7 +210,6 @@ export class MissionsSystem {
 
       // Controlla se il step corrente è un target temporaneo
       if (nextStep.target.startsWith('timetravel:')) {
-        const year = parseInt(nextStep.target.split(':')[1]);
         // Questo viene gestito separatamente
         return;
       }
