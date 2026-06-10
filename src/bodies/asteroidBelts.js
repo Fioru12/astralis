@@ -53,18 +53,17 @@ export function updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused) {
   const asteroidSpeed = mult * 0.1;
   [mainBelt, kuiperBelt].forEach(belt => {
     if (!belt || !belt.userData?.asteroids) return;
-      belt.userData.asteroids.forEach(asteroid => {
-        const data = asteroid.userData.orbitalData;
-        if (data) {
-          data.angle += data.speed * asteroidSpeed;
-          asteroid.position.set(
-            Math.cos(data.angle) * data.radius,
-            Math.sin(data.angle) * data.radius * Math.sin(data.inclination),
-            Math.sin(data.angle) * data.radius * Math.cos(data.inclination),
-          );
-        }
-      });
-    }
+    belt.userData.asteroids.forEach(asteroid => {
+      const data = asteroid.userData.orbitalData;
+      if (data) {
+        data.angle += data.speed * asteroidSpeed;
+        asteroid.position.set(
+          Math.cos(data.angle) * data.radius,
+          Math.sin(data.angle) * data.radius * Math.sin(data.inclination),
+          Math.sin(data.angle) * data.radius * Math.cos(data.inclination),
+        );
+      }
+    });
   });
 }
 
