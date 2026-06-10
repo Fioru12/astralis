@@ -1,10 +1,12 @@
-# 🪐 Sistema Solare 3D Interattivo
+# 🌌 ASTRALIS - 3D Solar System Explorer
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
+![Version: 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Three.js](https://img.shields.io/badge/Three.js-v0.170-green.svg)
 
+**ASTRALIS** - Un visualizzatore 3D interattivo e completamente immersivo del Sistema Solare e dello spazio circostante.
 
-
-Un visualizzatore 3D interattivo del Sistema Solare realizzato con Three.js e Vite.
+Realizzato con **Three.js** e **Vite**, con una UI moderna, effetti visivi professionali, e dati scientifici accurati.
 
 ## ✨ Caratteristiche
 
