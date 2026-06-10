@@ -60,6 +60,12 @@ let localBubbleMode = false; // Local Bubble 3D graph visualization
 const lastOrbitTRef = { current: null };
 const hintTimerRef = { current: null };
 
+// Global arrays (must be declared early, before functions use them)
+const allBodies = [];
+const meshList = [];
+const hitboxList = [];
+const lodList = [];
+
 function getTimeOffset() { return timeOffsetMs; }
 function getSelectedBody() { return selectedBody; }
 
@@ -447,10 +453,6 @@ const mouseMove = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-const allBodies = [];
-const meshList = [];
-const hitboxList = [];
-const lodList = [];
 const pGroup = new THREE.Group(); scene.add(pGroup);
 const oGroup = new THREE.Group(); scene.add(oGroup);
 const cGroup = new THREE.Group(); scene.add(cGroup);
