@@ -181,8 +181,8 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   color: var(--text);
   z-index: 100;
   user-select: none;
-  transition: left 0.32s var(--ease), transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-  animation: slideInLeft 0.5s var(--ease);
+  transition: left 0.35s var(--ease), transform 0.35s var(--ease), box-shadow 0.4s ease, filter 0.3s ease;
+  animation: slideInLeft 0.5s var(--ease-bounce);
 }
 #ui:hover { box-shadow: var(--shadow), 0 0 60px rgba(91,196,207,0.15); border-color: var(--border-light); }
 .ui-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
@@ -1050,4 +1050,100 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 #inventoryList::-webkit-scrollbar-track { background: transparent; }
 #inventoryList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
 
-.inv-section-header { padding:  10px 14px 4px; font-size: 10.5px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.8px; }
+.inv-section-header {
+  padding: 10px 14px 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.inv-item {
+  padding: 8px 12px;
+  margin: 4px 6px;
+  background: rgba(91,196,207,0.05);
+  border: 1px solid rgba(91,196,207,0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: all 0.3s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+
+.inv-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(91,196,207,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.inv-item:hover {
+  background: rgba(91,196,207,0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 4px 12px rgba(91,196,207,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+  transform: translateX(4px);
+}
+
+.inv-item:hover::before {
+  opacity: 1;
+}
+
+.inv-item.highlighted {
+  background: rgba(91,196,207,0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 16px rgba(91,196,207,0.3);
+}
+
+/* ════════════════════════════════════════════
+   CELESTIAL LABELS (On-screen body names)
+   ════════════════════════════════════════════ */
+.label {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 10;
+  background: rgba(8, 10, 20, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text);
+  animation: labelFadeIn 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.label:hover {
+  background: rgba(8, 10, 20, 0.95);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 6px 20px rgba(91,196,207,0.3);
+  text-shadow: 0 0 8px rgba(91,196,207,0.6);
+}
+
+.label.highlighted {
+  background: rgba(91,196,207,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 16px rgba(91,196,207,0.4);
+}
+
+@keyframes labelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
