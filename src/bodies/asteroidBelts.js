@@ -52,7 +52,7 @@ export function updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused) {
   if (paused) return;
   const asteroidSpeed = mult * 0.1;
   [mainBelt, kuiperBelt].forEach(belt => {
-    if (belt.userData.asteroids) {
+    if (!belt || !belt.userData?.asteroids) return;
       belt.userData.asteroids.forEach(asteroid => {
         const data = asteroid.userData.orbitalData;
         if (data) {
