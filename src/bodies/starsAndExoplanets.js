@@ -1,17 +1,30 @@
 import * as THREE from 'three';
-import { AU, DEG } from '../utils/constants.js';
+import { AU } from '../utils/constants.js';
 import { makeGlow } from '../utils/helpers.js';
 
 export function createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList, selectBody) {
   NEARBY_STARS.forEach(def => {
     const pivot = new THREE.Group();
-    const angle = Math.random() * Math.PI * 2;
-    const phi = (Math.random() - 0.5) * Math.PI;
-    pivot.position.set(
-      Math.cos(angle) * Math.cos(phi) * def.distAU,
-      Math.sin(phi) * def.distAU,
-      Math.sin(angle) * Math.cos(phi) * def.distAU,
-    );
+    
+    // Usa coordinate 3D reali se disponibili, altrimenti posizione casuale
+    if (def.x !== undefined && def.y !== undefined && def.z !== undefined) {
+      // Converti da anni luce a unità Three.js (1 anno luce ≈ 63241 AU)
+      const lyToAU = 63241;
+      pivot.position.set(
+        def.x * lyToAU,
+        def.y * lyToAU,
+        def.z * lyToAU
+      );
+    } else {
+      // Fallback a posizione casuale per compatibilità
+      const angle = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI;
+      pivot.position.set(
+        Math.cos(angle) * Math.cos(phi) * def.distAU,
+        Math.sin(phi) * def.distAU,
+        Math.sin(angle) * Math.cos(phi) * def.distAU,
+      );
+    }
 
     const starVertexShader = `
       varying vec2 vUv;
@@ -176,10 +189,12 @@ export function createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBod
     const pivot = new THREE.Group();
     const angle = Math.random() * Math.PI * 2;
     const phi = (Math.random() - 0.5) * Math.PI;
+    // Fix: moltiplica per AU per convertire da AU a unità Three.js
+    const distUnits = def.distAU * AU;
     pivot.position.set(
-      Math.cos(angle) * Math.cos(phi) * def.distAU,
-      Math.sin(phi) * def.distAU,
-      Math.sin(angle) * Math.cos(phi) * def.distAU,
+      Math.cos(angle) * Math.cos(phi) * distUnits,
+      Math.sin(phi) * distUnits,
+      Math.sin(angle) * Math.cos(phi) * distUnits,
     );
 
     const mesh = new THREE.Mesh(
@@ -220,7 +235,10 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
 
     const pivot = new THREE.Group();
     pivot.position.copy(parentStar.pivot.position);
-    const orbitRadius = def.distAU * AU * 0.5;
+    // Fix: usa Math.max per garantire che il pianeta sia sempre FUORI dalla stella
+    // Il pianeta deve essere almeno a 3x il raggio della stella
+    const minOrbitRadius = parentStar.radius * 3.5;
+    const orbitRadius = Math.max(def.distAU * AU * 2, minOrbitRadius);
     const isGasGiant = def.radius > 2.0;
 
     const gasGiantVertexShader = `
@@ -346,5 +364,116 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
       type: 'exoplanet', getPos, orbitRadius,
     };
     allBodies.push(body);
+  });
+}
+
+export function createLocalBubbleConnections(allBodies, localBubbleGroup) {
+  const stars = allBodies.filter(b => b.type === 'star');
+  const maxDistLY = 50; // Distanza massima per connessione nella Local Bubble (in anni luce)
+  const lyToAU = 63241;
+  const maxDistAU = maxDistLY * lyToAU;
+  
+  stars.forEach((star1, i) => {
+    stars.forEach((star2, j) => {
+      if (i >= j) return;
+      const distance = star1.pivot.position.distanceTo(star2.pivot.position);
+      if (distance < maxDistAU) {
+        const points = [star1.pivot.position.clone(), star2.pivot.position.clone()];
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        
+        // Calculate distance in light-years for opacity
+        const distLY = distance / lyToAU;
+        const opacity = Math.max(0.1, 0.6 - (distLY / maxDistLY) * 0.4);
+        
+        const material = new THREE.LineBasicMaterial({
+          color: 0x88ccff,
+          transparent: true,
+          opacity: opacity,
+        });
+        const line = new THREE.Line(geometry, material);
+        line.userData = { from: star1.key, to: star2.key, distance, distLY };
+        localBubbleGroup.add(line);
+      }
+    });
+  });
+}
+
+export function createLocalBubbleAxes(localBubbleGroup) {
+  const lyToAU = 63241;
+  const axisLength = 50 * lyToAU; // 50 light-years in AU
+  
+  // Create axes helper
+  const axesHelper = new THREE.AxesHelper(axisLength);
+  axesHelper.name = 'localBubbleAxes';
+  localBubbleGroup.add(axesHelper);
+  
+  // Add scale markers (every 10 light-years)
+  const markerInterval = 10 * lyToAU; // 10 light-years
+  const markerCount = Math.floor(axisLength / markerInterval);
+  
+  for (let i = 1; i <= markerCount; i++) {
+    const dist = i * markerInterval;
+    const distLY = i * 10;
+    
+    // X-axis marker (red)
+    const xMarker = new THREE.Mesh(
+      new THREE.SphereGeometry(500, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 })
+    );
+    xMarker.position.set(dist, 0, 0);
+    localBubbleGroup.add(xMarker);
+    
+    // Y-axis marker (green)
+    const yMarker = new THREE.Mesh(
+      new THREE.SphereGeometry(500, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 })
+    );
+    yMarker.position.set(0, dist, 0);
+    localBubbleGroup.add(yMarker);
+    
+    // Z-axis marker (blue)
+    const zMarker = new THREE.Mesh(
+      new THREE.SphereGeometry(500, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 })
+    );
+    zMarker.position.set(0, 0, dist);
+    localBubbleGroup.add(zMarker);
+  }
+  
+  // Add origin marker (Sun position)
+  const originMarker = new THREE.Mesh(
+    new THREE.SphereGeometry(1000, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.8 })
+  );
+  originMarker.name = 'sunOrigin';
+  localBubbleGroup.add(originMarker);
+  
+  // Add grid at origin for reference
+  const gridHelper = new THREE.GridHelper(axisLength, 10, 0x444444, 0x222222);
+  gridHelper.name = 'localBubbleGrid';
+  localBubbleGroup.add(gridHelper);
+}
+
+export function createLocalBubbleDistanceLabels(allBodies, ui) {
+  const stars = allBodies.filter(b => b.type === 'star');
+  const lyToAU = 63241;
+  
+  stars.forEach(star => {
+    if (!ui.labelsLayer) return;
+    
+    const distAU = star.pivot.position.length();
+    const distLY = (distAU / lyToAU).toFixed(1);
+    
+    const labelEl = document.createElement('div');
+    labelEl.className = 'label local-bubble-label';
+    labelEl.style.fontSize = '10px';
+    labelEl.style.color = '#88ccff';
+    labelEl.style.opacity = '0';
+    labelEl.style.transition = 'opacity 0.3s';
+    labelEl.textContent = `${distLY} ly`;
+    labelEl.dataset.starKey = star.key;
+    
+    ui.labelsLayer.appendChild(labelEl);
+    star.distanceLabel = labelEl;
   });
 }

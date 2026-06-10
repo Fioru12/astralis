@@ -155,6 +155,7 @@ export class CommandPalette {
       { type: 'action', icon: '🔗', label: t('cmd_action_share'),        id: 'share' },
       { type: 'action', icon: '🔊', label: t('cmd_action_sound'),        id: 'sound' },
       { type: 'action', icon: '🎓', label: t('cmd_action_quiz'),         id: 'quiz' },
+      { type: 'action', icon: '⚙️', label: t('cmd_action_settings') || 'Impostazioni', id: 'settings' },
       { type: 'view',   icon: '🏠', label: t('cmd_view_home'),    id: 'home' },
       { type: 'view',   icon: '🪐', label: t('cmd_view_system'),  id: 'system' },
       { type: 'view',   icon: '🔥', label: t('cmd_view_inner'),   id: 'inner' },

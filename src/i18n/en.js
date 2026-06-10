@@ -57,6 +57,7 @@ export const en = {
   shortcut_esc: 'Exit mode',
   shortcut_theme: 'Toggle theme',
   shortcut_lang: 'Switch language',
+  shortcut_settings: 'Open Settings',
 
   cmd_placeholder: 'Type a command or search a celestial body...',
   cmd_no_results: 'No results',
@@ -136,4 +137,21 @@ export const en = {
 
   a11y_reduce_motion: 'Reduce motion',
   a11y_high_contrast: 'High contrast',
+
+  // Comparison Mode
+  comparison_title: 'Compare Planets',
+  comparison_body1: 'Planet 1',
+  comparison_body2: 'Planet 2',
+
+  // Credits
+  credits_title: 'Credits & About',
+  credits_about: 'About',
+  credits_about_text: 'Astralis is an interactive 3D Solar System viewer using real orbital data from NASA/JPL.',
+  credits_features: 'Features',
+  credits_tech: 'Technologies',
+  credits_data: 'Data Sources',
+  credits_team: 'Team',
+  credits_team_text: 'Developed with passion for astronomy and science education.',
+  credits_license: 'License',
+  credits_license_text: 'Open source under MIT License. NASA data in public domain.',
 };

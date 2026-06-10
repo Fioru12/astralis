@@ -3,25 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sistema Solare</title>
+  <title>ASTRALIS - Sistema Solare 3D Interattivo | Esplora il Cosmo</title>
+  <meta name="description" content="Visualizzatore 3D interattivo del Sistema Solare con orbite kepleriane NASA/JPL, 40+ corpi celesti, Time Travel, e effetti atmosferici realistici." />
+  <meta name="keywords" content="sistema solare, pianeti, 3D, interattivo, Three.js, astronomia, spazio, NASA, esopianeti, comete" />
+  <meta name="author" content="ASTRALIS" />
+  <meta name="theme-color" content="#0a0e1f" />
+  <meta property="og:title" content="ASTRALIS - Sistema Solare 3D Interattivo" />
+  <meta property="og:description" content="Esplora il cosmo, un'orbita alla volta. Visualizzatore 3D con orbite kepleriane reali e 40+ corpi celesti." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ASTRALIS - Sistema Solare 3D" />
+  <meta name="twitter:description" content="Esplora il cosmo con orbite kepleriane reali NASA/JPL" />
+  <link rel="icon" type="image/x-icon" href="/solar-system-icon.ico" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <div id="loadingScreen" style="position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:16px;">
-    <div style="color:#fff;font-size:1.4rem;font-weight:700;">🪐 Sistema Solare</div>
-    <div style="width:260px;height:6px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;">
-      <div id="loadingBar" style="height:100%;width:0%;background:#5bc4cf;transition:width 0.2s;border-radius:99px;"></div>
+  <div id="loadingScreen" style="position:fixed;inset:0;background:radial-gradient(ellipse at center,#0a0e1f 0%,#000 100%);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:12px;font-family:'Space Grotesk',system-ui,sans-serif;">
+    <div style="position:absolute;top:24px;left:24px;font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;">ASTRALIS v2.0</div>
+    <img src="./astralis-logo.svg" alt="" style="width:80px;height:80px;margin-bottom:8px;filter:drop-shadow(0 0 30px rgba(91,196,207,0.5));animation:spin 8s linear infinite;" />
+    <div style="font-size:1.8rem;font-weight:700;letter-spacing:-0.5px;background:linear-gradient(135deg,#5bc4cf,#a78bfa,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ASTRALIS</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:0.5px;margin-bottom:16px;">Esplora il cosmo, un'orbita alla volta</div>
+    <div style="width:260px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span id="loadingText" style="font-size:11px;color:rgba(255,255,255,0.6);">Inizializzazione...</span>
+        <span id="loadingPct" style="font-size:11px;color:#5bc4cf;font-weight:700;font-family:'JetBrains Mono',monospace;">0%</span>
+      </div>
+      <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;">
+        <div id="loadingBar" style="height:100%;width:0%;background:linear-gradient(90deg,#5bc4cf,#a78bfa,#f59e0b);background-size:200% 100%;border-radius:99px;transition:width 0.3s ease;"></div>
+      </div>
     </div>
-    <div id="loadingText" style="color:rgba(255,255,255,0.5);font-size:13px;">Caricamento texture... 0%</div>
   </div>
+  <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
 
   <div id="labelsLayer"></div>
 
+  <!-- Toast Container per feedback visivo -->
+  <div id="toastContainer"></div>
+
   <div id="ui">
-    <div class="row">
-      <span class="title">🪐 Sistema Solare</span>
+    <!-- Header con titolo e orologio -->
+    <div class="ui-header">
+      <span class="title">🪐 ASTRALIS</span>
       <span class="pill" id="clock">--</span>
+      <button id="settingsBtn" class="icon-btn" data-tooltip="Impostazioni" aria-label="Apri impostazioni">⚙️</button>
     </div>
     
     <!-- Minimap Galattica -->
@@ -29,33 +54,69 @@
       <canvas id="minimapCanvas" width="200" height="200"></canvas>
       <div id="minimapLabel" style="position: absolute; top: 5px; left: 5px; color: rgba(255,255,255,0.7); font-size: 10px; pointer-events: none;">Minimap</div>
     </div>
-    <div class="row">
-      <button id="toggle">⏸ Pausa</button>
-      <button id="now">⏱ Adesso</button>
-      <button id="resetCam">🎯 Reset Cam</button>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="simulazione">⏱️ Simulazione</button>
+      <button class="tab-btn" data-tab="vista">👁️ Vista</button>
+      <button class="tab-btn" data-tab="esplora">🔭 Esplora</button>
     </div>
-    <div class="row">
-      <span style="font-size:12px;white-space:nowrap">Velocita</span>
-      <input id="speed" type="range" min="-2" max="7" step="0.01" value="0" />
-      <span class="pill" id="speedLabel">1x</span>
+
+    <!-- Tab: Simulazione -->
+    <div class="tab-content active" id="tab-simulazione">
+      <div class="row">
+        <button id="toggle" data-tooltip="Metti in pausa o riprendi la simulazione">⏸ Pausa</button>
+        <button id="now" data-tooltip="Torna al momento presente">⏱ Adesso</button>
+      </div>
+      <div class="row speed-row">
+        <span class="speed-label" data-tooltip="Velocità della simulazione temporale">⏱️ Tempo</span>
+        <input id="speed" type="range" min="-2" max="7" step="0.01" value="0" data-tooltip="Regola la velocità del tempo" />
+        <span class="pill" id="speedLabel">1x</span>
+      </div>
+      <div class="row">
+        <button id="yearBack" class="btn-compact" data-tooltip="Indietro di 1 anno">◀ -1</button>
+        <button id="yearFwd" class="btn-compact" data-tooltip="Avanti di 1 anno">+1 ▶</button>
+        <button id="decBack" class="btn-compact" data-tooltip="Indietro di 10 anni">◀ -10</button>
+        <button id="decFwd" class="btn-compact" data-tooltip="Avanti di 10 anni">+10 ▶</button>
+      </div>
     </div>
-    <div class="row">
-      <button id="yearBack">◀ -1 Anno</button>
-      <button id="yearFwd">+1 Anno ▶</button>
+
+    <!-- Tab: Vista -->
+    <div class="tab-content" id="tab-vista">
+      <div class="row">
+        <button id="resetCam" data-tooltip="Ripristina la vista iniziale della camera">🎯 Reset Camera</button>
+      </div>
+      <div class="row">
+        <label data-tooltip="Mostra o nascondi le orbite dei pianeti"><input id="orbits" type="checkbox" checked /> Mostra Orbite</label>
+      </div>
+      <div class="row">
+        <label data-tooltip="Mostra o nascondi i nomi dei corpi celesti"><input id="labels" type="checkbox" checked /> Mostra Etichette</label>
+      </div>
     </div>
-    <div class="row">
-      <button id="decBack">◀ -10 Anni</button>
-      <button id="decFwd">+10 Anni ▶</button>
+
+    <!-- Tab: Esplora -->
+    <div class="tab-content" id="tab-esplora">
+      <div class="row">
+        <button id="inventoryToggleBtn" data-tooltip="Apri l'inventario con tutti i corpi celesti">📦 Inventario</button>
+        <button id="menuToggle" data-tooltip="Sfoglia il catalogo completo di stelle, pianeti e lune">🪐 Catalogo</button>
+      </div>
+      <div class="row">
+        <button id="localBubbleBtn" data-tooltip="Visualizza la Bolla Locale in 3D con le posizioni reali delle stelle">🫧 Bolla Locale</button>
+        <button id="galaxyMapBtn" data-tooltip="Visualizza la mappa delle stelle vicine con le hyperlanes">🌌 Mappa Galattica</button>
+        <button id="observatoryBtn" data-tooltip="Atterra su un pianeta (seleziona prima un pianeta, poi premi O)">🔭 Osservatorio</button>
+      </div>
+      <div class="row">
+        <button id="missionsBtn" data-tooltip="Missioni astronautiche con obiettivi e premi">🎮 Missioni</button>
+        <button id="spaceMissionsBtn" data-tooltip="Missioni spaziali reali (Voyager, Webb, ecc.)">🚀 Spazio</button>
+      </div>
+      <div class="row">
+        <button id="compareBtn" data-tooltip="Confronta due corpi celesti fianco a fianco">⚖️ Confronta</button>
+        <button id="creditsBtn" data-tooltip="Informazioni sul progetto e crediti">ℹ️ Credits</button>
+      </div>
     </div>
-    <div class="row">
-      <label><input id="orbits" type="checkbox" checked /> Orbite</label>
-      <label><input id="labels" type="checkbox" checked /> Etichette</label>
-    </div>
-    <div class="row">
-      <button id="menuToggle">📋 Menù Oggetti</button>
-      <button id="galaxyMapBtn">🌌 Mappa Galattica</button>
-    </div>
-    <p class="hint">WASD/Frecce muovi - Scroll zoom - [ / ] ±1 anno - R reset - H home</p>
+
+    <!-- Hint accorciata -->
+    <p class="hint">WASD muovi · Scroll zoom · <kbd>O</kbd> osservatorio · <kbd>X</kbd> missioni · <kbd>P</kbd> impostazioni</p>
   </div>
 
   <div id="celestialMenu" class="celestial-menu">
@@ -86,6 +147,10 @@
       <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
         <input type="checkbox" id="showHyperlanes" checked>
         <span>Mostra Hyperlanes</span>
+      </label>
+      <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="showSectors" checked>
+        <span>Mostra Settori</span>
       </label>
     </div>
   </div>

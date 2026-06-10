@@ -61,6 +61,7 @@ export const it = {
   shortcut_esc: 'Esci da modalità',
   shortcut_theme: 'Cambia tema',
   shortcut_lang: 'Cambia lingua',
+  shortcut_settings: 'Apri Impostazioni',
 
   // ─── Command Palette ───
   cmd_placeholder: 'Digita un comando o cerca un corpo celeste...',
@@ -149,4 +150,21 @@ export const it = {
   // ─── A11y ───
   a11y_reduce_motion: 'Riduci animazioni',
   a11y_high_contrast: 'Contrasto elevato',
+
+  // Comparison Mode
+  comparison_title: 'Confronta Pianeti',
+  comparison_body1: 'Pianeta 1',
+  comparison_body2: 'Pianeta 2',
+
+  // Credits
+  credits_title: 'Credits & About',
+  credits_about: 'About',
+  credits_about_text: 'Astralis è un visualizzatore 3D interattivo del Sistema Solare che utilizza dati orbitali reali dalla NASA/JPL.',
+  credits_features: 'Features',
+  credits_tech: 'Technologies',
+  credits_data: 'Data Sources',
+  credits_team: 'Team',
+  credits_team_text: 'Sviluppato con passione per l\'astronomia e l\'educazione scientifica.',
+  credits_license: 'License',
+  credits_license_text: 'Open source under MIT License. Dati NASA di pubblico dominio.',
 };

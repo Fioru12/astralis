@@ -18,6 +18,7 @@ export function createUIRefs() {
     invList:     document.getElementById('inventoryList'),
     invSearch:   document.getElementById('inventorySearch'),
     invToggle:   document.getElementById('inventoryToggle'),
+    invToggleBtn: document.getElementById('inventoryToggleBtn'),
     camLabel:    document.getElementById('camModeLabel'),
     yearBack:    document.getElementById('yearBack'),
     yearFwd:     document.getElementById('yearFwd'),
@@ -35,6 +36,10 @@ export function createUIRefs() {
     showHyperlanes: document.getElementById('showHyperlanes'),
     minimapContainer: document.getElementById('minimapContainer'),
     minimapCanvas: document.getElementById('minimapCanvas'),
+    compareBtn: document.getElementById('compareBtn'),
+    creditsBtn: document.getElementById('creditsBtn'),
+    toastContainer: document.getElementById('toastContainer'),
+    settingsBtn: document.getElementById('settingsBtn'),
   };
 }
 

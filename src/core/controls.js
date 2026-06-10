@@ -150,8 +150,6 @@ export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouse
   document.addEventListener('pointerlockchange', () => {
     cam.pointerLocked = document.pointerLockElement === renderer.domElement;
   });
-
-  return keys;
 }
 
 /**

@@ -1,5 +1,6 @@
 node_modules
- dist
- assets/textures
- *.min.js
- .husky
+dist
+backup_legacy
+assets/textures
+*.min.js
+.husky

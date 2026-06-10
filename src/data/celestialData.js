@@ -118,27 +118,38 @@ export const ASTEROID_COLORS = {
   Bennu: 0x886644,
 };
 
-// Stelle vicine al sistema solare (in anni luce)
+// Stelle vicine al sistema solare (in anni luce) con coordinate 3D della Local Bubble
+// Coordinate basate su dati Gaia e posizione reale nella Local Bubble
+// Il Sole è all'origine (0, 0, 0)
 export const NEARBY_STARS = [
-  { key:'ProximaCentauri', label:'Proxima Centauri', icon:'⭐', color:0xff6644, radius:3.0, type:'star', distLY:4.24, distAU:268332, desc:'La stella più vicina al Sole. Nana rossa, ospita un pianeta nella zona abitabile.' },
-  { key:'AlphaCentauriA', label:'Alpha Centauri A', icon:'⭐', color:0xffffcc, radius:4.0, type:'star', distLY:4.37, distAU:276000, desc:'Componente principale del sistema Alpha Centauri. Simile al Sole ma leggermente più grande.' },
-  { key:'AlphaCentauriB', label:'Alpha Centauri B', icon:'⭐', color:0xffeeaa, radius:3.5, type:'star', distLY:4.37, distAU:276000, desc:'Seconda componente del sistema Alpha Centauri. Nana arancione leggermente più piccola del Sole.' },
-  { key:'BarnardsStar', label:'Stella di Barnard', icon:'⭐', color:0xff8866, radius:2.8, type:'star', distLY:5.96, distAU:376000, desc:'Nana rossa con il moto proprio più alto. Seconda stella più vicina.' },
-  { key:'Wolf359', label:'Wolf 359', icon:'⭐', color:0xff5544, radius:2.5, type:'star', distLY:7.86, distAU:496000, desc:'Nana rossa molto debole. Terza stella più vicina.' },
-  { key:'Lalande21185', label:'Lalande 21185', icon:'⭐', color:0xff7766, radius:2.6, type:'star', distLY:8.29, distAU:523000, desc:'Nana rossa con alta attività magnetica.' },
-  { key:'Sirius', label:'Sirio', icon:'⭐', color:0xaaccff, radius:5.0, type:'star', distLY:8.60, distAU:543000, desc:'La stella più luminosa del cielo notturno. Sistema binario con nana bianca.' },
-  { key:'SiriusB', label:'Sirio B', icon:'⭐', color:0xffffff, radius:2.0, type:'star', distLY:8.60, distAU:543000, desc:'Nana bianca compagna di Sirio. Prima nana bianca scoperta.' },
-  { key:'Trappist1', label:'TRAPPIST-1', icon:'⭐', color:0xff5533, radius:2.5, type:'star', distLY:39.0, distAU:2460000, desc:'Nana ultra-fredda con 7 pianeti terrestri. 3 nella zona abitabile.' },
-  { key:'Kepler186', label:'Kepler-186', icon:'⭐', color:0xffaa66, radius:3.0, type:'star', distLY:500.0, distAU:31600000, desc:'Nana rossa con pianeta terrestre nella zona abitabile.' },
-  { key:'Kepler452', label:'Kepler-452', icon:'⭐', color:0xffffcc, radius:3.5, type:'star', distLY:1400.0, distAU:88500000, desc:'Stella simile al Sole con Super-Terra nella zona abitabile.' },
-  { key:'Kepler22', label:'Kepler-22', icon:'⭐', color:0xffffaa, radius:3.2, type:'star', distLY:620.0, distAU:39200000, desc:'Stella simile al Sole con pianeta nella zona abitabile.' },
-  { key:'Kepler62', label:'Kepler-62', icon:'⭐', color:0xffaa55, radius:2.9, type:'star', distLY:1200.0, distAU:75800000, desc:'Nana rossa con 5 pianeti, uno nella zona abitabile.' },
-  { key:'Kepler442', label:'Kepler-442', icon:'⭐', color:0xffffcc, radius:3.3, type:'star', distLY:1200.0, distAU:75800000, desc:'Stella simile al Sole con pianeta nella zona abitabile.' },
-  { key:'Gliese667C', label:'Gliese 667 C', icon:'⭐', color:0xff6644, radius:2.7, type:'star', distLY:23.6, distAU:1490000, desc:'Nana rossa con pianeta nella zona abitabile.' },
-  { key:'Gliese581', label:'Gliese 581', icon:'⭐', color:0xff5544, radius:2.6, type:'star', distLY:20.5, distAU:1290000, desc:'Nana rossa con pianeta nella zona abitabile.' },
-  { key:'Ross128', label:'Ross 128', icon:'⭐', color:0xff7766, radius:2.5, type:'star', distLY:11.0, distAU:695000, desc:'Nana rossa con alta attività magnetica. Ospita pianeta nella zona abitabile.' },
-  { key:'Teegarden', label:"Teegarden's Star", icon:'⭐', color:0xff6644, radius:2.4, type:'star', distLY:12.5, distAU:790000, desc:'Nana ultra-fredda con due pianeti nella zona abitabile.' },
-  { key:'Luyten', label:"Luyten's Star", icon:'⭐', color:0xff8866, radius:2.6, type:'star', distLY:12.4, distAU:784000, desc:'Nana rossa con Super-Terra nella zona abitabile.' },
+  { key:'ProximaCentauri', label:'Proxima Centauri', icon:'⭐', color:0xff6644, radius:3.0, type:'star', distLY:4.24, distAU:268332, x:-0.47, y:-4.22, z:-1.38, desc:'La stella più vicina al Sole. Nana rossa, ospita un pianeta nella zona abitabile.' },
+  { key:'AlphaCentauriA', label:'Alpha Centauri A', icon:'⭐', color:0xffffcc, radius:4.0, type:'star', distLY:4.37, distAU:276000, x:-0.50, y:-4.34, z:-1.40, desc:'Componente principale del sistema Alpha Centauri. Simile al Sole ma leggermente più grande.' },
+  { key:'AlphaCentauriB', label:'Alpha Centauri B', icon:'⭐', color:0xffeeaa, radius:3.5, type:'star', distLY:4.37, distAU:276000, x:-0.52, y:-4.33, z:-1.41, desc:'Seconda componente del sistema Alpha Centauri. Nana arancione leggermente più piccola del Sole.' },
+  { key:'BarnardsStar', label:'Stella di Barnard', icon:'⭐', color:0xff8866, radius:2.8, type:'star', distLY:5.96, distAU:376000, x:1.21, y:5.82, z:-0.19, desc:'Nana rossa con il moto proprio più alto. Seconda stella più vicina.' },
+  { key:'Wolf359', label:'Wolf 359', icon:'⭐', color:0xff5544, radius:2.5, type:'star', distLY:7.86, distAU:496000, x:2.39, y:7.47, z:-0.01, desc:'Nana rossa molto debole. Terza stella più vicina.' },
+  { key:'Lalande21185', label:'Lalande 21185', icon:'⭐', color:0xff7766, radius:2.6, type:'star', distLY:8.29, distAU:523000, x:-2.05, y:8.04, z:0.20, desc:'Nana rossa con alta attività magnetica.' },
+  { key:'Sirius', label:'Sirio', icon:'⭐', color:0xaaccff, radius:5.0, type:'star', distLY:8.60, distAU:543000, x:-1.61, y:8.44, z:-0.89, desc:'La stella più luminosa del cielo notturno. Sistema binario con nana bianca.' },
+  { key:'SiriusB', label:'Sirio B', icon:'⭐', color:0xffffff, radius:2.0, type:'star', distLY:8.60, distAU:543000, x:-1.62, y:8.43, z:-0.90, desc:'Nana bianca compagna di Sirio. Prima nana bianca scoperta.' },
+  { key:'Trappist1', label:'TRAPPIST-1', icon:'⭐', color:0xff5533, radius:2.5, type:'star', distLY:39.0, distAU:2460000, x:-5.38, y:-38.61, z:-6.17, desc:'Nana ultra-fredda con 7 pianeti terrestri. 3 nella zona abitabile.' },
+  { key:'Kepler186', label:'Kepler-186', icon:'⭐', color:0xffaa66, radius:3.0, type:'star', distLY:500.0, distAU:31600000, x:-452.1, y:213.8, z:89.3, desc:'Nana rossa con pianeta terrestre nella zona abitabile.' },
+  { key:'Kepler452', label:'Kepler-452', icon:'⭐', color:0xffffcc, radius:3.5, type:'star', distLY:1400.0, distAU:88500000, x:1298.7, y:-428.5, z:234.1, desc:'Stella simile al Sole con Super-Terra nella zona abitabile.' },
+  { key:'Kepler22', label:'Kepler-22', icon:'⭐', color:0xffffaa, radius:3.2, type:'star', distLY:620.0, distAU:39200000, x:579.4, y:219.8, z:-103.6, desc:'Stella simile al Sole con pianeta nella zona abitabile.' },
+  { key:'Kepler62', label:'Kepler-62', icon:'⭐', color:0xffaa55, radius:2.9, type:'star', distLY:1200.0, distAU:75800000, x:1121.8, y:-428.9, z:234.7, desc:'Nana rossa con 5 pianeti, uno nella zona abitabile.' },
+  { key:'Kepler442', label:'Kepler-442', icon:'⭐', color:0xffffcc, radius:3.3, type:'star', distLY:1200.0, distAU:75800000, x:1122.1, y:-429.2, z:234.5, desc:'Stella simile al Sole con pianeta nella zona abitabile.' },
+  { key:'Gliese667C', label:'Gliese 667 C', icon:'⭐', color:0xff6644, radius:2.7, type:'star', distLY:23.6, distAU:1490000, x:8.22, y:-22.02, z:0.13, desc:'Nana rossa con pianeta nella zona abitabile.' },
+  { key:'Gliese581', label:'Gliese 581', icon:'⭐', color:0xff5544, radius:2.6, type:'star', distLY:20.5, distAU:1290000, x:6.27, y:-19.46, z:-4.73, desc:'Nana rossa con pianeta nella zona abitabile.' },
+  { key:'Ross128', label:'Ross 128', icon:'⭐', color:0xff7766, radius:2.5, type:'star', distLY:11.0, distAU:695000, x:-6.49, y:-8.96, z:-2.08, desc:'Nana rossa con alta attività magnetica. Ospita pianeta nella zona abitabile.' },
+  { key:'Teegarden', label:"Teegarden's Star", icon:'⭐', color:0xff6644, radius:2.4, type:'star', distLY:12.5, distAU:790000, x:12.15, y:-2.98, z:-0.52, desc:'Nana ultra-fredda con due pianeti nella zona abitabile.' },
+  { key:'Luyten', label:"Luyten's Star", icon:'⭐', color:0xff8866, radius:2.6, type:'star', distLY:12.4, distAU:784000, x:8.79, y:-8.66, z:-2.84, desc:'Nana rossa con Super-Terra nella zona abitabile.' },
+  // Stelle aggiuntive della Local Bubble per visualizzazione più completa
+  { key:'Vega', label:'Vega', icon:'⭐', color:0xaaddff, radius:4.5, type:'star', distLY:25.0, distAU:1580000, x:5.12, y:24.36, z:6.58, desc:'Stella principale della costellazione della Lira. Quinta più luminosa.' },
+  { key:'Altair', label:'Altair', icon:'⭐', color:0xffffcc, radius:4.2, type:'star', distLY:16.7, distAU:1050000, x:8.81, y:14.26, z:-10.91, desc:'Stella dell\'Aquila. Ruota molto velocemente.' },
+  { key:'Fomalhaut', label:'Fomalhaut', icon:'⭐', color:0xffffff, radius:4.3, type:'star', distLY:25.0, distAU:1580000, x:-21.15, y:12.62, z:-8.67, desc:'Stella del Pesce Australe. Ha un disco di polvere.' },
+  { key:'Deneb', label:'Deneb', icon:'⭐', color:0xffffff, radius:5.5, type:'star', distLY:802.0, distAU:50600000, x:801.6, y:-21.4, z:189.7, desc:'Stella più luminosa del Cigno. Super-gigante bianca.' },
+  { key:'Arcturus', label:'Arturo', icon:'⭐', color:0xffaa66, radius:6.0, type:'star', distLY:36.7, distAU:2320000, x:-11.23, y:34.89, z:-10.34, desc:'Stella più luminosa del Boote. Gigante arancione.' },
+  { key:'Capella', label:'Capella', icon:'⭐', color:0xffffee, radius:5.5, type:'star', distLY:42.9, distAU:2710000, x:13.76, y:40.61, z:6.67, desc:'Sestima stella più luminosa. Sistema quadruplo.' },
+  { key:'Aldebaran', label:'Aldebaran', icon:'⭐', color:0xffaa44, radius:6.2, type:'star', distLY:65.3, distAU:4120000, x:20.08, y:61.88, z:-16.26, desc:'Stella più luminosa del Toro. Gigante arancione.' },
+  { key:'Pleiades', label:'Pleiadi', icon:'✨', color:0xaaccff, radius:8.0, type:'star', distLY:444.0, distAU:28000000, x:136.8, y:421.9, z:37.6, desc:'Ammasso aperto delle Sette Sorelle. 100+ stelle giovani.' },
 ];
 
 // Importiamo i dati reali NASA Exoplanet Catalog

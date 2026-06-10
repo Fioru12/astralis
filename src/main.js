@@ -5,7 +5,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 
-import { AU, SEG, DEG, SUN_R } from './utils/constants.js';
+import { AU, DEG, SUN_R } from './utils/constants.js';
 import { julianDate, makeCanvasSprite, makeGlow, createTooltip } from './utils/helpers.js';
 import { textureLoader as TL } from './utils/textureLoader.js';
 import { keplerPos } from './utils/kepler.js';
@@ -13,25 +13,53 @@ import { createCameraSystem, enterFly as enterFlyModule, exitFly as exitFlyModul
 import { setupPostProcessing } from './core/postprocessing.js';
 import { setupControls } from './core/controls.js';
 import { rebuildOrbits } from './core/orbits.js';
-import { createSimState, simDate } from './core/state.js';
+import { } from './core/state.js';
 
 import { createUIRefs, showHint, setCamLabel, timeMultiplier, speedText } from './ui/manager.js';
 import { setupInfoPanel, showInfo } from './ui/infoPanel.js';
 import { buildInventory, updateInventoryDistances, filterInventory, highlightInventory } from './ui/inventory.js';
 import { updateLabels } from './ui/labels.js';
-import { buildCelestialMenu, buildStarList, setupMenuUI } from './ui/celestialMenu.js';
+import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
 
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
 import { generateAsteroidBelt, buildAsteroidBody, createDustBelts, updateDustBelts, updateAsteroidBelts } from './bodies/asteroidBelts.js';
-import { createNearbyStars, createHyperlanes, createSpaceProbes, createExoplanets } from './bodies/starsAndExoplanets.js';
+import { createNearbyStars, createHyperlanes, createSpaceProbes, createExoplanets, createLocalBubbleConnections, createLocalBubbleAxes, createLocalBubbleDistanceLabels } from './bodies/starsAndExoplanets.js';
+import { customCursor } from './ui/customCursor.js';
+import { particleEffects } from './ui/particleEffects.js';
+import { comparisonMode } from './ui/comparisonMode.js';
+import { creditsPage } from './ui/credits.js';
+import { toast } from './ui/toast.js';
+import { themeManager } from './core/theme.js';
+import { a11y } from './core/a11y.js';
+import { HUD } from './ui/hud.js';
+import { Screenshot } from './core/screenshot.js';
+import { XRManager } from './core/xr.js';
+import { SpaceNews } from './ui/spaceNews.js';
+import { Quiz } from './ui/quiz.js';
+import { TimeTravel } from './ui/timeTravel.js';
+import { ViewPresets } from './ui/viewPresets.js';
+import { GravitySandbox } from './ui/gravitySandbox.js';
+import { commandPalette } from './ui/commandPalette.js';
+import { urlState } from './core/urlState.js';
+import { soundManager } from './core/soundManager.js';
+import { shortcutsPanel } from './ui/shortcuts.js';
+import { getLang, setLang, applyI18nToDOM } from './i18n/index.js';
+import { settingsPanel } from './ui/settings.js';
+import { Observatory } from './core/observatory.js';
+import { createAdvancedSun, createSunCorona, updateSunShader } from './core/sunShader.js';
+import { showMissionsPanel } from './core/spaceMissions.js';
+import { MissionsSystem } from './ui/missions.js';
+import { addAtmosphereEffects, updateAtmosphereEffects, getAtmosphericPlanets } from './ui/atmosphereEffects.js';
 
 let paused = false;
 let timeOffsetMs = 0;
 let lastPerf = performance.now();
 let selectedBody = null;
+let selectedStars = new Set(); // Multi-selection for star systems
 let customDate = null;
 let galaxyMapMode = false;
+let localBubbleMode = false; // Local Bubble 3D graph visualization
 const lastOrbitTRef = { current: null };
 const hintTimerRef = { current: null };
 
@@ -64,7 +92,8 @@ manager.onError = url => console.warn('Texture not found:', url);
 TL.setManager(manager);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 500000);
+// Fix: aumenta far plane per vedere stelle lontane (Kepler-452 è a ~88M unità)
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200000000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -87,12 +116,16 @@ themeManager.apply();
 a11y.apply();
 const hud = new HUD();
 const screenshot = new Screenshot(renderer, scene, camera);
-const xrManager = new XRManager(renderer);
+new XRManager(renderer);
 const spaceNews = new SpaceNews();
 const quiz = new Quiz();
 const timeTravel = new TimeTravel({ onDateChange: (d) => { customDate = d; timeOffsetMs = d.getTime() - Date.now(); } });
 const viewPresets = new ViewPresets({ onSelect: (p) => { if (p.pos) { const target = new THREE.Vector3(...p.pos); if (p.target === 'earth') { const eb = allBodies.find(b => b.key === 'Earth'); if (eb) zoomToBody(eb); } else { zoomToPosition(target, Math.max(p.pos[1] * 0.6, 50)); } } } });
 const gravitySandbox = new GravitySandbox(scene);
+const observatory = new Observatory(scene, camera, renderer);
+window.observatory = observatory;
+const missions = new MissionsSystem();
+window.missions = missions;
 
 // Command palette actions
 commandPalette.registerActions({
@@ -165,7 +198,7 @@ viewFolder.close();
 const camFolder = gui.addFolder('Camera');
 camFolder.add(camera, 'fov', 30, 120).name('FOV').onChange(() => camera.updateProjectionMatrix());
 camFolder.add({ near: 0.1 }, 'near', 0.01, 10).name('Near Plane').onChange(v => { camera.near = v; camera.updateProjectionMatrix(); });
-camFolder.add({ far: 500000 }, 'far', 10000, 1000000).name('Far Plane').onChange(v => { camera.far = v; camera.updateProjectionMatrix(); });
+camFolder.add({ far: 200000000 }, 'far', 10000, 500000000).name('Far Plane').onChange(v => { camera.far = v; camera.updateProjectionMatrix(); });
 camFolder.close();
 
 const renderFolder = gui.addFolder('Rendering');
@@ -180,14 +213,6 @@ navFolder.add({ side: () => { camera.position.set(800, 0, 0); camera.lookAt(0, 0
 navFolder.add({ inner: () => { camera.position.set(0, 50, 100); camera.lookAt(0, 0, 0); } }, 'inner').name('Inner System');
 navFolder.add({ outer: () => { camera.position.set(0, 400, 600); camera.lookAt(0, 0, 0); } }, 'outer').name('Outer System');
 navFolder.close();
-
-function jumpToDate(year, month = 1, day = 1) {
-  customDate = new Date(Date.UTC(year, month - 1, day));
-  timeOffsetMs = customDate.getTime() - Date.now();
-  const nowBtn = document.getElementById('now');
-  if (nowBtn) nowBtn.click();
-  showHint(ui, `Jumped to ${day}/${month}/${year}`, hintTimerRef);
-}
 
 function jumpToNow() {
   customDate = null;
@@ -207,6 +232,10 @@ function jumpYears(years) {
 
 const ui = createUIRefs();
 setupInfoPanel(ui);
+
+// Add sector and Local Bubble toggle to UI
+ui.showSectors = document.getElementById('showSectors');
+ui.localBubbleBtn = document.getElementById('localBubbleBtn');
 
 if (ui.toggle) ui.toggle.onclick = () => { paused = !paused; ui.toggle.textContent = paused ? 'Play' : 'Pause'; lastPerf = performance.now(); };
 if (ui.now) ui.now.onclick = () => { jumpToNow(); };
@@ -273,6 +302,7 @@ function zoomToStar(starKey) {
 
 function toggleGalaxyMap() {
   galaxyMapMode = !galaxyMapMode;
+  localBubbleMode = false; // Disable Local Bubble when switching to galaxy map
   if (galaxyMapMode) {
     exitFly();
     CAM.tRadius = 500000;
@@ -303,7 +333,112 @@ function toggleGalaxyMap() {
   }
 }
 
+function toggleLocalBubble() {
+  localBubbleMode = !localBubbleMode;
+  galaxyMapMode = false; // Disable galaxy map when switching to Local Bubble
+  if (localBubbleMode) {
+    exitFly();
+    // Position camera for Local Bubble view (Sun at origin, looking at nearby stars)
+    CAM.tRadius = 200000; // Closer view for Local Bubble
+    CAM.tTheta = 0.5;
+    CAM.tPhi = 1.2;
+    CAM.tPivot.set(0, 0, 0);
+    CAM.followBody = null;
+    setCamLabel(ui, 'localbubble');
+    showHint(ui, 'Local Bubble: 3D graph of nearby stars. WASD/Arrows to navigate. Click star to zoom.', hintTimerRef);
+    if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Back to Solar System';
+    if (ui.galaxyGuide) ui.galaxyGuide.classList.remove('open');
+    if (ui.minimapContainer) ui.minimapContainer.style.display = 'none';
+    // Show Local Bubble connections and hide hyperlanes
+    if (localBubbleGroup) localBubbleGroup.visible = true;
+    if (hyperlaneGroup) hyperlaneGroup.visible = false;
+    if (sectorGroup) sectorGroup.visible = false;
+    // Show stars with enhanced glow for graph visualization
+    allBodies.filter(b => b.type === 'star').forEach(star => {
+      if (star.glow) { star.glow.scale.set(star.radius * 15, star.radius * 15, 1); star.glow.material.opacity = 0.85; }
+      // Show distance labels
+      if (star.distanceLabel) star.distanceLabel.style.opacity = '1';
+    });
+  } else {
+    exitFly();
+    CAM.tRadius = 1400; CAM.tTheta = 0.9; CAM.tPhi = 1.05; CAM.tPivot.set(0, 0, 0);
+    CAM.followBody = null;
+    setCamLabel(ui, 'orbit');
+    if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Local Bubble';
+    // Hide Local Bubble connections
+    if (localBubbleGroup) localBubbleGroup.visible = false;
+    if (hyperlaneGroup) hyperlaneGroup.visible = true;
+    if (sectorGroup) sectorGroup.visible = true;
+    allBodies.filter(b => b.type === 'star').forEach(star => {
+      if (star.glow) { star.glow.scale.set(star.radius * 7, star.radius * 7, 1); star.glow.material.opacity = 0.72; }
+      // Hide distance labels
+      if (star.distanceLabel) star.distanceLabel.style.opacity = '0';
+    });
+  }
+}
+
 if (ui.galaxyMapBtn) ui.galaxyMapBtn.onclick = () => toggleGalaxyMap();
+if (ui.localBubbleBtn) ui.localBubbleBtn.onclick = () => toggleLocalBubble();
+
+// Toggle sectors visibility
+if (ui.showHyperlanes) {
+  ui.showHyperlanes.addEventListener('change', (e) => {
+    if (hyperlaneGroup) hyperlaneGroup.visible = e.target.checked;
+  });
+}
+
+if (ui.showSectors) {
+  ui.showSectors.addEventListener('change', (e) => {
+    if (sectorGroup) sectorGroup.visible = e.target.checked;
+  });
+}
+
+// Minimap click handler for navigation
+if (ui.minimapCanvas) {
+  ui.minimapCanvas.addEventListener('click', (e) => {
+    if (!galaxyMapMode) return;
+    
+    const canvas = ui.minimapCanvas;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    
+    const stars = allBodies.filter(b => b.type === 'star');
+    if (stars.length === 0) return;
+    
+    const positions = stars.map(s => s.pivot.position);
+    const xs = positions.map(p => p.x), ys = positions.map(p => p.z);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const padding = 20;
+    const width = canvas.width, height = canvas.height;
+    
+    const scale = (val, mn, mx, tMin, tMax) => tMin + ((val - mn) / (mx - mn)) * (tMax - tMin);
+    const unscale = (val, mn, mx, tMin, tMax) => mn + ((val - tMin) / (tMax - tMin)) * (mx - mn);
+    
+    // Find nearest star to click position
+    let nearestStar = null;
+    let minDistance = Infinity;
+    
+    stars.forEach(star => {
+      const x = scale(star.pivot.position.x, minX, maxX, padding, width - padding);
+      const y = scale(star.pivot.position.z, minY, maxY, padding, height - padding);
+      const distance = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+      
+      if (distance < minDistance && distance < 20) { // 20px click radius
+        minDistance = distance;
+        nearestStar = star;
+      }
+    });
+    
+    if (nearestStar) {
+      zoomToStar(nearestStar.key);
+    }
+  });
+  
+  // Add cursor pointer on hover
+  ui.minimapCanvas.style.cursor = 'pointer';
+}
 
 if (ui.invToggle) ui.invToggle.onclick = () => { if (ui.invPanel) ui.invPanel.classList.toggle('open'); };
 if (ui.invSearch) ui.invSearch.addEventListener('input', () => filterInventory(ui.invList, ui.invSearch.value));
@@ -316,11 +451,14 @@ const mouse = new THREE.Vector2();
 const allBodies = [];
 const meshList = [];
 const hitboxList = [];
+const lodList = [];
 const pGroup = new THREE.Group(); scene.add(pGroup);
 const oGroup = new THREE.Group(); scene.add(oGroup);
 const cGroup = new THREE.Group(); scene.add(cGroup);
 const aGroup = new THREE.Group(); scene.add(aGroup);
 const hyperlaneGroup = new THREE.Group(); hyperlaneGroup.name = 'hyperlanes'; scene.add(hyperlaneGroup);
+const sectorGroup = new THREE.Group(); sectorGroup.name = 'sectors'; scene.add(sectorGroup);
+const localBubbleGroup = new THREE.Group(); localBubbleGroup.name = 'localBubble'; scene.add(localBubbleGroup);
 
 function selectBody(body) {
   selectedBody = body;
@@ -329,6 +467,8 @@ function selectBody(body) {
     highlightInventory(ui.invList, null);
     return;
   }
+  // ═══ Gamification: track body visited ═══
+  if (missions) missions.onBodyVisited(body.key);
   showInfo(ui, body, zoomToBody, enterFollow);
   highlightInventory(ui.invList, body.key);
   if (CAM.mode === 'orbit') {
@@ -338,18 +478,37 @@ function selectBody(body) {
   }
 }
 
-setupControls(CAM, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef), selectBody, (key) => highlightInventory(ui.invList, key));
+function updateStarSelectionVisuals() {
+  allBodies.forEach(body => {
+    if (body.type === 'star' && body.glow) {
+      if (selectedStars.has(body.key)) {
+        // Highlight selected stars with brighter glow
+        body.glow.material.opacity = 1.0;
+        body.glow.scale.set(body.radius * 25, body.radius * 25, 1);
+      } else {
+        // Normal glow for unselected stars
+        body.glow.material.opacity = galaxyMapMode ? 0.9 : 0.72;
+        body.glow.scale.set(body.radius * (galaxyMapMode ? 20 : 7), body.radius * (galaxyMapMode ? 20 : 7), 1);
+      }
+    }
+  });
+}
 
-document.addEventListener('pointerlockchange', () => {
-  CAM.pointerLocked = document.pointerLockElement === renderer.domElement;
-});
+setupControls(CAM, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef), selectBody, (key) => highlightInventory(ui.invList, key));
 
 const keys = {};
 window.addEventListener('keydown', e => {
   keys[e.key] = true;
   if (e.key === 'Escape') {
-    if (CAM.mode !== 'orbit') exitFly();
+    if (observatory.active) { observatory.exit(); }
+    else if (CAM.mode !== 'orbit') exitFly();
     if (ui.infoPanel) ui.infoPanel.classList.remove('visible');
+    // Clear multi-selection
+    if (selectedStars.size > 0) {
+      selectedStars.clear();
+      updateStarSelectionVisuals();
+      showHint(ui, 'Selezione cancellata', hintTimerRef);
+    }
   }
   if (e.key === 'f' || e.key === 'F') { CAM.mode === 'fly' ? exitFly() : enterFly(); }
   if (e.key === '1') { exitFly(); }
@@ -362,8 +521,6 @@ window.addEventListener('keydown', e => {
   if (e.key === ']') { jumpYears(1); }
   if (e.key === '{') { jumpYears(-10); }
   if (e.key === '}') { jumpYears(10); }
-  if (e.key === 'h' || e.key === 'H') { zoomToPosition(new THREE.Vector3(0, 0, 0), 300); }
-
   // ═══ Shortcuts nuove features ═══
   if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); commandPalette.toggle(); }
   if (e.key === 'h' || e.key === 'H') { e.preventDefault(); shortcutsPanel.toggle(); }
@@ -373,33 +530,70 @@ window.addEventListener('keydown', e => {
   if (e.key === 'n' || e.key === 'N') { spaceNews.toggle(); }
   if (e.key === 'q' || e.key === 'Q') { quiz.toggle(); }
   if (e.key === 'g' || e.key === 'G') { gravitySandbox.toggle(); }
+  if (e.key === 'c' || e.key === 'C') { comparisonMode.toggle(); }
+  if (e.key === 'i' || e.key === 'I') { creditsPage.toggle(); }
+  if (e.key === 'p' || e.key === 'P') { e.preventDefault(); settingsPanel.toggle(); }
+  if (e.key === 'm' || e.key === 'M') { showMissionsPanel(); }
+  if (e.key === 'x' || e.key === 'X') { missions.toggle(); }
+  // ═══ Observatory: shortcut O ═══
+  if (e.key === 'o' || e.key === 'O') {
+    if (selectedBody && (selectedBody.type === 'planet' || selectedBody.type === 'dwarf')) {
+      const sunBody = allBodies.find(b => b.key === 'Sun');
+      const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3(0, 0, 0);
+      observatory.toggle(selectedBody, sunPos);
+    } else if (!observatory.active) {
+      if (window.toast) window.toast.warning('Seleziona prima un pianeta per atterrare!');
+    } else {
+      observatory.exit();
+    }
+  }
 });
 window.addEventListener('keyup', e => { keys[e.key] = false; if (e.key === 'Shift') CAM.flyBoost = false; });
 
 window.addEventListener('mousedown', e => {
   if (CAM.pointerLocked) return;
-  CAM.dragging = true; CAM.isDragging = false;
-  CAM.lastX = e.clientX; CAM.lastY = e.clientY;
-  CAM.downPos.set(e.clientX, e.clientY);
-  CAM.zoomTarget = null;
+  // Star zoom raycast (orbit mode only — controls.js handles drag & body clicks)
   mouseMove.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(mouseMove, camera);
   const hits = raycaster.intersectObjects([...meshList, ...hitboxList]).filter(h => h.object.userData.isStar);
   if (hits.length > 0 && hits[0].object.userData.starKey) {
-    zoomToStar(hits[0].object.userData.starKey);
+    const starKey = hits[0].object.userData.starKey;
+    
+    // Multi-selection with Ctrl+Click
+    if (e.ctrlKey || e.metaKey) {
+      if (selectedStars.has(starKey)) {
+        selectedStars.delete(starKey);
+      } else {
+        selectedStars.add(starKey);
+      }
+      updateStarSelectionVisuals();
+      showHint(ui, `${selectedStars.size} sistemi selezionati`, hintTimerRef);
+    } else {
+      // Single selection - clear multi-selection and zoom
+      selectedStars.clear();
+      zoomToStar(starKey);
+    }
   }
+});
+
+// ═══ Observatory mousemove handler ═══
+window.addEventListener('mousemove', e => {
+  if (!observatory.active) return;
+  const dx = e.movementX || 0;
+  const dy = e.movementY || 0;
+  observatory.onMouseMove(dx, dy);
 });
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 const sunLight = new THREE.PointLight(0xfff4e0, 8.0, 0);
 scene.add(sunLight);
 
-const sunTex = TL.load('./assets/textures/2k_sun.jpg');
-const sun = new THREE.Mesh(
-  new THREE.SphereGeometry(SUN_R, 64, 64),
-  new THREE.MeshStandardMaterial({ map: sunTex, emissiveMap: sunTex, emissive: new THREE.Color(0xffaa00), emissiveIntensity: 2.5, roughness: 1, metalness: 0 })
-);
+const sun = createAdvancedSun(SUN_R, './assets/textures/2k_sun.jpg', manager);
 scene.add(sun);
+
+// Corona solare
+const sunCorona = createSunCorona(SUN_R * 1.5, SUN_R * 4);
+scene.add(sunCorona);
 
 [[8, 128, 'rgba(255,200,50,0.9)', 'rgba(255,120,0,0.4)', SUN_R * 6],
  [2, 128, 'rgba(255,240,100,0.5)', 'rgba(255,160,0,0.1)', SUN_R * 14],
@@ -491,7 +685,7 @@ function buildPlanet(def) {
   const lod = pm.lod || null;
   const lodMeshes = pm.lodMeshes || [mesh];
   lodMeshes.forEach(m => { if (m) m.userData.bodyKey = def.key; });
-  if (lod) tiltGroup.add(lod);
+  if (lod) { tiltGroup.add(lod); lodList.push(lod); }
   else tiltGroup.add(mesh);
   pivot.add(tiltGroup);
   pGroup.add(pivot);
@@ -569,7 +763,7 @@ MOONS.forEach(def => {
     mesh = pm.mesh || pm;
     const lodMeshes = pm.lodMeshes || [mesh];
     lodMeshes.forEach(m => { if (m) m.userData.bodyKey = def.key; });
-    if (pm.lod) pivot.add(pm.lod);
+    if (pm.lod) { pivot.add(pm.lod); lodList.push(pm.lod); }
     else pivot.add(mesh);
     lodMeshes.forEach(m => { if (m) meshList.push(m); });
   }
@@ -622,6 +816,21 @@ createHyperlanes(allBodies, hyperlaneGroup);
 createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBody);
 createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, getTimeOffset, meshList);
 createDustBelts(scene);
+
+// Create Local Bubble graph connections and axes
+createLocalBubbleConnections(allBodies, localBubbleGroup);
+createLocalBubbleAxes(localBubbleGroup);
+createLocalBubbleDistanceLabels(allBodies, ui);
+localBubbleGroup.visible = false; // Hidden by default
+
+// Create territorial sectors after stars are positioned
+createSectors();
+
+// ═══ Aggiungi effetti atmosferici ai pianeti ═══
+getAtmosphericPlanets().forEach(planetKey => {
+  const planetBody = allBodies.find(b => b.key === planetKey);
+  if (planetBody) addAtmosphereEffects(planetBody, planetKey);
+});
 
 setupMenuUI(ui, allBodies, getSelectedBody, selectBody, zoomToStar, hyperlaneGroup);
 
@@ -693,6 +902,54 @@ function updateCamera(dt) {
 
 let invDistFrame = 0;
 
+function createSectors() {
+  const stars = allBodies.filter(b => b.type === 'star');
+  if (stars.length === 0) return;
+  
+  const positions = stars.map(s => s.pivot.position);
+  const xs = positions.map(p => p.x), ys = positions.map(p => p.z);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  
+  // Divide galaxy into 4x4 grid sectors
+  const gridSize = 4;
+  const sectorWidth = (maxX - minX) / gridSize;
+  const sectorHeight = (maxY - minY) / gridSize;
+  
+  for (let i = 0; i < gridSize; i++) {
+    for (let j = 0; j < gridSize; j++) {
+      const x = minX + i * sectorWidth;
+      const z = minY + j * sectorHeight;
+      
+      // Create sector boundary
+      const geometry = new THREE.PlaneGeometry(sectorWidth, sectorHeight);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0x4488ff,
+        transparent: true,
+        opacity: 0.05,
+        side: THREE.DoubleSide
+      });
+      const sector = new THREE.Mesh(geometry, material);
+      sector.rotation.x = -Math.PI / 2;
+      sector.position.set(x + sectorWidth / 2, 0, z + sectorHeight / 2);
+      sector.userData = { sectorX: i, sectorY: j };
+      sectorGroup.add(sector);
+      
+      // Add sector border
+      const borderGeometry = new THREE.EdgesGeometry(geometry);
+      const borderMaterial = new THREE.LineBasicMaterial({
+        color: 0x4488ff,
+        transparent: true,
+        opacity: 0.15
+      });
+      const border = new THREE.LineSegments(borderGeometry, borderMaterial);
+      border.rotation.x = -Math.PI / 2;
+      border.position.copy(sector.position);
+      sectorGroup.add(border);
+    }
+  }
+}
+
 function updateMinimap() {
   if (!ui.minimapCanvas || !galaxyMapMode) return;
   const canvas = ui.minimapCanvas;
@@ -706,7 +963,6 @@ function updateMinimap() {
   const xs = positions.map(p => p.x), ys = positions.map(p => p.z);
   const minX = Math.min(...xs), maxX = Math.max(...xs);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
   const padding = 20;
   const scale = (val, mn, mx, tMin, tMax) => tMin + ((val - mn) / (mx - mn)) * (tMax - tMin);
   stars.forEach(star => {
@@ -735,7 +991,8 @@ function animate() {
   if (!paused) timeOffsetMs += dt * 1000 * (mult - 1);
 
   const d = customDate || new Date(Date.now() + timeOffsetMs);
-  if (ui.clock) ui.clock.textContent = d.toLocaleString('it-IT', { hour12: false });
+  const locale = getLang() === 'it' ? 'it-IT' : 'en-US';
+  if (ui.clock) ui.clock.textContent = d.toLocaleString(locale, { hour12: false });
   const T = (julianDate(d) - 2451545.0) / 36525.0;
 
   allBodies.forEach(b => {
@@ -761,12 +1018,17 @@ function animate() {
   updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused);
   updateComets(cometObjects, dt, mult, paused, ui, camera);
   updateDustBelts(scene, dt, mult);
+  // ═══ Atmosphere effects update ═══
+  allBodies.forEach(b => { if (b.clouds || b.aurora) updateAtmosphereEffects(b, dt); });
 
   if (ui.orbits) oGroup.visible = ui.orbits.checked;
   rebuildOrbits(T, oGroup, lastOrbitTRef);
 
   sun.rotation.y += 0.0006;
   scene.children.forEach(c => { if (c._isSunGlow) c.quaternion.copy(camera.quaternion); });
+  // ═══ Advanced sun shader update ═══
+  updateSunShader(sun, sunCorona);
+  if (sunCorona) sunCorona.quaternion.copy(camera.quaternion);
 
   invDistFrame++;
   if (invDistFrame % 60 === 0) updateInventoryDistances(allBodies, AU);
@@ -774,13 +1036,21 @@ function animate() {
   updateLabels(allBodies, camera, ui, selectedBody);
   updateMinimap();
 
-  scene.traverse(o => { if (o.isLOD) o.update(camera); });
+  // ═══ Observatory update ═══
+  if (observatory.active) {
+    const sunBody = allBodies.find(b => b.key === 'Sun');
+    const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3();
+    observatory.update(dt, sunPos);
+  }
 
-  composer.render();
-}
+  for (let i = 0; i < lodList.length; i++) lodList[i].update(camera);
+
   hud.updateFPS(1 / Math.max(dt, 0.001));
   if (selectedBody) hud.setBody(selectedBody.label); else hud.setBody('Libero');
   if (d) hud.setDate(d);
+
+  composer.render();
+}
 
 function startApp() {
   if (window.__solarStarted) return;
@@ -788,7 +1058,62 @@ function startApp() {
   rebuildOrbits((julianDate(new Date()) - 2451545.0) / 36525.0, oGroup, lastOrbitTRef);
   buildInventory(ui.invList, allBodies, selectBody);
   setCamLabel(ui, 'orbit');
-  showHint(ui, 'Drag to orbit - Scroll to zoom - Shift+drag to pan - F to fly - TAB for inventory', hintTimerRef);
+  
+  // Init nuovi moduli
+  customCursor.init();
+  particleEffects.init();
+  toast.init();
+  settingsPanel.init();
+  
+  // Bind bottoni UI con feedback toast
+  if (ui.compareBtn) ui.compareBtn.onclick = () => {
+    comparisonMode.toggle();
+    toast.info('Modalità confronto attivata');
+  };
+  if (ui.creditsBtn) ui.creditsBtn.onclick = () => {
+    creditsPage.toggle();
+    toast.info('Credits & About');
+  };
+  if (ui.settingsBtn) ui.settingsBtn.onclick = () => {
+    settingsPanel.toggle();
+  };
+  const missionsBtn = document.getElementById('missionsBtn');
+  if (missionsBtn) missionsBtn.onclick = () => {
+    missions.toggle();
+    toast.info('Missioni astronautiche');
+  };
+  const spaceMissionsBtn = document.getElementById('spaceMissionsBtn');
+  if (spaceMissionsBtn) spaceMissionsBtn.onclick = () => {
+    showMissionsPanel();
+    toast.info('Missioni spaziali reali');
+  };
+  const observatoryBtn = document.getElementById('observatoryBtn');
+  if (observatoryBtn) observatoryBtn.onclick = () => {
+    if (selectedBody && (selectedBody.type === 'planet' || selectedBody.type === 'dwarf')) {
+      const sunBody = allBodies.find(b => b.key === 'Sun');
+      const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3(0, 0, 0);
+      observatory.toggle(selectedBody, sunPos);
+    } else if (!observatory.active) {
+      toast.warning('Seleziona prima un pianeta per atterrare!');
+    } else {
+      observatory.exit();
+    }
+  };
+  
+  // Settings panel onChange callback
+  settingsPanel.onChange((key, value) => {
+    if (key === 'theme') {
+      toast.info(value === 'light' ? 'Tema chiaro attivato' : 'Tema scuro attivato');
+    } else if (key === 'language') {
+      toast.info(value === 'it' ? 'Lingua: Italiano' : 'Language: English');
+    } else if (key === 'quality') {
+      const labels = { low: 'Bassa', medium: 'Media', high: 'Alta' };
+      toast.info(`Qualità grafica: ${labels[value] || value}`);
+    }
+  });
+  
+  showHint(ui, 'WASD muovi · Scroll zoom · H comandi · P impostazioni', hintTimerRef);
+  toast.success('ASTRALIS pronto! Esplora il cosmo.', 3000);
   animate();
 }
 

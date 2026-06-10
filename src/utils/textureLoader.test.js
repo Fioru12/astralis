@@ -1,7 +1,20 @@
 // Comprehensive texture loading test
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AsyncTextureLoader } from './textureLoader.js';
-import * as THREE from 'three';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+
+// Mock document before any import that needs it
+const mockCreateElementNS = () => ({
+  src: '',
+  decode: () => Promise.resolve(),
+  addEventListener: () => {},
+  removeEventListener: () => {},
+});
+
+if (typeof globalThis.document === 'undefined') {
+  globalThis.document = { createElementNS: mockCreateElementNS };
+}
+
+const THREE = await import('three');
+const { AsyncTextureLoader } = await import('./textureLoader.js');
 
 describe('AsyncTextureLoader', () => {
   let loader;

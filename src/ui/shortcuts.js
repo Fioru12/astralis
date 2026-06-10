@@ -11,6 +11,7 @@ const SHORTCUTS = [
       { key: 'R',         desc: 'shortcut_reset_cam' },
       { key: 'N',         desc: 'shortcut_now' },
       { key: 'H',         desc: 'shortcut_help' },
+      { key: 'P',         desc: 'shortcut_settings' },
       { key: 'Ctrl+K',    desc: 'shortcut_command' },
       { key: 'V',         desc: 'shortcut_presets' },
       { key: 'TAB',       desc: 'shortcut_inv' },
