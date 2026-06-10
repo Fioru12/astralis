@@ -109,10 +109,11 @@ export function createAdvancedSun(radius, textureUrl, manager) {
     uniforms: {
       sunTexture: { value: sunTexture },
       time: { value: 0 },
-      intensity: { value: 1.4 },
+      intensity: { value: 1.6 },
     },
     vertexShader: sunVertexShader,
     fragmentShader: sunFragmentShader,
+    fog: false,
   });
   
   const mesh = new THREE.Mesh(geometry, material);
@@ -133,9 +134,9 @@ export function createSunCorona(innerRadius, outerRadius) {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
-      intensity: { value: 0.8 },
-      colorInner: { value: new THREE.Color(0xffcc44) },
-      colorOuter: { value: new THREE.Color(0xff6600) },
+      intensity: { value: 1.0 },
+      colorInner: { value: new THREE.Color(0xffee66) },
+      colorOuter: { value: new THREE.Color(0xff7722) },
     },
     vertexShader: `
       varying vec2 vUv;

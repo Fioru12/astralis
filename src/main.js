@@ -11,6 +11,7 @@ import { textureLoader as TL } from './utils/textureLoader.js';
 import { keplerPos } from './utils/kepler.js';
 import { createCameraSystem, enterFly as enterFlyModule, exitFly as exitFlyModule, enterFollow as enterFollowModule } from './core/camera.js';
 import { setupPostProcessing } from './core/postprocessing.js';
+import { createStarfield, updateStarfieldParallax } from './core/starfield.js';
 import { setupControls } from './core/controls.js';
 import { rebuildOrbits } from './core/orbits.js';
 import { } from './core/state.js';
@@ -109,7 +110,10 @@ mwTex.magFilter = THREE.LinearFilter;
 mwTex.generateMipmaps = false;
 scene.background = mwTex;
 
-const { composer, bloomPass, outlinePass } = setupPostProcessing(renderer, scene, camera);
+const { composer, bloomPass, outlinePass, toneMappingPass } = setupPostProcessing(renderer, scene, camera);
+
+// Create dynamic starfield
+const starfield = createStarfield(scene);
 
 // ═══ Setup nuove features ═══
 themeManager.apply();
@@ -1048,6 +1052,9 @@ function animate() {
   hud.updateFPS(1 / Math.max(dt, 0.001));
   if (selectedBody) hud.setBody(selectedBody.label); else hud.setBody('Libero');
   if (d) hud.setDate(d);
+
+  // Update starfield parallax
+  updateStarfieldParallax(starfield, camera);
 
   composer.render();
 }

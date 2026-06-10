@@ -31,19 +31,19 @@ export const ORBITAL_ELEMENTS = {
 };
 
 export const PLANETS = [
-  { key:'Mercury', label:'Mercurio', icon:'☿', color:0xb5a99a, radius:2.2, type:'planet', tex:'./assets/textures/2k_mercury.jpg',      tilt:0.03,   distAU:'0.39 AU', period:'88 giorni',  moons:0,   day:1407.6,  desc:'Il pianeta più piccolo e più vicino al Sole. Temperature da -180 a +430°C.' },
-  { key:'Venus',   label:'Venere',   icon:'♀', color:0xf0c060, radius:3.5, type:'planet', tex:'./assets/textures/2k_venus_surface.jpg', tilt:177.3,  distAU:'0.72 AU', period:'225 giorni', moons:0,   day:-5832.5, desc:'Il pianeta più caldo (465°C). Ruota in senso retrogrado.' },
-  { key:'Earth',   label:'Terra',    icon:'🌍',color:0x3a8fff, radius:3.6, type:'planet', tex:'./assets/textures/2k_earth_daymap.jpg',  tilt:23.44,  distAU:'1.00 AU', period:'365 giorni', moons:1,   day:23.93,   desc:"L'unico pianeta con vita conosciuta. 71% coperto d'acqua.", hasAtmosphere:true },
-  { key:'Mars',    label:'Marte',    icon:'♂', color:0xff5533, radius:2.8, type:'planet', tex:'./assets/textures/2k_mars.jpg',          tilt:25.19,  distAU:'1.52 AU', period:'687 giorni', moons:2,   day:24.62,   desc:'Il Pianeta Rosso. Ospita Olympus Mons, il vulcano più alto del sistema solare.' },
-  { key:'Jupiter', label:'Giove',    icon:'♃', color:0xd4956a, radius:8.5, type:'planet', tex:'./assets/textures/2k_jupiter.jpg',       tilt:3.13,   distAU:'5.20 AU', period:'11.9 anni',  moons:95,  day:9.93,    desc:'Il pianeta più grande. La Grande Macchia Rossa è attiva da oltre 350 anni.' },
-  { key:'Saturn',  label:'Saturno',  icon:'♄', color:0xe8d080, radius:7.5, type:'planet', tex:'./assets/textures/2k_saturn.jpg',        tilt:26.73,  distAU:'9.54 AU', period:'29.5 anni',  moons:146, day:10.66,   desc:"Il pianeta degli anelli. Così poco denso che galleggerebbe sull'acqua." },
-  { key:'Uranus',  label:'Urano',    icon:'⛢', color:0x55ddcc, radius:5.5, type:'planet', tex:'./assets/textures/2k_uranus.jpg',        tilt:97.77,  distAU:'19.2 AU', period:'84 anni',    moons:28,  day:-17.24,  desc:'Asse inclinato di 98° a causa di una probabile antica collisione.' },
-  { key:'Neptune', label:'Nettuno',  icon:'♆', color:0x2255ff, radius:5.2, type:'planet', tex:'./assets/textures/2k_neptune.jpg',       tilt:28.32,  distAU:'30.1 AU', period:'165 anni',   moons:16,  day:16.11,   desc:'Venti fino a 2100 km/h. Triton orbita in senso retrogrado.' },
-  { key:'Ceres',   label:'Cerere',   icon:'⚳', color:0x998877, radius:1.5, type:'dwarf',                                               tilt:4.0,    distAU:'2.77 AU', period:'4.6 anni',   moons:0,   day:9.07,    desc:'Il pianeta nano più grande della fascia asteroidale. Diametro 945 km.' },
-  { key:'Pluto',   label:'Plutone',  icon:'♇', color:0xddbb99, radius:1.4, type:'dwarf',                                               tilt:122.5,  distAU:'39.5 AU', period:'248 anni',   moons:5,   day:153.3,   desc:"Pianeta nano nella fascia di Kuiper. Ha un'atmosfera tenue di azoto." },
-  { key:'Eris',    label:'Eris',     icon:'⊕', color:0xddddcc, radius:1.3, type:'dwarf',                                               tilt:44.0,   distAU:'67.7 AU', period:'559 anni',   moons:1,   day:25.9,    desc:'Il pianeta nano più massiccio. Quasi della dimensione di Plutone.' },
-  { key:'Makemake',label:'Makemake', icon:'🥚',color:0xffccaa, radius:1.2, type:'dwarf',                                               tilt:29.0,   distAU:'45.8 AU', period:'309 anni',   moons:1,   day:22.5,    desc:'Pianeta nano nella fascia di Kuiper, privo di atmosfera rilevante.' },
-  { key:'Haumea',  label:'Haumea',   icon:'🏉',color:0xeeddcc, radius:1.1, type:'dwarf',                                               tilt:28.2,   distAU:'43.1 AU', period:'283 anni',   moons:2,   day:3.9,     desc:'Forma ellissoidale per la sua rotazione rapidissima (3.9 ore).' },
+  { key:'Mercury', label:'Mercurio', icon:'☿', color:0xaa8866, radius:2.2, type:'planet', tex:'./assets/textures/2k_mercury.jpg',      tilt:0.03,   distAU:'0.39 AU', period:'88 giorni',  moons:0,   day:1407.6,  desc:'Il pianeta più piccolo e più vicino al Sole. Temperature da -180 a +430°C.' },
+  { key:'Venus',   label:'Venere',   icon:'♀', color:0xffdd44, radius:3.5, type:'planet', tex:'./assets/textures/2k_venus_surface.jpg', tilt:177.3,  distAU:'0.72 AU', period:'225 giorni', moons:0,   day:-5832.5, desc:'Il pianeta più caldo (465°C). Ruota in senso retrogrado.' },
+  { key:'Earth',   label:'Terra',    icon:'🌍',color:0x2296ff, radius:3.6, type:'planet', tex:'./assets/textures/2k_earth_daymap.jpg',  tilt:23.44,  distAU:'1.00 AU', period:'365 giorni', moons:1,   day:23.93,   desc:"L'unico pianeta con vita conosciuta. 71% coperto d'acqua.", hasAtmosphere:true },
+  { key:'Mars',    label:'Marte',    icon:'♂', color:0xff4411, radius:2.8, type:'planet', tex:'./assets/textures/2k_mars.jpg',          tilt:25.19,  distAU:'1.52 AU', period:'687 giorni', moons:2,   day:24.62,   desc:'Il Pianeta Rosso. Ospita Olympus Mons, il vulcano più alto del sistema solare.' },
+  { key:'Jupiter', label:'Giove',    icon:'♃', color:0xffaa33, radius:8.5, type:'planet', tex:'./assets/textures/2k_jupiter.jpg',       tilt:3.13,   distAU:'5.20 AU', period:'11.9 anni',  moons:95,  day:9.93,    desc:'Il pianeta più grande. La Grande Macchia Rossa è attiva da oltre 350 anni.' },
+  { key:'Saturn',  label:'Saturno',  icon:'♄', color:0xffdd99, radius:7.5, type:'planet', tex:'./assets/textures/2k_saturn.jpg',        tilt:26.73,  distAU:'9.54 AU', period:'29.5 anni',  moons:146, day:10.66,   desc:"Il pianeta degli anelli. Così poco denso che galleggerebbe sull'acqua." },
+  { key:'Uranus',  label:'Urano',    icon:'⛢', color:0x44ddff, radius:5.5, type:'planet', tex:'./assets/textures/2k_uranus.jpg',        tilt:97.77,  distAU:'19.2 AU', period:'84 anni',    moons:28,  day:-17.24,  desc:'Asse inclinato di 98° a causa di una probabile antica collisione.' },
+  { key:'Neptune', label:'Nettuno',  icon:'♆', color:0x0055ff, radius:5.2, type:'planet', tex:'./assets/textures/2k_neptune.jpg',       tilt:28.32,  distAU:'30.1 AU', period:'165 anni',   moons:16,  day:16.11,   desc:'Venti fino a 2100 km/h. Triton orbita in senso retrogrado.' },
+  { key:'Ceres',   label:'Cerere',   icon:'⚳', color:0xaa9977, radius:1.5, type:'dwarf',                                               tilt:4.0,    distAU:'2.77 AU', period:'4.6 anni',   moons:0,   day:9.07,    desc:'Il pianeta nano più grande della fascia asteroidale. Diametro 945 km.' },
+  { key:'Pluto',   label:'Plutone',  icon:'♇', color:0xcc9966, radius:1.4, type:'dwarf',                                               tilt:122.5,  distAU:'39.5 AU', period:'248 anni',   moons:5,   day:153.3,   desc:"Pianeta nano nella fascia di Kuiper. Ha un'atmosfera tenue di azoto." },
+  { key:'Eris',    label:'Eris',     icon:'⊕', color:0xeeeecc, radius:1.3, type:'dwarf',                                               tilt:44.0,   distAU:'67.7 AU', period:'559 anni',   moons:1,   day:25.9,    desc:'Il pianeta nano più massiccio. Quasi della dimensione di Plutone.' },
+  { key:'Makemake',label:'Makemake', icon:'🥚',color:0xffddaa, radius:1.2, type:'dwarf',                                               tilt:29.0,   distAU:'45.8 AU', period:'309 anni',   moons:1,   day:22.5,    desc:'Pianeta nano nella fascia di Kuiper, privo di atmosfera rilevante.' },
+  { key:'Haumea',  label:'Haumea',   icon:'🏉',color:0xffddcc, radius:1.1, type:'dwarf',                                               tilt:28.2,   distAU:'43.1 AU', period:'283 anni',   moons:2,   day:3.9,     desc:'Forma ellissoidale per la sua rotazione rapidissima (3.9 ore).' },
 ];
 
 export const MOONS = [
@@ -90,11 +90,11 @@ export const COMETS = [
 ];
 
 export const ORBIT_COLORS = {
-  Mercury:0xff8855, Venus:0xffcc44,  Earth:0x44aaff,  Mars:0xff4422,
-  Jupiter:0xffaa66, Saturn:0xeedd77, Uranus:0x44ffee, Neptune:0x2266ff,
-  Pluto:0xddaa88,   Ceres:0xbbaa99,  Eris:0xddddcc,   Makemake:0xffccaa,
-  Haumea:0xeeddcc,  Vesta:0xbb9988,  Pallas:0x9988bb, Hygiea:0x88bb99,
-  Eros:0xccaa88,    Apophis:0xee9966,Itokawa:0xbb9977,Bennu:0xaa8866,
+  Mercury:0xff6633, Venus:0xffdd22,  Earth:0x33ccff,  Mars:0xff3311,
+  Jupiter:0xffbb44, Saturn:0xffee99, Uranus:0x44ffdd, Neptune:0x1166ff,
+  Pluto:0xdd9977,   Ceres:0xccbbaa,  Eris:0xeeeecc,   Makemake:0xffddaa,
+  Haumea:0xffddcc,  Vesta:0xdd7744,  Pallas:0xaa99dd, Hygiea:0x99dd88,
+  Eros:0xddaa77,    Apophis:0xff9944,Itokawa:0xccaa66,Bennu:0xbb8855,
 };
 
 // Palette standard per comete (azzurro/ciano)
