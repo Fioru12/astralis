@@ -18,7 +18,6 @@ export function createUIRefs() {
     invList:     document.getElementById('inventoryList'),
     invSearch:   document.getElementById('inventorySearch'),
     invToggle:   document.getElementById('inventoryToggle'),
-    invToggleBtn: document.getElementById('inventoryToggleBtn'),
     camLabel:    document.getElementById('camModeLabel'),
     yearBack:    document.getElementById('yearBack'),
     yearFwd:     document.getElementById('yearFwd'),

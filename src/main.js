@@ -10,7 +10,7 @@ import { setupPostProcessing } from './core/postprocessing.js';
 import { createStarfield, updateStarfieldParallax } from './core/starfield.js';
 import { setupControls } from './core/controls.js';
 import { rebuildOrbits } from './core/orbits.js';
-import { } from './core/state.js';
+// (state.js - funzioni utilitarie non usate direttamente)
 
 import { createUIRefs, showHint, setCamLabel, timeMultiplier, speedText } from './ui/manager.js';
 import { setupInfoPanel, showInfo } from './ui/infoPanel.js';
@@ -448,7 +448,22 @@ if (ui.minimapCanvas) {
   ui.minimapCanvas.style.cursor = 'pointer';
 }
 
-if (ui.invToggle) ui.invToggle.onclick = () => { if (ui.invPanel) ui.invPanel.classList.toggle('open'); };
+function openInventory() {
+  if (!ui.invPanel) return;
+  const open = ui.invPanel.style.opacity === '1';
+  if (open) {
+    ui.invPanel.style.opacity = '0';
+    ui.invPanel.style.pointerEvents = 'none';
+    ui.invPanel.style.transform = 'translateY(-50%) translateX(100%)';
+  } else {
+    ui.invPanel.style.opacity = '1';
+    ui.invPanel.style.pointerEvents = 'auto';
+    ui.invPanel.style.transform = 'translateY(-50%) translateX(0)';
+  }
+}
+if (ui.invToggle) ui.invToggle.onclick = () => openInventory();
+const invCloseBtn = document.getElementById('inventoryClose');
+if (invCloseBtn) invCloseBtn.onclick = () => openInventory();
 if (ui.invSearch) ui.invSearch.addEventListener('input', () => filterInventory(ui.invList, ui.invSearch.value));
 
 const tooltip = createTooltip();
@@ -1067,6 +1082,7 @@ function startApp() {
   setCamLabel(ui, 'orbit');
   
   // Init nuovi moduli
+  hud.init();
   customCursor.init();
   particleEffects.init();
   toast.init();

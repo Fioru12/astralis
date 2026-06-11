@@ -264,6 +264,12 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   border-color: rgba(91,196,207,0.5);
   box-shadow: 0 0 12px rgba(91,196,207,0.2);
 }
+.cam-mode-pill {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
 .muted { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
 .hint  { font-size: 10.5px; color: var(--text-faint); line-height: 1.5; text-align: center; margin-top: 12px; }
 .hint kbd { background: rgba(91,196,207,0.15); border: 1px solid rgba(91,196,207,0.3); color: var(--accent); padding: 1px 6px; border-radius: 4px; font-size: 10px; font-family: monospace; }
