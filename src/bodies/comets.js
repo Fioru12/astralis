@@ -127,6 +127,7 @@ export function createComets(COMETS, cGroup, hitboxList, ui, allBodies, meshList
 }
 
 export function updateComets(cometObjects, dt, mult, paused, ui, camera) {
+  if (!cometObjects || cometObjects.length === 0) return;
   const proj = new THREE.Vector3();
   if (!paused) {
     const cSpeed = Math.max(mult * 0.00003, 0.00003) * Math.sign(mult || 1);
