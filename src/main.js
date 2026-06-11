@@ -1000,6 +1000,7 @@ function updateMinimap() {
 
 function animate() {
   requestAnimationFrame(animate);
+  try {
   const now = performance.now(), dt = Math.min((now - lastPerf) / 1000, 0.1);
   lastPerf = now;
 
@@ -1029,9 +1030,9 @@ function animate() {
     if (b.atmosphere?.quaternion) b.atmosphere.quaternion.copy(camera.quaternion);
     const isH = hoveredBody?.key === b.key || selectedBody?.key === b.key;
     if (b.glow?.material) { b.glow.material.opacity = isH ? 0.95 : 0.72; const sc = b.radius * (isH ? 9 : 7); b.glow.scale.set(sc, sc, 1); }
-    if (b.key === 'Earth' && b.mesh.material.uniforms) b.mesh.material.uniforms.time.value = performance.now();
-    if (b.type === 'star' && b.mesh.material.uniforms) b.mesh.material.uniforms.time.value = performance.now();
-    if (b.type === 'exoplanet' && b.mesh.material.uniforms) b.mesh.material.uniforms.time.value = performance.now();
+    if (b.key === 'Earth' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
+    if (b.type === 'star' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
+    if (b.type === 'exoplanet' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
   });
 
   updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused);
@@ -1072,6 +1073,13 @@ function animate() {
   updateStarfieldParallax(starfield, camera);
 
   composer.render();
+  } catch (err) {
+    // Log SOLO il primo errore identico (non cascata) e continua il rendering
+    if (!animate._lastErr || animate._lastErr !== err.message) {
+      animate._lastErr = err.message;
+      console.error('[ASTRALIS animate]', err);
+    }
+  }
 }
 
 function startApp() {
