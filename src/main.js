@@ -1084,8 +1084,24 @@ function animate() {
 function startApp() {
   if (window.__solarStarted) return;
   window.__solarStarted = true;
+
+  // Ensure we start in orbit mode (not galaxy/local bubble)
+  galaxyMapMode = false;
+  localBubbleMode = false;
+  CAM.tRadius = 1400;
+  CAM.tTheta = 0.9;
+  CAM.tPhi = 1.05;
+  CAM.tPivot.set(0, 0, 0);
+  if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = 'Galactic Map';
+  if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Local Bubble';
+  if (ui.galaxyGuide) ui.galaxyGuide.classList.remove('open');
+  if (ui.celestialMenu) ui.celestialMenu.classList.remove('open');
+  if (ui.minimapContainer) ui.minimapContainer.style.display = 'none';
+
   rebuildOrbits((julianDate(new Date()) - 2451545.0) / 36525.0, oGroup, lastOrbitTRef);
   buildInventory(ui.invList, allBodies, selectBody);
+  // Build star list AFTER allBodies is populated
+  if (ui.starList) buildStarList(ui.starList, allBodies, '', zoomToStar);
   setCamLabel(ui, 'orbit');
   
   // Init nuovi moduli
