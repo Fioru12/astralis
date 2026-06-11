@@ -22,5 +22,12 @@ export default defineConfig({
     port: 5173,
     host: true,
     open: true,
+    middlewareMode: false,
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 5173,
+    },
   },
+  logLevel: 'warn',
 });

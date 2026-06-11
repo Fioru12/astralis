@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
+import './dev-heartbeat.js'; // Keep dev server alive
 
 import { AU, DEG, SUN_R } from './utils/constants.js';
 import { julianDate, makeCanvasSprite, makeGlow, createTooltip } from './utils/helpers.js';
