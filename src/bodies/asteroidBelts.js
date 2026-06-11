@@ -30,7 +30,9 @@ export function generateAsteroidBelt(innerRadius, outerRadius, count, color) {
     highMesh.scale.set(scale, scale, scale);
 
     const lowMesh = new THREE.Mesh(geometryLo, material);
-    Object.assign(lowMesh, Object.getOwnPropertyDescriptors(highMesh));
+    lowMesh.position.copy(highMesh.position);
+    lowMesh.rotation.copy(highMesh.rotation);
+    lowMesh.scale.copy(highMesh.scale);
 
     asteroidLod.addLevel(highMesh, 0);
     asteroidLod.addLevel(lowMesh, 300);

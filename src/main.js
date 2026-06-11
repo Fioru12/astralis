@@ -68,6 +68,8 @@ const lodList = [];
 let mainBelt = null;
 let kuiperBelt = null;
 let cometObjects = null;
+let invDistFrame = 0;
+let hoveredBody = null;
 
 function getTimeOffset() { return timeOffsetMs; }
 function getSelectedBody() { return selectedBody; }
@@ -626,8 +628,6 @@ scene.add(sunCorona);
   sp._isSunGlow = true;
 });
 
-let hoveredBody = null;
-
 function makePlanetMesh(radius, texPath, color, key) {
   const segs = texPath ? 48 : 24;
 
@@ -918,8 +918,6 @@ function updateCamera(dt) {
     if (Math.abs(CAM.followDist - targetDist) < 1) CAM.isTransitioning = false;
   }
 }
-
-let invDistFrame = 0;
 
 function createSectors() {
   const stars = allBodies.filter(b => b.type === 'star');

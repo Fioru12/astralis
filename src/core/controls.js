@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { enterFly, exitFly } from './camera.js';
+import { highlightInventory } from '../ui/inventory.js';
 
 export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, setCamLabel, showHint, selectBody) {
   // Mouse
