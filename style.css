@@ -1071,10 +1071,11 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
    ════════════════════════════════════════════ */
 .search-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 300px;
-  z-index: 90;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
+  z-index: 101;
 }
 
 .search-input {
