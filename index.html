@@ -50,6 +50,12 @@
       <button id="settingsBtn" class="icon-btn" data-tooltip="Impostazioni" aria-label="Apri impostazioni">⚙️</button>
     </div>
     
+    <!-- Global Search Bar -->
+    <div class="search-container">
+      <input type="text" id="globalSearch" class="search-input" placeholder="🔍 Cerca oggetti celesti...">
+      <div id="searchResults" class="search-results" style="display: none;"></div>
+    </div>
+
     <!-- Minimap Galattica -->
     <div id="minimapContainer" style="position: fixed; bottom: 20px; right: 20px; width: 200px; height: 200px; background: rgba(0,0,0,0.7); border: 2px solid rgba(100,150,255,0.5); border-radius: 8px; overflow: hidden; display: none;">
       <canvas id="minimapCanvas" width="200" height="200"></canvas>

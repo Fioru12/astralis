@@ -21,6 +21,7 @@ import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
 import { setupTabs } from './ui/tabs.js';
 import { initMinimap, toggleMinimapVisibility } from './ui/minimap.js';
 import { createHyperlines as createHyperlinesCosmetic, setHyperlinesVisible } from './core/hyperlines.js';
+import { setupGlobalSearch } from './ui/search.js';
 
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
@@ -1141,6 +1142,7 @@ function startApp() {
   
   // Init nuovi moduli
   setupTabs();
+  setupGlobalSearch(allBodies, selectBody, zoomToBody);
   hud.init();
   customCursor.init();
   particleEffects.init();

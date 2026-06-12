@@ -398,13 +398,29 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
       pivot.add(atmosphere);
     }
 
-    const orbitGeo = new THREE.RingGeometry(orbitRadius - 0.5, orbitRadius + 0.5, 64);
-    const orbitMat = new THREE.MeshBasicMaterial({
-      color: def.color, side: THREE.DoubleSide, transparent: true, opacity: 0.3,
+    // Create orbit line instead of ring - more accurate and visible
+    const orbitPoints = [];
+    const segments = 128;
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2;
+      orbitPoints.push(
+        new THREE.Vector3(
+          Math.cos(angle) * orbitRadius,
+          0,
+          Math.sin(angle) * orbitRadius
+        )
+      );
+    }
+    const orbitLineGeo = new THREE.BufferGeometry().setFromPoints(orbitPoints);
+    const orbitLineMat = new THREE.LineBasicMaterial({
+      color: new THREE.Color(def.color).multiplyScalar(0.7),
+      transparent: true,
+      opacity: 0.5,
+      linewidth: 1,
+      fog: false,
     });
-    const orbit = new THREE.Mesh(orbitGeo, orbitMat);
-    orbit.rotation.x = Math.PI / 2;
-    pivot.add(orbit);
+    const orbitLine = new THREE.Line(orbitLineGeo, orbitLineMat);
+    pivot.add(orbitLine);
 
     let labelEl = null;
     if (ui.labelsLayer) {
