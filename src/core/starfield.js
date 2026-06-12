@@ -21,12 +21,23 @@ export function createStarfield(scene) {
   const closeStars = createStarLayer(1.5, 1000, 0.8, 'close');
   starfieldGroup.add(closeStars);
 
-  // Add subtle Milky Way glow
+  // Milky Way glow (hidden by default in orbit mode, shown in galactic views)
   const milkyWay = createMilkyWay();
+  milkyWay.userData.galaxyGlow = true; // Mark for conditional rendering
+  milkyWay.visible = false; // Start hidden
   starfieldGroup.add(milkyWay);
 
   scene.add(starfieldGroup);
   return starfieldGroup;
+}
+
+export function setMilkyWayVisible(scene, visible, modeLabel) {
+  const milkyWay = scene.getObjectByName('milkyway-glow');
+  if (milkyWay) {
+    // Show in galactic views, hide in orbit mode
+    milkyWay.visible = visible;
+    milkyWay.material.opacity = visible ? 0.25 : 0;
+  }
 }
 
 function createStarLayer(parallaxFactor, starCount, size, layerName) {

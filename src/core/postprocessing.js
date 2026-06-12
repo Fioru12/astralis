@@ -77,9 +77,9 @@ export function setupPostProcessing(renderer, scene, camera) {
   // Enhanced bloom effect for Sun and glowing objects
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.8,   // strength (increased for more glow)
-    0.5,   // radius (larger bloom)
-    0.75   // threshold (slightly lower to catch more objects)
+    1.2,   // strength (refined for elegant glow, not overwhelming)
+    0.4,   // radius (medium bloom spread)
+    0.85   // threshold (only brightest objects bloom)
   );
   bloomPass.renderToScreen = false;
   composer.addPass(bloomPass);
@@ -90,10 +90,10 @@ export function setupPostProcessing(renderer, scene, camera) {
     scene,
     camera
   );
-  outlinePass.edgeStrength = 2.5;  // Reduced from 3.0 for less aggressiveness
-  outlinePass.edgeGlow = 0.3;      // Added subtle glow
-  outlinePass.edgeThickness = 1.2;
-  outlinePass.visibleEdgeColor.set(0x88ddff);  // Cyan highlight
+  outlinePass.edgeStrength = 1.8;  // Subtle, elegant outline
+  outlinePass.edgeGlow = 0.2;      // Minimal glow for cleanliness
+  outlinePass.edgeThickness = 0.8; // Thinner, more refined
+  outlinePass.visibleEdgeColor.set(0x5bc4cf);  // Softer cyan (matches theme)
   outlinePass.hiddenEdgeColor.set(0x000000);
   outlinePass.usePatternTexture = false;
   outlinePass.renderToScreen = false;

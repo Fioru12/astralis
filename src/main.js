@@ -8,7 +8,7 @@ import { textureLoader as TL } from './utils/textureLoader.js';
 import { keplerPos } from './utils/kepler.js';
 import { createCameraSystem, enterFly as enterFlyModule, exitFly as exitFlyModule, enterFollow as enterFollowModule } from './core/camera.js';
 import { setupPostProcessing } from './core/postprocessing.js';
-import { createStarfield, updateStarfieldParallax } from './core/starfield.js';
+import { createStarfield, updateStarfieldParallax, setMilkyWayVisible } from './core/starfield.js';
 import { setupControls } from './core/controls.js';
 import { rebuildOrbits } from './core/orbits.js';
 // (state.js - funzioni utilitarie non usate direttamente)
@@ -316,6 +316,7 @@ function toggleGalaxyMap() {
   galaxyMapMode = !galaxyMapMode;
   localBubbleMode = false; // Disable Local Bubble when switching to galaxy map
   if (galaxyMapMode) {
+    setMilkyWayVisible(scene, true, 'galaxy');
     exitFly();
     CAM.tRadius = 500000;
     CAM.tTheta = 0;
@@ -332,6 +333,7 @@ function toggleGalaxyMap() {
       if (star.glow) { star.glow.scale.set(star.radius * 20, star.radius * 20, 1); star.glow.material.opacity = 0.9; }
     });
   } else {
+    setMilkyWayVisible(scene, false, 'orbit');
     exitFly();
     CAM.tRadius = 1400; CAM.tTheta = 0.9; CAM.tPhi = 1.05; CAM.tPivot.set(0, 0, 0);
     CAM.followBody = null;
@@ -348,9 +350,10 @@ function toggleGalaxyMap() {
 function toggleLocalBubble() {
   localBubbleMode = !localBubbleMode;
   if (localBubbleMode) {
+    setMilkyWayVisible(scene, false, 'localbubble');
     // Disable galaxy map when switching to Local Bubble
     galaxyMapMode = false;
-    
+
     exitFly();
     // Position camera for Local Bubble view (Sun at origin, looking at nearby stars)
     CAM.tRadius = 200000; // Closer view for Local Bubble
@@ -374,6 +377,7 @@ function toggleLocalBubble() {
       if (star.distanceLabel) star.distanceLabel.style.opacity = '1';
     });
   } else {
+    setMilkyWayVisible(scene, false, 'orbit');
     exitFly();
     CAM.tRadius = 1400; CAM.tTheta = 0.9; CAM.tPhi = 1.05; CAM.tPivot.set(0, 0, 0);
     CAM.followBody = null;
