@@ -661,11 +661,15 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   z-index: 95;
-  display: flex;
+  display: none;
   flex-direction: column;
   box-shadow: var(--shadow), 0 0 80px rgba(91,196,207,0.12);
   animation: slideInUp 0.4s var(--ease-bounce);
   overflow: hidden;
+}
+
+.celestial-menu.open, .galaxy-guide.open {
+  display: flex;
 }
 
 .celestial-menu {
