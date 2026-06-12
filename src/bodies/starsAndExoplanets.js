@@ -349,26 +349,35 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
       });
     }
 
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(def.radius * 0.5, 16, 16), material);
+    // Scale planets appropriately - larger for better visibility
+    const planetScale = 0.9; // Increased from 0.5 to 0.9
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(def.radius * planetScale, 32, 32), material);
     mesh.userData.bodyKey = def.key;
     mesh.userData.isGasGiant = isGasGiant;
     pivot.add(mesh);
     pGroup.add(pivot);
 
-    // Add rings to gas giants
-    if (isGasGiant && Math.random() > 0.3) {
-      const ringInner = def.radius * 0.7;
-      const ringOuter = def.radius * 1.3;
+    // Add rings to large gas giants only
+    if (isGasGiant && def.radius > 3.0 && Math.random() > 0.4) {
+      // Rings are proportional to planet size and much more subtle
+      const ringInner = (def.radius * planetScale) * 1.2;
+      const ringOuter = (def.radius * planetScale) * 1.6;
       const ringGeo = new THREE.RingGeometry(ringInner, ringOuter, 64);
+
+      // More realistic ring colors (greyish with slight tint)
+      const ringColor = new THREE.Color(def.color)
+        .multiplyScalar(0.4)
+        .lerp(new THREE.Color(0xcccccc), 0.5);
+
       const ringMat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(def.color).multiplyScalar(0.6),
+        color: ringColor,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.35, // More subtle
         depthWrite: false,
       });
       const rings = new THREE.Mesh(ringGeo, ringMat);
-      rings.rotation.x = (Math.random() - 0.5) * 0.8; // Tilted rings
+      rings.rotation.x = (Math.random() - 0.5) * 0.6; // More tilted
       pivot.add(rings);
     }
 
