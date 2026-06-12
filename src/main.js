@@ -317,7 +317,7 @@ function toggleGalaxyMap() {
   galaxyMapMode = !galaxyMapMode;
   localBubbleMode = false; // Disable Local Bubble when switching to galaxy map
   if (galaxyMapMode) {
-    setMilkyWayVisible(scene, true, 'galaxy');
+    setMilkyWayVisible(scene, true);
     exitFly();
     CAM.tRadius = 500000;
     CAM.tTheta = 0;

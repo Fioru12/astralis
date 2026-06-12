@@ -31,7 +31,7 @@ export function createStarfield(scene) {
   return starfieldGroup;
 }
 
-export function setMilkyWayVisible(scene, visible, modeLabel) {
+export function setMilkyWayVisible(scene, visible) {
   const milkyWay = scene.getObjectByName('milkyway-glow');
   if (milkyWay) {
     // Show in galactic views, hide in orbit mode
