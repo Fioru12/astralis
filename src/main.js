@@ -18,6 +18,7 @@ import { setupInfoPanel, showInfo } from './ui/infoPanel.js';
 import { buildInventory, updateInventoryDistances, filterInventory, highlightInventory } from './ui/inventory.js';
 import { updateLabels } from './ui/labels.js';
 import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
+import { setupTabs } from './ui/tabs.js';
 
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
@@ -1134,6 +1135,7 @@ function startApp() {
   setCamLabel(ui, 'orbit');
   
   // Init nuovi moduli
+  setupTabs();
   hud.init();
   customCursor.init();
   particleEffects.init();

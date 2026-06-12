@@ -14,8 +14,8 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 const toneMapShader = {
   uniforms: {
     tDiffuse: { value: null },
-    exposure: { value: 1.2 },
-    saturation: { value: 1.15 },
+    exposure: { value: 1.0 },
+    saturation: { value: 1.3 },
   },
   vertexShader: `
     varying vec2 vUv;
