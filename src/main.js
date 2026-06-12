@@ -19,6 +19,8 @@ import { buildInventory, updateInventoryDistances, filterInventory, highlightInv
 import { updateLabels } from './ui/labels.js';
 import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
 import { setupTabs } from './ui/tabs.js';
+import { initMinimap, toggleMinimapVisibility } from './ui/minimap.js';
+import { createHyperlines as createHyperlinesCosmetic, setHyperlinesVisible } from './core/hyperlines.js';
 
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
@@ -123,6 +125,9 @@ const { composer, bloomPass, outlinePass } = setupPostProcessing(renderer, scene
 
 // Create dynamic starfield
 const starfield = createStarfield(scene);
+
+// Initialize hyperlines (will be populated after planets are created)
+let hyperlines = null;
 
 // ═══ Setup nuove features ═══
 themeManager.apply();

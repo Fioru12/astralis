@@ -114,6 +114,7 @@ export function createAdvancedSun(radius, textureUrl, manager) {
     vertexShader: sunVertexShader,
     fragmentShader: sunFragmentShader,
     fog: false,
+    side: THREE.BackSide,
   });
   
   const mesh = new THREE.Mesh(geometry, material);
