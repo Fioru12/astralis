@@ -156,7 +156,7 @@ export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouse
 /**
  * Gestisce il click su un corpo celeste
  */
-function handleClick(cx, cy, camera, raycaster, mouse, meshList, hitboxList, allBodies, ui, renderer, selectBody, highlightInventory) {
+function handleClick(cx, cy, camera, raycaster, mouse, meshList, hitboxList, allBodies, ui, renderer, selectBody) {
   const el = document.elementFromPoint(cx, cy);
   if (el && el !== renderer.domElement && !el.classList.contains('label')) return;
 
