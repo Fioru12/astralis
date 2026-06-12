@@ -116,7 +116,6 @@ export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouse
 
   window.addEventListener('wheel', e => {
     cam.zoomTarget = null;
-    e.preventDefault(); // Prevent page scroll
     if (cam.mode === 'fly') {
       cam.flySpeed = Math.max(5, Math.min(100000, cam.flySpeed * (1 + e.deltaY * 0.001)));
       return;
