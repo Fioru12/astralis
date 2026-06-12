@@ -1071,10 +1071,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
    ════════════════════════════════════════════ */
 .search-container {
   position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 380px;
+  top: 460px;
+  left: 16px;
+  width: 320px;
   z-index: 101;
 }
 
