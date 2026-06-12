@@ -120,6 +120,7 @@ export function createAdvancedSun(radius, textureUrl, manager) {
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = 'advancedSun';
   mesh.userData.material = material;
+  mesh.renderOrder = -100; // Render sun first (behind everything else)
   return mesh;
 }
 

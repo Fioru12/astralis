@@ -146,7 +146,7 @@ export function updateCamera(cam, camera, dt, keys) {
 
   } else if (cam.mode === 'fly') {
     const speed = cam.flySpeed * (cam.flyBoost ? 5 : 1) * dt;
-    const fwd = new THREE.Vector3(-Math.sin(cam.flyYaw) * Math.cos(cam.flyPitch), Math.sin(cam.flyPitch), -Math.cos(cam.flyYaw) * Math.cos(cam.flyPitch));
+    const fwd = new THREE.Vector3(Math.sin(cam.flyYaw) * Math.cos(cam.flyPitch), Math.sin(cam.flyPitch), Math.cos(cam.flyYaw) * Math.cos(cam.flyPitch));
     const right = new THREE.Vector3(Math.cos(cam.flyYaw), 0, -Math.sin(cam.flyYaw));
     const up = new THREE.Vector3(0, 1, 0);
     if (keys['w'] || keys['W'] || keys['ArrowUp']) cam.flyPos.addScaledVector(fwd, speed);

@@ -259,12 +259,30 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
       varying vec2 vUv;
       varying vec3 vNormal;
       varying vec3 vPosition;
+
+      float noise(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+
       void main() {
-        float bands = sin(vUv.y * 20.0 + time * 0.001) * 0.1;
-        vec3 color = baseColor + vec3(bands);
-        float edge = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
-        color += edge * 0.2;
-        gl_FragColor = vec4(color, 0.9);
+        // Strisce atmosferiche animate
+        float bands = sin(vUv.y * 30.0 + time * 0.0005) * 0.15;
+        bands += sin(vUv.y * 50.0 - time * 0.0003) * 0.08;
+
+        // Turbolenza atmosferica
+        float turb = noise(vUv * 10.0 + vec2(time * 0.001)) * 0.1;
+
+        vec3 color = baseColor + vec3(bands + turb);
+
+        // Limb darkening (bordi scuri)
+        float rim = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.0);
+        color *= 1.0 - rim * 0.3;
+
+        // Edge glow (alone al bordo)
+        float edge = pow(max(0.0, dot(vNormal, normalize(vPosition))), 3.0);
+        color += baseColor * edge * 0.3;
+
+        gl_FragColor = vec4(color, 0.95);
       }
     `;
 
@@ -286,15 +304,31 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
       varying vec2 vUv;
       varying vec3 vNormal;
       varying vec3 vPosition;
-      float random(vec2 st) {
-        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+
+      float fbm(vec2 p) {
+        float f = 0.0;
+        f += 0.5 * fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5);
+        f += 0.25 * fract(sin(dot(p * 2.01, vec2(269.5, 183.3))) * 43758.5);
+        f += 0.125 * fract(sin(dot(p * 4.01, vec2(456.2, 234.1))) * 43758.5);
+        return f;
       }
+
       void main() {
-        float n = random(vUv * 50.0) * 0.1;
-        vec3 color = baseColor + vec3(n);
-        float edge = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-        color += edge * 0.15;
-        gl_FragColor = vec4(color, 0.9);
+        // Texture di superficie con crateri
+        float surface = fbm(vUv * 20.0) * 0.2;
+        surface += fbm(vUv * 50.0 + time * 0.0001) * 0.1;
+
+        vec3 color = baseColor * (0.9 + surface);
+
+        // Limb darkening (ombre ai bordi)
+        float rim = pow(1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0))), 2.5);
+        color *= 1.0 - rim * 0.4;
+
+        // Specular highlight (riflessi)
+        float spec = pow(max(0.0, dot(normalize(vPosition), vNormal)), 10.0);
+        color += vec3(spec) * 0.2;
+
+        gl_FragColor = vec4(color, 0.92);
       }
     `;
 
@@ -321,9 +355,39 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
     pivot.add(mesh);
     pGroup.add(pivot);
 
+    // Add rings to gas giants
+    if (isGasGiant && Math.random() > 0.3) {
+      const ringInner = def.radius * 0.7;
+      const ringOuter = def.radius * 1.3;
+      const ringGeo = new THREE.RingGeometry(ringInner, ringOuter, 64);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(def.color).multiplyScalar(0.6),
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.5,
+        depthWrite: false,
+      });
+      const rings = new THREE.Mesh(ringGeo, ringMat);
+      rings.rotation.x = (Math.random() - 0.5) * 0.8; // Tilted rings
+      pivot.add(rings);
+    }
+
     const glow = makeGlow(def.radius * 1.5, def.color);
     glow.scale.set(0.5, 0.5, 0.5);
     pivot.add(glow);
+
+    // Add atmospheric glow for habitable/ocean planets
+    if (!isGasGiant && (def.color.toString(16).includes('0084ff') || def.color.toString(16).includes('0099ff'))) {
+      const atmosphereGeo = new THREE.SphereGeometry(def.radius * 0.53, 16, 16);
+      const atmosphereMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(def.color).multiplyScalar(1.5),
+        transparent: true,
+        opacity: 0.2,
+        side: THREE.BackSide,
+      });
+      const atmosphere = new THREE.Mesh(atmosphereGeo, atmosphereMat);
+      pivot.add(atmosphere);
+    }
 
     const orbitGeo = new THREE.RingGeometry(orbitRadius - 0.5, orbitRadius + 0.5, 64);
     const orbitMat = new THREE.MeshBasicMaterial({
