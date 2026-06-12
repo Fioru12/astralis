@@ -495,6 +495,7 @@ const cGroup = new THREE.Group(); scene.add(cGroup);
 const aGroup = new THREE.Group(); scene.add(aGroup);
 const hyperlaneGroup = new THREE.Group(); hyperlaneGroup.name = 'hyperlanes'; scene.add(hyperlaneGroup);
 const sectorGroup = new THREE.Group(); sectorGroup.name = 'sectors'; scene.add(sectorGroup);
+sectorGroup.visible = false; // Hidden by default, only visible in galactic map mode
 const localBubbleGroup = new THREE.Group(); localBubbleGroup.name = 'localBubble'; scene.add(localBubbleGroup);
 
 function selectBody(body) {
