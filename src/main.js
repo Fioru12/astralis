@@ -22,7 +22,7 @@ import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
 import { generateAsteroidBelt, buildAsteroidBody, createDustBelts, updateDustBelts, updateAsteroidBelts } from './bodies/asteroidBelts.js';
-import { createNearbyStars, createHyperlanes, createSpaceProbes, createExoplanets, createLocalBubbleConnections, createLocalBubbleAxes, createLocalBubbleDistanceLabels } from './bodies/starsAndExoplanets.js';
+import { createNearbyStars, createHyperlanes, createSpaceProbes, createExoplanets, createLocalBubbleConnections, createLocalBubbleAxes, createLocalBubbleDistanceLabels, cleanupLocalBubbleLabels } from './bodies/starsAndExoplanets.js';
 import { customCursor } from './ui/customCursor.js';
 import { particleEffects } from './ui/particleEffects.js';
 import { comparisonMode } from './ui/comparisonMode.js';
@@ -347,8 +347,10 @@ function toggleGalaxyMap() {
 
 function toggleLocalBubble() {
   localBubbleMode = !localBubbleMode;
-  galaxyMapMode = false; // Disable galaxy map when switching to Local Bubble
   if (localBubbleMode) {
+    // Disable galaxy map when switching to Local Bubble
+    galaxyMapMode = false;
+    
     exitFly();
     // Position camera for Local Bubble view (Sun at origin, looking at nearby stars)
     CAM.tRadius = 200000; // Closer view for Local Bubble
@@ -386,6 +388,8 @@ function toggleLocalBubble() {
       // Hide distance labels
       if (star.distanceLabel) star.distanceLabel.style.opacity = '0';
     });
+    // Cleanup distance labels to prevent memory leak
+    cleanupLocalBubbleLabels(allBodies);
   }
 }
 
@@ -1039,6 +1043,27 @@ function animate() {
   updateDustBelts(scene, dt, mult);
   // ═══ Atmosphere effects update ═══
   allBodies.forEach(b => { if (b.clouds || b.aurora) updateAtmosphereEffects(b); });
+  
+  // ═══ Update Local Bubble distance labels position ═══
+  if (localBubbleMode) {
+    allBodies.filter(b => b.type === 'star' && b.distanceLabel).forEach(star => {
+      const label = star.distanceLabel;
+      const pos = star.pivot.position.clone();
+      pos.project(camera);
+      
+      const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (pos.y * -0.5 + 0.5) * window.innerHeight;
+      
+      // Hide if behind camera
+      if (pos.z > 1) {
+        label.style.display = 'none';
+      } else {
+        label.style.display = 'block';
+        label.style.left = `${x}px`;
+        label.style.top = `${y}px`;
+      }
+    });
+  }
 
   if (ui.orbits) oGroup.visible = ui.orbits.checked;
   rebuildOrbits(T, oGroup, lastOrbitTRef);

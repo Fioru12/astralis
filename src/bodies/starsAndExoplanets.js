@@ -457,6 +457,10 @@ export function createLocalBubbleDistanceLabels(allBodies, ui) {
   const stars = allBodies.filter(b => b.type === 'star');
   const lyToAU = 63241;
   
+  // Remove existing distance labels to prevent memory leak
+  const existingLabels = ui.labelsLayer?.querySelectorAll('.local-bubble-label');
+  existingLabels?.forEach(label => label.remove());
+  
   stars.forEach(star => {
     if (!ui.labelsLayer) return;
     
@@ -474,5 +478,14 @@ export function createLocalBubbleDistanceLabels(allBodies, ui) {
     
     ui.labelsLayer.appendChild(labelEl);
     star.distanceLabel = labelEl;
+  });
+}
+
+export function cleanupLocalBubbleLabels(allBodies) {
+  allBodies.forEach(star => {
+    if (star.distanceLabel) {
+      star.distanceLabel.remove();
+      star.distanceLabel = null;
+    }
   });
 }
