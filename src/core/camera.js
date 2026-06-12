@@ -19,6 +19,15 @@ export function createCameraSystem() {
     pivot: new THREE.Vector3(),
     tPivot: new THREE.Vector3(),
     DAMP: CAMERA_DAMP,
+    DAMP_FAST: 0.15,
+    // Camera smoothing
+    momentumTheta: 0,
+    momentumPhi: 0,
+    momentumRadius: 0,
+    momentumDamp: 0.92, // Inertia decay
+    // Zoom constraints
+    minRadius: 50,
+    maxRadius: 500000,
     // Fly
     flyPos: new THREE.Vector3(0, 200, 1400),
     flyYaw: 0, flyPitch: 0,
@@ -35,6 +44,7 @@ export function createCameraSystem() {
     downPos: new THREE.Vector2(),
     pointerLocked: false,
     zoomTarget: null,
+    isTransitioning: false,
   };
 }
 
@@ -94,6 +104,25 @@ export function updateCamera(cam, camera, dt, keys) {
   const sp = 1 - Math.pow(1 - cam.DAMP, dt * 60);
 
   if (cam.mode === 'orbit') {
+    // Apply momentum from dragging
+    if (cam.momentumTheta !== 0 || cam.momentumPhi !== 0 || cam.momentumRadius !== 0) {
+      cam.tTheta += cam.momentumTheta;
+      cam.tPhi += cam.momentumPhi;
+      cam.tPhi = Math.max(0.05, Math.min(Math.PI - 0.05, cam.tPhi));
+      cam.tRadius += cam.momentumRadius;
+      cam.tRadius = Math.max(cam.minRadius, Math.min(cam.maxRadius, cam.tRadius));
+
+      // Decay momentum
+      cam.momentumTheta *= cam.momentumDamp;
+      cam.momentumPhi *= cam.momentumDamp;
+      cam.momentumRadius *= cam.momentumDamp;
+
+      // Stop momentum when negligible
+      if (Math.abs(cam.momentumTheta) < 0.0001) cam.momentumTheta = 0;
+      if (Math.abs(cam.momentumPhi) < 0.0001) cam.momentumPhi = 0;
+      if (Math.abs(cam.momentumRadius) < 0.1) cam.momentumRadius = 0;
+    }
+
     if (cam.zoomTarget) {
       const pos = cam.zoomTarget.body.pivot?.position;
       if (pos) {

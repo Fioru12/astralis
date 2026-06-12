@@ -74,14 +74,37 @@ export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouse
     }
     cam.lastX = e.clientX;
     cam.lastY = e.clientY;
-  });
+  }, { passive: true });
 
+  let lastDragVelX = 0, lastDragVelY = 0;
   window.addEventListener('mouseup', e => {
     const was = cam.isDragging;
     cam.dragging = cam.isDragging = false;
+
+    // Transfer drag velocity to momentum
+    if (was && cam.mode === 'orbit') {
+      cam.momentumTheta = -lastDragVelX * 0.005 * 0.15; // 15% of velocity becomes momentum
+      cam.momentumPhi = lastDragVelY * 0.005 * 0.15;
+    }
+
     if (was) return;
     handleClick(e.clientX, e.clientY, camera, raycaster, mouse, meshList, hitboxList, allBodies, ui, renderer, selectBody, highlightInventory);
   });
+
+  // Track velocity for momentum
+  let lastVelCheckX = 0, lastVelCheckY = 0;
+  let lastVelCheckTime = Date.now();
+  window.addEventListener('mousemove', e => {
+    if (cam.dragging && cam.isDragging) {
+      const now = Date.now();
+      const dt = Math.max(1, now - lastVelCheckTime);
+      lastDragVelX = (e.clientX - lastVelCheckX) / (dt * 0.016);
+      lastDragVelY = (e.clientY - lastVelCheckY) / (dt * 0.016);
+      lastVelCheckX = e.clientX;
+      lastVelCheckY = e.clientY;
+      lastVelCheckTime = now;
+    }
+  }, { passive: true });
 
   window.addEventListener('dblclick', e => {
     if (cam.mode !== 'orbit') { exitFly(cam, setCamLabel, showHint); return; }
@@ -93,6 +116,7 @@ export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouse
 
   window.addEventListener('wheel', e => {
     cam.zoomTarget = null;
+    e.preventDefault(); // Prevent page scroll
     if (cam.mode === 'fly') {
       cam.flySpeed = Math.max(5, Math.min(100000, cam.flySpeed * (1 + e.deltaY * 0.001)));
       return;
@@ -102,8 +126,8 @@ export function setupControls(cam, camera, renderer, ui, raycaster, mouse, mouse
       return;
     }
     cam.tRadius *= 1 + e.deltaY * 0.001;
-    cam.tRadius = Math.max(20, Math.min(300000, cam.tRadius));
-  }, { passive: true });
+    cam.tRadius = Math.max(cam.minRadius, Math.min(cam.maxRadius, cam.tRadius));
+  });
 
   // Touch
   let touchStartDist = 0;
