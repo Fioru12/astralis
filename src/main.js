@@ -19,8 +19,6 @@ import { buildInventory, updateInventoryDistances, filterInventory, highlightInv
 import { updateLabels } from './ui/labels.js';
 import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
 import { setupTabs } from './ui/tabs.js';
-import { initMinimap, toggleMinimapVisibility } from './ui/minimap.js';
-import { createHyperlines as createHyperlinesCosmetic, setHyperlinesVisible } from './core/hyperlines.js';
 import { setupGlobalSearch } from './ui/search.js';
 
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
@@ -126,9 +124,6 @@ const { composer, bloomPass, outlinePass } = setupPostProcessing(renderer, scene
 
 // Create dynamic starfield
 const starfield = createStarfield(scene);
-
-// Initialize hyperlines (will be populated after planets are created)
-let hyperlines = null;
 
 // ═══ Setup nuove features ═══
 themeManager.apply();
@@ -536,6 +531,11 @@ setupControls(CAM, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, 
 
 const keys = {};
 window.addEventListener('keydown', e => {
+  // Ignore keyboard shortcuts when typing in an input/textarea
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) {
+    return;
+  }
   keys[e.key] = true;
   if (e.key === 'Escape') {
     if (observatory.active) { observatory.exit(); }

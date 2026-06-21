@@ -385,8 +385,10 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
     glow.scale.set(0.5, 0.5, 0.5);
     pivot.add(glow);
 
-    // Add atmospheric glow for habitable/ocean planets
-    if (!isGasGiant && (def.color.toString(16).includes('0084ff') || def.color.toString(16).includes('0099ff'))) {
+    // Add atmospheric glow for habitable/ocean planets (bluish planets)
+    const c = new THREE.Color(def.color);
+    const isBluish = !isGasGiant && c.b > 0.5 && c.b > c.r;
+    if (isBluish) {
       const atmosphereGeo = new THREE.SphereGeometry(def.radius * 0.53, 16, 16);
       const atmosphereMat = new THREE.MeshBasicMaterial({
         color: new THREE.Color(def.color).multiplyScalar(1.5),
