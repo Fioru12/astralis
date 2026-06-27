@@ -580,7 +580,7 @@ window.addEventListener('keydown', e => {
       const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3(0, 0, 0);
       observatory.toggle(selectedBody, sunPos);
     } else if (!observatory.active) {
-      if (window.toast) window.toast.warning('Seleziona prima un pianeta per atterrare!');
+      toast.warning('Seleziona prima un pianeta per atterrare!');
     } else {
       observatory.exit();
     }

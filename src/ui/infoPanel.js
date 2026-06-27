@@ -1,4 +1,5 @@
 import { AU } from '../utils/constants.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export function setupInfoPanel(ui) {
   if (ui.infoClose) {
@@ -17,7 +18,7 @@ export function showInfo(ui, body, zoomToBody, enterFollow) {
     comet: 'Comet', asteroid: 'Asteroid',
   }[body.type] || body.type;
 
-  let rows = `<div class="info-row"><span>Type</span><strong>${typeLabel}</strong></div>`;
+  let rows = `<div class="info-row"><span>Type</span><strong>${escapeHtml(typeLabel)}</strong></div>`;
 
   let currentDist = '--';
   if (body.pivot) {
@@ -26,27 +27,27 @@ export function showInfo(ui, body, zoomToBody, enterFollow) {
   }
 
   if (body.type === 'comet') {
-    rows += `<div class="info-row"><span>Period</span><strong>${body.period}</strong></div>`;
-    rows += `<div class="info-row"><span>Perihelion</span><strong>${body.perielio}</strong></div>`;
-    rows += `<div class="info-row"><span>Discovery</span><strong>${body.scoperta}</strong></div>`;
-    rows += `<div class="info-row"><span>Eccentricity</span><strong>${body.e ? body.e.toFixed(4) : '--'}</strong></div>`;
-    rows += `<div class="info-row"><span>Current distance</span><strong>${currentDist}</strong></div>`;
+    rows += `<div class="info-row"><span>Period</span><strong>${escapeHtml(String(body.period))}</strong></div>`;
+    rows += `<div class="info-row"><span>Perihelion</span><strong>${escapeHtml(String(body.perielio))}</strong></div>`;
+    rows += `<div class="info-row"><span>Discovery</span><strong>${escapeHtml(String(body.scoperta))}</strong></div>`;
+    rows += `<div class="info-row"><span>Eccentricity</span><strong>${body.e ? escapeHtml(body.e.toFixed(4)) : '--'}</strong></div>`;
+    rows += `<div class="info-row"><span>Current distance</span><strong>${escapeHtml(currentDist)}</strong></div>`;
   } else {
-    if (body.distAU) rows += `<div class="info-row"><span>Avg distance</span><strong>${body.distAU}</strong></div>`;
-    rows += `<div class="info-row"><span>Current distance</span><strong>${currentDist}</strong></div>`;
-    if (body.period) rows += `<div class="info-row"><span>Orbital period</span><strong>${body.period}</strong></div>`;
+    if (body.distAU) rows += `<div class="info-row"><span>Avg distance</span><strong>${escapeHtml(String(body.distAU))}</strong></div>`;
+    rows += `<div class="info-row"><span>Current distance</span><strong>${escapeHtml(currentDist)}</strong></div>`;
+    if (body.period) rows += `<div class="info-row"><span>Orbital period</span><strong>${escapeHtml(String(body.period))}</strong></div>`;
     if (body.type !== 'asteroid') rows += `<div class="info-row"><span>Moons</span><strong>${body.moons || 0}</strong></div>`;
-    if (body.day) rows += `<div class="info-row"><span>Day length</span><strong>${Math.abs(body.day).toFixed(1)}h${body.day < 0 ? ' <em>(retrograde)</em>' : ''}</strong></div>`;
-    if (body.tilt) rows += `<div class="info-row"><span>Axial tilt</span><strong>${body.tilt.toFixed(1)}°</strong></div>`;
+    if (body.day) rows += `<div class="info-row"><span>Day length</span><strong>${escapeHtml(String(Math.abs(body.day).toFixed(1)))}h${body.day < 0 ? ' <em>(retrograde)</em>' : ''}</strong></div>`;
+    if (body.tilt) rows += `<div class="info-row"><span>Axial tilt</span><strong>${escapeHtml(body.tilt.toFixed(1))}°</strong></div>`;
 
     if (body.type === 'exoplanet') {
-      if (body.mass) rows += `<div class="info-row"><span>Mass</span><strong>${body.mass}</strong></div>`;
-      if (body.temp) rows += `<div class="info-row"><span>Temperature</span><strong>${body.temp}</strong></div>`;
-      if (body.atmosphere) rows += `<div class="info-row"><span>Atmosphere</span><strong>${body.atmosphere}</strong></div>`;
-      if (body.habitability) rows += `<div class="info-row"><span>Habitability</span><strong>${body.habitability}</strong></div>`;
+      if (body.mass) rows += `<div class="info-row"><span>Mass</span><strong>${escapeHtml(String(body.mass))}</strong></div>`;
+      if (body.temp) rows += `<div class="info-row"><span>Temperature</span><strong>${escapeHtml(String(body.temp))}</strong></div>`;
+      if (body.atmosphere) rows += `<div class="info-row"><span>Atmosphere</span><strong>${escapeHtml(String(body.atmosphere))}</strong></div>`;
+      if (body.habitability) rows += `<div class="info-row"><span>Habitability</span><strong>${escapeHtml(String(body.habitability))}</strong></div>`;
     }
   }
-  rows += `<p class="info-desc">${body.desc || ''}</p>`;
+  rows += `<p class="info-desc">${escapeHtml(body.desc || '')}</p>`;
   rows += `<div class="info-actions">`;
   rows += `<button class="zoom-btn" id="zoomBtn">Zoom</button>`;
   rows += `<button class="follow-btn" id="followBtn">Follow</button>`;

@@ -3,6 +3,7 @@
 // GAMIFICATION - MISSIONI EDUCATIVE INTERATTIVE
 // "Diventa un astronauta": missioni a tappe con obiettivi
 // ══════════════════════════════════════════════════════════════════
+import { toast } from './toast.js';
 
 const MISSIONS = [
   {
@@ -231,15 +232,11 @@ export class MissionsSystem {
           this.save();
           
           // Mostra notifica
-          if (window.toast) {
-            window.toast.success(`🎉 Missione completata: ${mission.name}! ${mission.reward.badge} +${mission.reward.xp} XP`);
-          }
+          toast.success(`🎉 Missione completata: ${mission.name}! ${mission.reward.badge} +${mission.reward.xp} XP`);
         } else {
           // Step completato, prossimo step
           const nextStepLabel = mission.steps[newProgress]?.label || 'Prossimo obiettivo';
-          if (window.toast) {
-            window.toast.info(`✅ ${nextStep.label} completato! Prossimo: ${nextStepLabel}`);
-          }
+          toast.info(`✅ ${nextStep.label} completato! Prossimo: ${nextStepLabel}`);
           this.save();
         }
       }
@@ -269,14 +266,10 @@ export class MissionsSystem {
           this.totalXP += mission.reward.xp;
           this.badges.push(mission.reward.badge);
           this.save();
-          if (window.toast) {
-            window.toast.success(`🎉 Missione completata: ${mission.name}! ${mission.reward.badge} +${mission.reward.xp} XP`);
-          }
+          toast.success(`🎉 Missione completata: ${mission.name}! ${mission.reward.badge} +${mission.reward.xp} XP`);
         } else {
           this.save();
-          if (window.toast) {
-            window.toast.info(`✅ Step temporale completato! Prossimo: ${mission.steps[this.missionProgress[mission.id]]?.label}`);
-          }
+          toast.info(`✅ Step temporale completato! Prossimo: ${mission.steps[this.missionProgress[mission.id]]?.label}`);
         }
       }
     });

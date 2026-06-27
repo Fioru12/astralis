@@ -3,6 +3,7 @@
  */
 import { BRAND } from '../core/brand.js';
 import { t } from '../i18n/index.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export class CreditsPage {
   constructor() {
@@ -64,19 +65,19 @@ export class CreditsPage {
         <div style="text-align:center;margin-bottom:32px;">
           <img src="./astralis-logo.svg" alt="Astralis" style="width:80px;height:80px;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(91,196,207,0.5));" />
           <h1 style="margin:0;font-size:2rem;font-weight:700;background:linear-gradient(135deg,#5bc4cf 0%,#a78bfa 50%,#f59e0b 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">ASTRALIS</h1>
-          <p style="margin:8px 0 0;font-size:13px;color:rgba(228,234,248,0.6);">${BRAND.tagline}</p>
-          <p style="margin:4px 0 0;font-size:11px;color:rgba(228,234,248,0.4);">Version ${BRAND.version} · ${BRAND.year}</p>
+          <p style="margin:8px 0 0;font-size:13px;color:rgba(228,234,248,0.6);">${escapeHtml(BRAND.tagline)}</p>
+          <p style="margin:4px 0 0;font-size:11px;color:rgba(228,234,248,0.4);">Version ${escapeHtml(BRAND.version)} · ${escapeHtml(BRAND.year)}</p>
         </div>
 
         <section style="margin-bottom:28px;">
-          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${t('credits_about') || 'About'}</h3>
+          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(t('credits_about') || 'About')}</h3>
           <p style="font-size:13px;line-height:1.7;color:rgba(228,234,248,0.8);margin:0;">
-            ${t('credits_about_text') || 'Astralis è un visualizzatore 3D interattivo del Sistema Solare che utilizza dati orbitali reali dalla NASA/JPL. Esplora pianeti, lune, asteroidi, comete e stelle vicine con precisione scientifica.'}
+            ${escapeHtml(t('credits_about_text') || 'Astralis è un visualizzatore 3D interattivo del Sistema Solare che utilizza dati orbitali reali dalla NASA/JPL. Esplora pianeti, lune, asteroidi, comete e stelle vicine con precisione scientifica.')}
           </p>
         </section>
 
         <section style="margin-bottom:28px;">
-          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${t('credits_features') || 'Features'}</h3>
+          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(t('credits_features') || 'Features')}</h3>
           <ul style="font-size:13px;line-height:1.8;color:rgba(228,234,248,0.8);margin:0;padding-left:20px;">
             <li>40+ corpi celesti con orbite kepleriane NASA/JPL</li>
             <li>Time travel con eventi storici</li>
@@ -91,7 +92,7 @@ export class CreditsPage {
         </section>
 
         <section style="margin-bottom:28px;">
-          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${t('credits_tech') || 'Technologies'}</h3>
+          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(t('credits_tech') || 'Technologies')}</h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
             <div style="padding:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;text-align:center;">
               <div style="font-size:13px;font-weight:600;">Three.js</div>
@@ -113,7 +114,7 @@ export class CreditsPage {
         </section>
 
         <section style="margin-bottom:28px;">
-          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${t('credits_data') || 'Data Sources'}</h3>
+          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(t('credits_data') || 'Data Sources')}</h3>
           <ul style="font-size:13px;line-height:1.8;color:rgba(228,234,248,0.8);margin:0;padding-left:20px;">
             <li><strong>NASA/JPL</strong> - Orbital elements, APOD, NEO</li>
             <li><strong>HYG Database</strong> - Nearby stars catalog</li>
@@ -123,16 +124,16 @@ export class CreditsPage {
         </section>
 
         <section style="margin-bottom:28px;">
-          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${t('credits_team') || 'Team'}</h3>
+          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(t('credits_team') || 'Team')}</h3>
           <p style="font-size:13px;line-height:1.7;color:rgba(228,234,248,0.8);margin:0;">
-            ${t('credits_team_text') || 'Sviluppato con passione per l\'astronomia e l\'educazione scientifica.'}
+            ${escapeHtml(t('credits_team_text') || 'Sviluppato con passione per l\'astronomia e l\'educazione scientifica.')}
           </p>
         </section>
 
         <section>
-          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${t('credits_license') || 'License'}</h3>
+          <h3 style="font-size:14px;font-weight:700;color:#5bc4cf;margin:0 0 12px;text-transform:uppercase;letter-spacing:1px;">${escapeHtml(t('credits_license') || 'License')}</h3>
           <p style="font-size:13px;line-height:1.7;color:rgba(228,234,248,0.8);margin:0;">
-            ${t('credits_license_text') || 'Open source under MIT License. Dati NASA di pubblico dominio.'}
+            ${escapeHtml(t('credits_license_text') || 'Open source under MIT License. Dati NASA di pubblico dominio.')}
           </p>
         </section>
 

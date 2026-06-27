@@ -3,6 +3,8 @@
 // GLOBAL SEARCH - Ricerca oggetti celesti in tempo reale
 // ══════════════════════════════════════════════════════════════════
 
+import { escapeHtml } from '../utils/sanitize.js';
+
 export function setupGlobalSearch(allBodies, selectBody, zoomToBody) {
   const searchInput = document.getElementById('globalSearch');
   const searchResults = document.getElementById('searchResults');
@@ -31,7 +33,7 @@ export function setupGlobalSearch(allBodies, selectBody, zoomToBody) {
     }
 
     searchResults.innerHTML = results.map(body => `
-      <div class="search-result-item" data-key="${body.key}">
+      <div class="search-result-item" data-key="${escapeHtml(body.key)}">
         <span class="search-result-icon">${body.icon || '⭐'}</span>
         <div style="flex: 1;">
           <div class="search-result-name">${body.label || body.key}</div>

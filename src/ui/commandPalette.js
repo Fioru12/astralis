@@ -3,6 +3,7 @@
  * Stile VS Code / GitHub
  */
 import { t } from '../i18n/index.js';
+import { escapeHtml } from '../utils/sanitize.js';
 import { PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, EXOPLANETS } from '../data/celestialData.js';
 
 const BODIES = [
@@ -96,7 +97,7 @@ export class CommandPalette {
       <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);
         display:flex;align-items:center;gap:10px;">
         <span style="font-size:18px;">🔍</span>
-        <input id="cmdInput" type="text" placeholder="${t('cmd_placeholder')}"
+        <input id="cmdInput" type="text" placeholder="${escapeHtml(t('cmd_placeholder'))}"
           style="flex:1;background:transparent;border:none;outline:none;color:#e4eaf8;
           font-size:15px;font-family:inherit;" />
         <kbd style="background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:5px;
@@ -190,7 +191,7 @@ export class CommandPalette {
     this.selectedIndex = 0;
 
     if (items.length === 0) {
-      this.results.innerHTML = `<div style="padding:30px;text-align:center;color:rgba(228,234,248,0.4);">${t('cmd_no_results')}</div>`;
+      this.results.innerHTML = `<div style="padding:30px;text-align:center;color:rgba(228,234,248,0.4);">${escapeHtml(t('cmd_no_results'))}</div>`;
       return;
     }
 
@@ -206,8 +207,8 @@ export class CommandPalette {
           style="padding:8px 14px;margin:2px 6px;border-radius:8px;cursor:pointer;
           display:flex;align-items:center;gap:10px;transition:background 0.1s;
           ${it._idx === this.selectedIndex ? 'background:rgba(91,196,207,0.15);' : ''}">
-          <span style="font-size:16px;width:22px;text-align:center;">${it.icon}</span>
-          <span style="color:#e4eaf8;font-size:13px;flex:1;">${it.label}</span>
+          <span style="font-size:16px;width:22px;text-align:center;">${escapeHtml(it.icon || '⚡')}</span>
+          <span style="color:#e4eaf8;font-size:13px;flex:1;">${escapeHtml(it.label)}</span>
         </div>
       `).join('')}
     `).join('');

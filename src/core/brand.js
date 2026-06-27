@@ -2,6 +2,7 @@
  * Astralis - Brand & microinterazioni
  */
 import { soundManager } from './soundManager.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export const BRAND = {
   name: 'ASTRALIS',
@@ -55,10 +56,10 @@ class AchievementManager {
       display: 'flex', alignItems: 'center', gap: '12px',
       fontFamily: '"Space Grotesk", system-ui, sans-serif',
     });
-    el.innerHTML = `<div style="font-size:2rem;">${ach.icon}</div>
+    el.innerHTML = `<div style="font-size:2rem;">${escapeHtml(ach.icon)}</div>
       <div style="flex:1;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;">Achievement Sbloccato!</div>
-      <div style="font-size:14px;font-weight:800;">${ach.name}</div>
-      <div style="font-size:11px;opacity:0.7;margin-top:2px;">+${ach.xp} XP</div></div>`;
+      <div style="font-size:14px;font-weight:800;">${escapeHtml(ach.name)}</div>
+      <div style="font-size:11px;opacity:0.7;margin-top:2px;">+${escapeHtml(String(ach.xp))} XP</div></div>`;
     document.body.appendChild(el);
     requestAnimationFrame(() => { el.style.transform = 'translateX(0)'; });
     setTimeout(() => { el.style.transform = 'translateX(120%)'; setTimeout(() => el.remove(), 500); }, 4000);
@@ -199,18 +200,18 @@ export class AchievementPanel {
       <div style="padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
         <div>
           <h2 style="margin:0;font-size:1.1rem;font-weight:800;color:#5bc4cf;">Achievement</h2>
-          <div style="font-size:11px;color:rgba(228,234,248,0.6);margin-top:3px;">${progress.unlocked}/${progress.total} sbloccati · ${progress.xp} XP</div>
+          <div style="font-size:11px;color:rgba(228,234,248,0.6);margin-top:3px;">${escapeHtml(String(progress.unlocked))}/${escapeHtml(String(progress.total))} sbloccati · ${escapeHtml(String(progress.xp))} XP</div>
         </div>
-        <button id="achClose" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:rgba(228,234,248,0.7);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;">X</button></div><div id="achList" style="flex:1;overflow-y:auto;padding:12px 18px;">255,0.07);border:1px solid rgba(255,255,</div><div style="padding:12px 18px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;font-size:10.5px;color:rgba(228,234,248,0.4);">Premi Y per chiudere · Totale: ' + ACHIEVEMENTS.length + ' achievement</div></div>`;
+        <button id="achClose" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:rgba(228,234,248,0.7);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;">X</button></div><div id="achList" style="flex:1;overflow-y:auto;padding:12px 18px;"></div><div style="padding:12px 18px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;font-size:10.5px;color:rgba(228,234,248,0.4);">Premi Y per chiudere · Totale: ${escapeHtml(String(ACHIEVEMENTS.length))} achievement</div></div>`;
     const items = list.map(a => {
       const ok = unlocked.includes(a.id);
       return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;background:rgba(255,255,255,${ok ? '0.06' : '0.02'});border:1px solid rgba(255,255,255,${ok ? '0.12' : '0.05'});border-radius:10px;${ok ? '' : 'opacity:0.45;filter:grayscale(0.5);'}">
-        <div style="font-size:24px;width:36px;text-align:center;">${a.icon}</div>
+        <div style="font-size:24px;width:36px;text-align:center;">${escapeHtml(a.icon)}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:700;color:${ok ? '#e4eaf8' : 'rgba(228,234,248,0.5)'};">${a.name}</div>
-          <div style="font-size:11px;color:rgba(228,234,248,0.5);">${a.desc}</div>
+          <div style="font-size:13px;font-weight:700;color:${ok ? '#e4eaf8' : 'rgba(228,234,248,0.5)'};">${escapeHtml(a.name)}</div>
+          <div style="font-size:11px;color:rgba(228,234,248,0.5);">${escapeHtml(a.desc)}</div>
         </div>
-        <div style="font-size:10px;color:#5bc4cf;font-weight:700;font-family:monospace;">+${a.xp} XP</div>
+        <div style="font-size:10px;color:#5bc4cf;font-weight:700;font-family:monospace;">+${escapeHtml(String(a.xp))} XP</div>
       </div>`;
     }).join('');
     this.el.querySelector('#achList').innerHTML = items;

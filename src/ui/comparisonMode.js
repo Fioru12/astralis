@@ -2,6 +2,7 @@
  * Comparison Mode - Confronta 2 pianeti side-by-side
  */
 import { t } from '../i18n/index.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export class ComparisonMode {
   constructor() {
@@ -58,7 +59,7 @@ export class ComparisonMode {
 
     this.panel.innerHTML = `
       <div style="padding:18px 22px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
-        <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#5bc4cf;">${t('comparison_title') || 'Confronta Pianeti'}</h2>
+        <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#5bc4cf;">${escapeHtml(t('comparison_title') || 'Confronta Pianeti')}</h2>
         <button id="cmpClose" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:rgba(228,234,248,0.7);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:14px;">✕</button>
       </div>
       <div style="flex:1;overflow-y:auto;padding:20px;">
@@ -139,12 +140,12 @@ export class ComparisonMode {
     let html = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
         <div style="text-align:center;padding:20px;background:rgba(91,196,207,0.1);border:1px solid rgba(91,196,207,0.3);border-radius:12px;">
-          <div style="font-size:48px;margin-bottom:8px;">${body1.icon || '🪐'}</div>
-          <div style="font-size:20px;font-weight:700;color:#5bc4cf;">${body1.label}</div>
+          <div style="font-size:48px;margin-bottom:8px;">${escapeHtml(body1.icon || '🪐')}</div>
+          <div style="font-size:20px;font-weight:700;color:#5bc4cf;">${escapeHtml(body1.label)}</div>
         </div>
         <div style="text-align:center;padding:20px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.3);border-radius:12px;">
-          <div style="font-size:48px;margin-bottom:8px;">${body2.icon || '🪐'}</div>
-          <div style="font-size:20px;font-weight:700;color:#a78bfa;">${body2.label}</div>
+          <div style="font-size:48px;margin-bottom:8px;">${escapeHtml(body2.icon || '🪐')}</div>
+          <div style="font-size:20px;font-weight:700;color:#a78bfa;">${escapeHtml(body2.label)}</div>
         </div>
       </div>
       <table style="width:100%;border-collapse:collapse;">

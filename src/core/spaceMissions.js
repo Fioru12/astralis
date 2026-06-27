@@ -3,6 +3,7 @@
 // MISSIONI SPAZIALI IN TEMPO REALE
 // Posizioni attuali di sonde, dati NASA Horizons, missioni storiche
 // ══════════════════════════════════════════════════════════════════
+import { escapeHtml } from '../utils/sanitize.js';
 
 /**
  * Database delle missioni spaziali con dati orbitali aggiornati
@@ -272,16 +273,16 @@ export function createMissionsPanel() {
 
     card.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <strong style="font-size:1.1rem;">${mission.name}</strong>
-        <span style="color:${statusColor};font-size:0.8rem;">● ${mission.status}</span>
+        <strong style="font-size:1.1rem;">${escapeHtml(mission.name)}</strong>
+        <span style="color:${statusColor};font-size:0.8rem;">● ${escapeHtml(mission.status)}</span>
       </div>
       <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:6px;">
-        ${mission.agency} • Lancio: ${mission.launchYear}
+        ${escapeHtml(mission.agency)} • Lancio: ${escapeHtml(String(mission.launchYear))}
       </div>
-      <div style="font-size:0.9rem;margin-bottom:8px;">${mission.description}</div>
+      <div style="font-size:0.9rem;margin-bottom:8px;">${escapeHtml(mission.description)}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.8rem;color:rgba(255,255,255,0.5);">
-        <span>📡 Distanza: ${mission.currentDistance}</span>
-        <span>🎯 Target: ${mission.target}</span>
+        <span>📡 Distanza: ${escapeHtml(mission.currentDistance)}</span>
+        <span>🎯 Target: ${escapeHtml(mission.target)}</span>
       </div>
     `;
     missionsList.appendChild(card);

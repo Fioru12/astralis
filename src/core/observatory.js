@@ -2,6 +2,7 @@
 // MODALITA OSSERVATORIO TERRESTRE
 import * as THREE from 'three';
 import { DEG } from '../utils/constants.js';
+import { toast } from '../ui/toast.js';
 
 const BRIGHT_STARS = [
   { name: 'Sirio', ra: 6.752, dec: -16.716, mag: -1.46, color: 0xaaccff },
@@ -163,7 +164,7 @@ export class Observatory {
     this.camera.lookAt(obsPos.x, obsPos.y + surfaceHeight, obsPos.z - 1);
     this.yaw = 0;
     this.pitch = 0;
-    if (window.toast) window.toast.success('Sei su ' + this.locationLabel + '!', 4000);
+    toast.success('Sei su ' + this.locationLabel + '!', 4000);
   }
 
   exit() {
@@ -186,7 +187,7 @@ export class Observatory {
       this.camera.updateProjectionMatrix();
       this.originalCameraState = null;
     }
-    if (window.toast) window.toast.info('Modalita osservatorio disattivata');
+    toast.info('Modalita osservatorio disattivata');
   }
 
   update(dt, sunPos) {

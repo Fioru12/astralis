@@ -1,3 +1,5 @@
+import { escapeHtml } from '../utils/sanitize.js';
+
 const invSections = [
   { title: 'Planets', filter: b => b.type === 'planet' },
   { title: 'Moons', filter: b => b.type === 'moon' },
@@ -20,7 +22,7 @@ export function buildInventory(invList, allBodies, selectBody) {
       const item = document.createElement('div');
       item.className = 'inv-item';
       item.dataset.key = body.key;
-      item.innerHTML = `<span class="inv-icon">${body.icon}</span><span class="inv-name">${body.label}</span><span class="inv-dist" id="idist_${body.key}">--</span>`;
+      item.innerHTML = `<span class="inv-icon">${escapeHtml(body.icon)}</span><span class="inv-name">${escapeHtml(body.label)}</span><span class="inv-dist" id="idist_${body.key}">--</span>`;
       item.addEventListener('click', () => selectBody(body));
       invList.appendChild(item);
     });

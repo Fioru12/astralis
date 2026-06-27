@@ -1,3 +1,5 @@
+import { escapeHtml } from '../utils/sanitize.js';
+
 export function buildCelestialMenu(menuContent, allBodies, selectedBody, selectBody, celestialMenu) {
   if (!menuContent) return;
   menuContent.innerHTML = '';
@@ -35,9 +37,9 @@ export function buildCelestialMenu(menuContent, allBodies, selectedBody, selectB
       if (selectedBody?.key === body.key) itemDiv.classList.add('selected');
 
       itemDiv.innerHTML = `
-        <span class="menu-item-icon">${body.icon || '&#8226;'}</span>
-        <span class="menu-item-name">${body.label}</span>
-        <span class="menu-item-type">${body.type}</span>
+        <span class="menu-item-icon">${escapeHtml(body.icon || '&#8226;')}</span>
+        <span class="menu-item-name">${escapeHtml(body.label)}</span>
+        <span class="menu-item-type">${escapeHtml(body.type)}</span>
       `;
 
       itemDiv.onclick = () => {
@@ -74,10 +76,10 @@ export function buildStarList(starList, allBodies, filter, zoomToStar) {
 
     item.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: 500;">${star.icon} ${star.label}</span>
-        <span style="color: rgba(255,255,255,0.5); font-size: 11px;">${star.distLY ? star.distLY + ' ly' : ''}</span>
+        <span style="font-weight: 500;">${escapeHtml(String(star.icon))} ${escapeHtml(star.label)}</span>
+        <span style="color: rgba(255,255,255,0.5); font-size: 11px;">${star.distLY ? escapeHtml(star.distLY + ' ly') : ''}</span>
       </div>
-      ${planetCount > 0 ? `<div style="font-size: 10px; color: rgba(255,255,255,0.4);">${planetCount} confirmed planets</div>` : ''}
+      ${planetCount > 0 ? `<div style="font-size: 10px; color: rgba(255,255,255,0.4);">${escapeHtml(String(planetCount))} confirmed planets</div>` : ''}
     `;
     item.onmouseover = () => item.style.background = 'rgba(255,255,255,0.1)';
     item.onmouseout = () => item.style.background = 'transparent';
