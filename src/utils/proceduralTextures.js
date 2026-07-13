@@ -24,6 +24,12 @@ function fbm(x, y, octaves = 4) {
   return val;
 }
 
+// Interpolazione smooth (equivalente a GLSL smoothstep)
+function smoothstep(edge0, edge1, x) {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
 function generateRockyTexture(width, height, baseColor, variation) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -218,15 +224,12 @@ export function generateEarthTexture() {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const u = x / width, v = y / height;
-      const lat = (v - 0.5) * Math.PI, lon = u * Math.PI * 2;
 
-      const continentNoise = fbm(u * 4 + 0.7, v * 4 + 2.3, 6);
       const detail = fbm(u * 16 + 5.1, v * 16 + 8.9, 3) * 0.15;
       const landThreshold = 0.48 + detail;
       const coast = fbm(u * 6 + 1.1, v * 6 + 3.7, 4);
 
-      let isLand = coast > landThreshold;
-      const poleCap = smoothstep(0.0, 0.25, Math.abs(v - 0.5) * 2) * (isLand ? 1.0 : 0.5);
+      const isLand = coast > landThreshold;
       const ice = 1.0 - smoothstep(0.7, 1.0, Math.abs(v - 0.5) * 2);
 
       let r, g, b;
@@ -399,6 +402,10 @@ export function getProceduralPlanetTexture(def) {
     if (def.key === 'Earth') return generateEarthTexture();
     if (def.key === 'Venus') return generateSandyTexture(1024, 512, 0xffdd44);
     if (def.key === 'Mercury') return generateRockyTexture(1024, 512, 0xaa8866, 0.35);
+    // Giganti gassosi: bande atmosferiche invece di superficie rocciosa
+    if (['Jupiter', 'Saturn', 'Uranus', 'Neptune'].includes(def.key)) {
+      return generateGasGiantTexture(1024, 512, def.color);
+    }
     return generateRockyTexture(1024, 512, def.color, 0.25);
   }
   return null;
