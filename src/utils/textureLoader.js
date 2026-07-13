@@ -10,22 +10,18 @@ class AsyncTextureLoader {
     this.loader = new THREE.TextureLoader(manager);
   }
 
-  // Synchronous-compatible API: returns a placeholder texture immediately
-  // and updates it when the real texture is loaded.
-  load(path) {
+  load(path, fallback) {
     if (this.cache.has(path)) return this.cache.get(path);
 
     const placeholder = new THREE.Texture();
     placeholder.minFilter = THREE.LinearMipmapLinearFilter;
     placeholder.magFilter = THREE.LinearFilter;
-    placeholder.anisotropy = 1; // will be updated after load if renderer supports
+    placeholder.anisotropy = 1;
     placeholder.generateMipmaps = false;
 
-    // Start async load and update placeholder when available
     this.loader.load(
       path,
       (tex) => {
-        // copy important properties into placeholder
         placeholder.image = tex.image;
         placeholder.mapping = tex.mapping;
         placeholder.wrapS = tex.wrapS;
@@ -38,8 +34,14 @@ class AsyncTextureLoader {
       },
       undefined,
       () => {
-        // load error - leave placeholder as-is
-        // console.warn optionally here
+        if (fallback) {
+          const fb = typeof fallback === 'function' ? fallback() : fallback;
+          placeholder.image = fb.image;
+          placeholder.minFilter = fb.minFilter;
+          placeholder.magFilter = fb.magFilter;
+          placeholder.generateMipmaps = fb.generateMipmaps;
+          placeholder.needsUpdate = true;
+        }
       }
     );
 
@@ -47,7 +49,6 @@ class AsyncTextureLoader {
     return placeholder;
   }
 
-  // Promise-based load when caller needs to await texture readiness
   loadAsync(path) {
     if (this.cache.has(path) && this.cache.get(path).image) return Promise.resolve(this.cache.get(path));
     return new Promise((resolve, reject) => {

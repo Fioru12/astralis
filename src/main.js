@@ -5,6 +5,7 @@ import './dev-heartbeat.js'; // Keep dev server alive
 import { AU, DEG, SUN_R } from './utils/constants.js';
 import { julianDate, makeCanvasSprite, makeGlow, createTooltip } from './utils/helpers.js';
 import { textureLoader as TL } from './utils/textureLoader.js';
+import { getProceduralPlanetTexture, generateSaturnRingTexture, generateProceduralMilkyWay } from './utils/proceduralTextures.js';
 import { keplerPos } from './utils/kepler.js';
 import { createCameraSystem, enterFly as enterFlyModule, exitFly as exitFlyModule, enterFollow as enterFollowModule } from './core/camera.js';
 import { setupPostProcessing } from './core/postprocessing.js';
@@ -24,11 +25,11 @@ import { createNavGrid, setNavGridVisible } from './core/navGrid.js';
 
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
-import { generateAsteroidBelt, buildAsteroidBody, createDustBelts, updateDustBelts, updateAsteroidBelts } from './bodies/asteroidBelts.js';
+import { generateAsteroidBelt, buildAsteroidBody, createDustBelts, createOortCloud, updateDustBelts, updateAsteroidBelts } from './bodies/asteroidBelts.js';
 import { createNearbyStars, createHyperlanes, createSpaceProbes, createExoplanets, createLocalBubbleConnections, createLocalBubbleAxes, createLocalBubbleDistanceLabels, cleanupLocalBubbleLabels } from './bodies/starsAndExoplanets.js';
 import { customCursor } from './ui/customCursor.js';
 import { particleEffects } from './ui/particleEffects.js';
-import { comparisonMode } from './ui/comparisonMode.js';
+import { ComparisonMode } from './ui/comparisonMode.js';
 import { creditsPage } from './ui/credits.js';
 import { toast } from './ui/toast.js';
 import { themeManager } from './core/theme.js';
@@ -47,6 +48,7 @@ import { soundManager } from './core/soundManager.js';
 import { shortcutsPanel } from './ui/shortcuts.js';
 import { getLang, setLang, applyI18nToDOM } from './i18n/index.js';
 import { settingsPanel } from './ui/settings.js';
+import { CameraBookmarks } from './ui/bookmarks.js';
 import { Observatory } from './core/observatory.js';
 import { createAdvancedSun, createSunCorona, updateSunShader } from './core/sunShader.js';
 import { showMissionsPanel } from './core/spaceMissions.js';
@@ -107,6 +109,8 @@ const scene = new THREE.Scene();
 // Fix: aumenta far plane per vedere stelle lontane (Kepler-452 è a ~88M unità)
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200000000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -114,7 +118,7 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.4;
 document.body.appendChild(renderer.domElement);
 
-const mwTex = TL.load('./assets/textures/8k_stars_milky_way.jpg');
+const mwTex = TL.load('./assets/textures/8k_stars_milky_way.jpg', generateProceduralMilkyWay);
 mwTex.mapping = THREE.EquirectangularReflectionMapping;
 mwTex.minFilter = THREE.LinearFilter;
 mwTex.magFilter = THREE.LinearFilter;
@@ -138,9 +142,8 @@ const timeTravel = new TimeTravel({ onDateChange: (d) => { customDate = d; timeO
 const viewPresets = new ViewPresets({ onSelect: (p) => { if (p.pos) { const target = new THREE.Vector3(...p.pos); if (p.target === 'earth') { const eb = allBodies.find(b => b.key === 'Earth'); if (eb) zoomToBody(eb); } else { zoomToPosition(target, Math.max(p.pos[1] * 0.6, 50)); } } } });
 const gravitySandbox = new GravitySandbox(scene);
 const observatory = new Observatory(scene, camera, renderer);
-window.observatory = observatory;
+
 const missions = new MissionsSystem();
-window.missions = missions;
 
 // Command palette actions
 commandPalette.registerActions({
@@ -587,6 +590,13 @@ window.addEventListener('keydown', e => {
       observatory.exit();
     }
   }
+  // ═══ Bookmarks ═══
+  if (e.key === 'b' || e.key === 'B') { bookmarks.toggle(CAM); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+    e.preventDefault();
+    const entry = bookmarks.save(CAM);
+    toast.success(`Bookmark salvato: ${entry.name}`, 2000);
+  }
 });
 window.addEventListener('keyup', e => { keys[e.key] = false; if (e.key === 'Shift') CAM.flyBoost = false; });
 
@@ -626,6 +636,12 @@ window.addEventListener('mousemove', e => {
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 const sunLight = new THREE.PointLight(0xfff4e0, 8.0, 0);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.near = 1;
+sunLight.shadow.camera.far = 8000;
+sunLight.shadow.bias = -0.001;
 scene.add(sunLight);
 
 const sun = createAdvancedSun(SUN_R, './assets/textures/2k_sun.jpg', manager);
@@ -647,47 +663,62 @@ scene.add(sunCorona);
   sp._isSunGlow = true;
 });
 
-function makePlanetMesh(radius, texPath, color, key) {
+function makePlanetMesh(radius, texPath, color, key, bodyType) {
+  const procFallback = () => getProceduralPlanetTexture({ key, type: bodyType || 'planet', color });
   const segs = texPath ? 48 : 24;
 
   if (key === 'Earth') {
     const vertShader = `
-      varying vec2 vUv; varying vec3 vNormal; varying vec3 vPosition;
+      varying vec2 vUv; varying vec3 vNormal; varying vec3 vPosition; varying vec3 vWorldNormal;
       void main() {
         vUv = uv; vNormal = normalize(normalMatrix * normal);
         vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `;
     const fragShader = `
       uniform sampler2D dayTexture; uniform vec3 sunDirection; uniform float time;
-      varying vec2 vUv; varying vec3 vNormal;
-      float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
+      varying vec2 vUv; varying vec3 vNormal; varying vec3 vWorldNormal;
+      float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
+      float noise(vec2 p) {
+        vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        float a = hash(i); float b = hash(i + vec2(1.0,0.0));
+        float c = hash(i + vec2(0.0,1.0)); float d = hash(i + vec2(1.0,1.0));
+        return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+      }
       vec3 proceduralNight(vec2 uv) {
         float cityLights = 0.0;
-        for (int i = 0; i < 8; i++) {
-          float scale = float(i + 1) * 10.0;
-          vec2 offset = vec2(float(i) * 0.1, float(i) * 0.15);
-          cityLights += random(uv * scale + offset) * 0.15;
+        for (int i = 0; i < 5; i++) {
+          float scale = float(i + 1) * 8.0;
+          vec2 offset = vec2(float(i) * 0.17, float(i) * 0.13);
+          cityLights += noise(uv * scale + offset) * 0.2;
         }
-        float continents = sin(uv.y * 10.0) * cos(uv.x * 10.0);
-        cityLights *= smoothstep(-0.5, 0.5, continents);
-        vec3 nightColor = vec3(1.0, 0.8, 0.4) * cityLights;
-        nightColor += vec3(0.0, 0.0, 0.1) * (1.0 - cityLights);
+        float coast = noise(uv * 3.0 + 1.5);
+        cityLights *= smoothstep(0.3, 0.7, coast);
+        cityLights = clamp(cityLights, 0.0, 1.0);
+        vec3 warm = vec3(1.0, 0.75, 0.35);
+        vec3 cool = vec3(0.6, 0.8, 1.0);
+        vec3 nightColor = mix(cool, warm, cityLights * 0.7 + 0.3);
+        nightColor *= cityLights * 0.5 + 0.05;
         return nightColor;
       }
       void main() {
         vec3 normal = normalize(vNormal);
-        float dayFactor = smoothstep(-0.2, 0.2, dot(normal, sunDirection));
+        vec3 worldNormal = normalize(vWorldNormal);
+        float ndotl = dot(worldNormal, normalize(sunDirection));
+        float dayFactor = smoothstep(-0.15, 0.25, ndotl);
         vec3 dayColor = texture2D(dayTexture, vUv).rgb;
         vec3 nightColor = proceduralNight(vUv);
-        vec3 finalColor = mix(nightColor, dayColor, dayFactor);
+        float specular = pow(max(0.0, ndotl), 32.0) * 0.3;
+        vec3 specColor = vec3(1.0) * specular;
+        vec3 finalColor = mix(nightColor, dayColor + specColor, dayFactor);
         gl_FragColor = vec4(finalColor, 1.0);
       }
     `;
     const mat = new THREE.ShaderMaterial({
       uniforms: {
-        dayTexture: { value: TL.load(texPath) },
+        dayTexture: { value: TL.load(texPath, procFallback) },
         sunDirection: { value: new THREE.Vector3(1, 0, 0) },
         time: { value: 0 },
       },
@@ -695,6 +726,7 @@ function makePlanetMesh(radius, texPath, color, key) {
       fragmentShader: fragShader,
     });
     const highMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, segs, segs), mat);
+    highMesh.castShadow = true;
     const lowMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, Math.max(8, Math.floor(segs / 3)), Math.max(6, Math.floor(segs / 3))), mat.clone());
     const lod = new THREE.LOD();
     lod.addLevel(highMesh, 0);
@@ -703,10 +735,22 @@ function makePlanetMesh(radius, texPath, color, key) {
   }
 
   const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.05 });
-  if (texPath) mat.map = TL.load(texPath);
-  else { mat.color = new THREE.Color(color); mat.emissive = new THREE.Color(color); mat.emissiveIntensity = 0.25; }
+  if (texPath) {
+    mat.map = TL.load(texPath, procFallback);
+  } else {
+    const procTex = procFallback();
+    if (procTex) {
+      mat.map = procTex;
+      mat.needsUpdate = true;
+    } else {
+      mat.color = new THREE.Color(color);
+      mat.emissive = new THREE.Color(color);
+      mat.emissiveIntensity = 0.15;
+    }
+  }
 
   const highMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, segs, segs), mat);
+  highMesh.castShadow = true;
   const lowMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, Math.max(8, Math.floor(segs / 3)), Math.max(6, Math.floor(segs / 3))), mat.clone());
   const lod = new THREE.LOD();
   lod.addLevel(highMesh, 0);
@@ -718,7 +762,7 @@ function buildPlanet(def) {
   const pivot = new THREE.Group();
   const tiltGroup = new THREE.Group();
   tiltGroup.rotation.z = (def.tilt || 0) * DEG;
-  const pm = makePlanetMesh(def.radius, def.tex || null, def.color, def.key);
+  const pm = makePlanetMesh(def.radius, def.tex || null, def.color, def.key, def.type);
   const mesh = pm.mesh || pm;
   const lod = pm.lod || null;
   const lodMeshes = pm.lodMeshes || [mesh];
@@ -748,8 +792,10 @@ function buildPlanet(def) {
     const rGeo = new THREE.RingGeometry(ri, ro, 256);
     const pos = rGeo.attributes.position, uv = rGeo.attributes.uv, v3 = new THREE.Vector3();
     for (let i = 0; i < pos.count; i++) { v3.fromBufferAttribute(pos, i); uv.setXY(i, (v3.length() - ri) / (ro - ri), 0); }
-    const rt = TL.load('./assets/textures/2k_saturn_ring_alpha.png');
+    const rt = TL.load('./assets/textures/2k_saturn_ring_alpha.png', generateSaturnRingTexture);
     const ring = new THREE.Mesh(rGeo, new THREE.MeshBasicMaterial({ map: rt, alphaMap: rt, color: 0xd4c070, side: THREE.DoubleSide, transparent: true, opacity: 0.88, depthWrite: false }));
+    ring.castShadow = true;
+    ring.receiveShadow = true;
     ring.rotation.x = Math.PI / 2; pivot.add(ring);
   }
   if (def.key === 'Uranus') {
@@ -794,10 +840,14 @@ MOONS.forEach(def => {
       positions.setXYZ(i, x * noise, y * noise, z * noise);
     }
     irregularGeometry.computeVertexNormals();
-    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(def.color), roughness: 0.9, metalness: 0.1 });
+    const mat = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.1 });
+    const procTex = getProceduralPlanetTexture({ key: def.key, type: 'moon', color: def.color });
+    if (procTex) { mat.map = procTex; mat.needsUpdate = true; }
+    else mat.color = new THREE.Color(def.color);
     mesh = new THREE.Mesh(irregularGeometry, mat);
+    mesh.castShadow = true;
   } else {
-    const pm = makePlanetMesh(def.radius, def.tex || null, def.color, def.key);
+  const pm = makePlanetMesh(def.radius, def.tex || null, def.color, def.key, def.type);
     mesh = pm.mesh || pm;
     const lodMeshes = pm.lodMeshes || [mesh];
     lodMeshes.forEach(m => { if (m) m.userData.bodyKey = def.key; });
@@ -854,6 +904,7 @@ createHyperlanes(allBodies, hyperlaneGroup);
 createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBody);
 createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, getTimeOffset);
 createDustBelts(scene);
+createOortCloud(scene);
 
 // Create Local Bubble graph connections and axes
 createLocalBubbleConnections(allBodies, localBubbleGroup);
@@ -871,6 +922,9 @@ getAtmosphericPlanets().forEach(planetKey => {
 });
 
 setupMenuUI(ui, allBodies, getSelectedBody, selectBody, zoomToStar, hyperlaneGroup);
+
+const comparisonMode = new ComparisonMode(allBodies);
+const bookmarks = new CameraBookmarks();
 
 function updateCamera(dt) {
   const distToTarget = CAM.zoomTarget ? Math.abs(CAM.radius - CAM.zoomTarget.finalRadius) : 0;
@@ -1047,7 +1101,14 @@ function animate() {
     if (b.atmosphere?.quaternion) b.atmosphere.quaternion.copy(camera.quaternion);
     const isH = hoveredBody?.key === b.key || selectedBody?.key === b.key;
     if (b.glow?.material) { b.glow.material.opacity = isH ? 0.95 : 0.72; const sc = b.radius * (isH ? 9 : 7); b.glow.scale.set(sc, sc, 1); }
-    if (b.key === 'Earth' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
+    if (b.key === 'Earth' && b.mesh?.material?.uniforms) {
+      b.mesh.material.uniforms.time.value = performance.now();
+      const sunBody = allBodies.find(s => s.key === 'Sun');
+      if (sunBody) {
+        const dir = new THREE.Vector3().copy(sunBody.pivot.position).sub(b.pivot.position).normalize();
+        b.mesh.material.uniforms.sunDirection.value.copy(dir);
+      }
+    }
     if (b.type === 'star' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
     if (b.type === 'exoplanet' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
   });
@@ -1056,7 +1117,7 @@ function animate() {
   updateComets(cometObjects, dt, mult, paused, ui, camera);
   updateDustBelts(scene, dt, mult);
   // ═══ Atmosphere effects update ═══
-  allBodies.forEach(b => { if (b.clouds || b.aurora) updateAtmosphereEffects(b); });
+  allBodies.forEach(b => { if (b.clouds || b.upperClouds || b.aurora || b.atmosphereGlow) updateAtmosphereEffects(b, camera); });
   
   // ═══ Update Local Bubble distance labels position ═══
   if (localBubbleMode) {
@@ -1212,7 +1273,4 @@ function startApp() {
 
 setTimeout(() => { if (!window.__solarStarted) { if (loadingScreen) loadingScreen.style.display = 'none'; startApp(); } }, 8000);
 
-window.allBodies = allBodies;
-window.CAM = CAM;
-window.selectBody = selectBody;
-window.setView = (r, phi, theta) => { exitFly(); CAM.tRadius = r; CAM.tPhi = phi; CAM.tTheta = theta; CAM.tPivot.set(0, 0, 0); };
+

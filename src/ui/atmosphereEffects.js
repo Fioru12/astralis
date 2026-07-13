@@ -19,6 +19,8 @@ const ATMOSPHERE_EFFECTS = {
     cloudOpacity: 0.25,
     auroraColor: 0x00ff88,
     auroraIntensity: 0.3,
+    glowColor: 0x4488ff,
+    glowIntensity: 0.5,
   },
   Venus: {
     clouds: true,
@@ -27,6 +29,8 @@ const ATMOSPHERE_EFFECTS = {
     color: 0xffcc44,
     cloudSpeed: 0.0005,
     cloudOpacity: 0.6,
+    glowColor: 0xffaa44,
+    glowIntensity: 0.4,
   },
   Mars: {
     clouds: true,
@@ -43,6 +47,8 @@ const ATMOSPHERE_EFFECTS = {
     color: 0xddaa66,
     cloudSpeed: 0.0008,
     cloudOpacity: 0.35,
+    glowColor: 0xcc8844,
+    glowIntensity: 0.3,
   },
   Saturn: {
     clouds: true,
@@ -51,6 +57,8 @@ const ATMOSPHERE_EFFECTS = {
     color: 0xeedd88,
     cloudSpeed: 0.0006,
     cloudOpacity: 0.2,
+    glowColor: 0xddcc66,
+    glowIntensity: 0.2,
   },
   Uranus: {
     clouds: true,
@@ -59,6 +67,8 @@ const ATMOSPHERE_EFFECTS = {
     color: 0x88eecc,
     cloudSpeed: 0.0004,
     cloudOpacity: 0.15,
+    glowColor: 0x88ddcc,
+    glowIntensity: 0.25,
   },
   Neptune: {
     clouds: true,
@@ -67,6 +77,8 @@ const ATMOSPHERE_EFFECTS = {
     color: 0x4488ff,
     cloudSpeed: 0.001,
     cloudOpacity: 0.2,
+    glowColor: 0x4466ff,
+    glowIntensity: 0.35,
   },
   Titan: {
     clouds: true,
@@ -75,6 +87,8 @@ const ATMOSPHERE_EFFECTS = {
     color: 0xff9944,
     cloudSpeed: 0.0003,
     cloudOpacity: 0.4,
+    glowColor: 0xff8844,
+    glowIntensity: 0.2,
   },
 };
 
@@ -84,14 +98,14 @@ const ATMOSPHERE_EFFECTS = {
  * @param {Object} config - Configurazione atmosfera
  * @returns {THREE.Mesh}
  */
-function createCloudLayer(radius, config) {
-  const geometry = new THREE.SphereGeometry(radius * 1.02, 48, 24);
+function createCloudLayer(radius, config, scale, opacityMul) {
+  const geometry = new THREE.SphereGeometry(radius * (scale || 1.02), 48, 24);
   
   const material = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
       speed: { value: config.cloudSpeed || 0.0003 },
-      opacity: { value: config.cloudOpacity || 0.25 },
+      opacity: { value: (config.cloudOpacity || 0.25) * (opacityMul || 1.0) },
       color: { value: new THREE.Color(config.color || 0xffffff) },
     },
     vertexShader: `
@@ -129,19 +143,31 @@ function createCloudLayer(radius, config) {
       void main() {
         vec2 uv = vUv;
         uv.x += time * speed;
-        
-        float cloudNoise = noise(uv * 8.0) * 0.5;
-        cloudNoise += noise(uv * 16.0) * 0.25;
-        cloudNoise += noise(uv * 32.0) * 0.125;
-        
-        float cloud = smoothstep(0.35, 0.65, cloudNoise);
-        
+
+        float n1 = noise(uv * 6.0);
+        float n2 = noise(uv * 12.0 + time * speed * 0.5);
+        float n3 = noise(uv * 24.0 - time * speed * 0.3);
+        float n4 = noise(uv * 48.0 + time * speed * 0.7);
+        float cloudNoise = n1 * 0.35 + n2 * 0.3 + n3 * 0.2 + n4 * 0.15;
+
+        float detail = noise(uv * 80.0 + time * speed * 1.2) * 0.1;
+        cloudNoise += detail;
+
+        float cloud = smoothstep(0.3, 0.7, cloudNoise);
+        float softCloud = smoothstep(0.2, 0.6, cloudNoise);
+
+        vec3 lightDir = normalize(vec3(0.5, 0.8, 0.6));
+        float ndotl = max(0.0, dot(vNormal, lightDir));
+        float shadow = 0.6 + 0.4 * ndotl;
+
         float fresnel = 1.0 - max(0.0, dot(vNormal, vec3(0.0, 0.0, 1.0)));
-        float edgeFade = smoothstep(0.0, 0.3, fresnel);
-        
-        float alpha = cloud * opacity * edgeFade;
-        
-        gl_FragColor = vec4(color, alpha);
+        float edgeFade = smoothstep(0.0, 0.5, fresnel);
+        float rimLight = pow(fresnel, 2.0) * 0.3;
+
+        vec3 cloudColor = color * shadow + vec3(1.0, 0.95, 0.9) * rimLight;
+        float alpha = (cloud * 0.7 + softCloud * 0.3) * opacity * edgeFade;
+
+        gl_FragColor = vec4(cloudColor, alpha);
       }
     `,
     transparent: true,
@@ -231,6 +257,52 @@ function createAuroraEffect(radius, config) {
 }
 
 /**
+ * Crea un alone atmosferico con scattering
+ * @param {number} radius - Raggio del pianeta
+ * @param {Object} config - Configurazione atmosfera
+ * @returns {THREE.Mesh}
+ */
+function createAtmosphericGlow(radius, config) {
+  const geometry = new THREE.SphereGeometry(radius * 1.08, 48, 24);
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      glowColor: { value: new THREE.Color(config.glowColor || 0x4488ff) },
+      intensity: { value: config.glowIntensity || 0.3 },
+    },
+    vertexShader: `
+      varying vec3 vNormal; varying vec3 vPosition;
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 glowColor; uniform float intensity;
+      varying vec3 vNormal; varying vec3 vPosition;
+      void main() {
+        vec3 viewDir = normalize(-vPosition);
+        float rim = 1.0 - max(0.0, dot(viewDir, normalize(vNormal)));
+        float glow = pow(rim, 3.0) * intensity;
+        float scatter = pow(rim, 6.0) * intensity * 1.5;
+        vec3 col = glowColor * (glow + scatter);
+        gl_FragColor = vec4(col, glow * 0.7 + scatter * 0.3);
+      }
+    `,
+    transparent: true,
+    side: THREE.FrontSide,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'atmosphereGlow';
+  mesh.userData.material = material;
+  return mesh;
+}
+
+/**
  * Aggiunge effetti atmosferici a un pianeta
  * @param {Object} body - Corpo celeste Three.js
  * @param {string} planetKey - Chiave del pianeta
@@ -241,11 +313,24 @@ export function addAtmosphereEffects(body, planetKey) {
 
   const radius = body.visualR || body.radius || 1;
 
-  // Aggiungi nuvole
+  // Aggiungi alone atmosferico
+  if (config.glowColor) {
+    const glow = createAtmosphericGlow(radius, config);
+    body.pivot.add(glow);
+    body.atmosphereGlow = glow;
+  }
+
+    // Aggiungi nuvole (doppio strato per pianeti principali)
   if (config.clouds) {
-    const clouds = createCloudLayer(radius, config);
+    const clouds = createCloudLayer(radius, config, 1.02, 1.0);
     body.pivot.add(clouds);
     body.clouds = clouds;
+    if (planetKey === 'Earth' || planetKey === 'Venus' || planetKey === 'Jupiter') {
+      const upperClouds = createCloudLayer(radius, config, 1.04, 0.6);
+      upperClouds.userData.material.uniforms.speed.value = config.cloudSpeed * 1.8;
+      body.pivot.add(upperClouds);
+      body.upperClouds = upperClouds;
+    }
   }
 
   // Aggiungi aurora (solo per Terra)
@@ -261,15 +346,16 @@ export function addAtmosphereEffects(body, planetKey) {
  * @param {Object} body - Corpo celeste
  * @param {number} dt - Delta time
  */
-export function updateAtmosphereEffects(body) {
+export function updateAtmosphereEffects(body, camera) {
   const time = performance.now() / 1000;
-  
-  if (body.clouds && body.clouds.userData.material) {
-    body.clouds.userData.material.uniforms.time.value = time;
-  }
+
+  [body.clouds, body.upperClouds].forEach(c => {
+    if (c && c.userData.material) c.userData.material.uniforms.time.value = time;
+  });
   if (body.aurora && body.aurora.userData.material) {
     body.aurora.userData.material.uniforms.time.value = time;
   }
+
 }
 
 /**

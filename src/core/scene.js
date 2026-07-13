@@ -4,6 +4,7 @@
 // ══════════════════════════════════════════════════════════════════
 
 import * as THREE from 'three';
+import { generateProceduralMilkyWay } from '../utils/proceduralTextures.js';
 
 /**
  * Crea e configura la scena Three.js
@@ -11,8 +12,8 @@ import * as THREE from 'three';
 export function createScene(textureLoader) {
   const scene = new THREE.Scene();
 
-  // Carica texture sfondo (Via Lattea)
-  const mwTex = textureLoader.load('./assets/textures/8k_stars_milky_way.jpg');
+  // Carica texture sfondo (Via Lattea) con fallback procedurale mozzafiato
+  const mwTex = textureLoader.load('./assets/textures/8k_stars_milky_way.jpg', generateProceduralMilkyWay);
   mwTex.mapping = THREE.EquirectangularReflectionMapping;
   mwTex.minFilter = THREE.LinearMipmapLinearFilter;
   mwTex.magFilter = THREE.LinearFilter;

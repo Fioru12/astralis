@@ -44,6 +44,7 @@ export function createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList,
       uniform vec3 baseColor;
       uniform float temperature;
       uniform float time;
+      uniform float starType;
       varying vec2 vUv;
       varying vec3 vNormal;
       varying vec3 vPosition;
@@ -77,26 +78,42 @@ export function createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList,
       }
 
       void main() {
-        vec3 color = baseColor;
-        float n = fbm(vUv * 15.0 + time * 0.05);
-        color += vec3(n * 0.15);
-        float edge = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
-        color += edge * 0.4;
-        float pulse = sin(time * 0.002) * 0.05;
-        color += edge * pulse;
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(-vPosition);
+        float rim = 1.0 - max(dot(normal, viewDir), 0.0);
         float tempFactor = (temperature - 3000.0) / 7000.0;
-        color = mix(vec3(1.0, 0.3, 0.1), vec3(0.8, 0.9, 1.0), tempFactor);
-        float atmosphere = smoothstep(0.0, 0.3, edge);
-        color += atmosphere * 0.1;
-        gl_FragColor = vec4(color, 0.9);
+
+        vec3 coolColor = mix(vec3(1.0, 0.8, 0.4), vec3(1.0, 0.3, 0.1), 1.0 - tempFactor);
+        vec3 hotColor = mix(vec3(0.9, 0.95, 1.0), vec3(0.6, 0.7, 1.0), tempFactor);
+        vec3 starColor = mix(coolColor, hotColor, tempFactor);
+
+        float n1 = fbm(vUv * 12.0 + time * 0.03);
+        float n2 = fbm(vUv * 25.0 - time * 0.07 + 10.0);
+        float granulation = n1 * 0.2 + n2 * 0.1;
+        float spot = fbm(vUv * 8.0 + 5.0) * 0.15;
+        vec3 surfaceColor = starColor * (0.7 + granulation + spot);
+
+        float corona = pow(rim, 2.5) * (0.8 + 0.2 * sin(time * 0.003 + vUv.x * 20.0));
+        float tempGlow = 0.3 + tempFactor * 0.4;
+        vec3 coronaColor = mix(vec3(1.0, 0.6, 0.2), vec3(0.6, 0.7, 1.0), tempFactor) * corona * tempGlow;
+
+        float pulse = 0.95 + 0.05 * sin(time * 0.001 + fbm(vUv * 30.0 + 20.0) * 6.28);
+        vec3 finalColor = surfaceColor * pulse + coronaColor;
+
+        float alpha = 0.85 + corona * 0.15;
+        gl_FragColor = vec4(finalColor, alpha);
       }
     `;
 
+    const r = (def.color >> 16) & 0xff, g = (def.color >> 8) & 0xff, b = def.color & 0xff;
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    const estTemp = 3000 + (b / Math.max(r, 1)) * 5000;
     const starMaterial = new THREE.ShaderMaterial({
       uniforms: {
         baseColor: { value: new THREE.Color(def.color) },
-        temperature: { value: 5000.0 },
+        temperature: { value: estTemp },
         time: { value: 0 },
+        starType: { value: 0.0 },
       },
       vertexShader: starVertexShader,
       fragmentShader: starFragmentShader,

@@ -5,11 +5,12 @@ import { t } from '../i18n/index.js';
 import { escapeHtml } from '../utils/sanitize.js';
 
 export class ComparisonMode {
-  constructor() {
+  constructor(allBodies) {
     this.panel = null;
     this.isOpen = false;
     this.body1 = null;
     this.body2 = null;
+    this.allBodies = allBodies || [];
   }
 
   toggle() {
@@ -89,7 +90,7 @@ export class ComparisonMode {
     this.panel.querySelector('#cmpClose').onclick = () => this.hide();
 
     // Popola select con pianeti
-    const bodies = window.allBodies || [];
+    const bodies = this.allBodies;
     const planets = bodies.filter(b => b.type === 'planet' || b.type === 'dwarf');
     const select1 = this.panel.querySelector('#cmpBody1');
     const select2 = this.panel.querySelector('#cmpBody2');
@@ -120,7 +121,7 @@ export class ComparisonMode {
       return;
     }
 
-    const bodies = window.allBodies || [];
+    const bodies = this.allBodies;
     const body1 = bodies.find(b => b.key === key1);
     const body2 = bodies.find(b => b.key === key2);
 
@@ -180,5 +181,3 @@ export class ComparisonMode {
     result.innerHTML = html;
   }
 }
-
-export const comparisonMode = new ComparisonMode();
