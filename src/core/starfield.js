@@ -9,16 +9,16 @@ export function createStarfield(scene) {
   const starfieldGroup = new THREE.Group();
   starfieldGroup.name = 'starfield';
 
-  // Layer 1: Distant stars (far background)
-  const distantStars = createStarLayer(0.5, 2000, 0.4, 'distant');
+  // Layer 1: Distant stars (far background) — denso, con banda galattica
+  const distantStars = createStarLayer(0.5, 9000, 0.35, 'distant', 0.55);
   starfieldGroup.add(distantStars);
 
   // Layer 2: Mid-distance stars
-  const midStars = createStarLayer(1.0, 1500, 0.6, 'mid');
+  const midStars = createStarLayer(1.0, 6000, 0.5, 'mid', 0.4);
   starfieldGroup.add(midStars);
 
   // Layer 3: Closer stars (faster parallax)
-  const closeStars = createStarLayer(1.5, 1000, 0.8, 'close');
+  const closeStars = createStarLayer(1.5, 3500, 0.7, 'close', 0.25);
   starfieldGroup.add(closeStars);
 
   // Milky Way glow (hidden by default in orbit mode, shown in galactic views)
@@ -40,17 +40,25 @@ export function setMilkyWayVisible(scene, visible) {
   }
 }
 
-function createStarLayer(parallaxFactor, starCount, size, layerName) {
+function createStarLayer(parallaxFactor, starCount, size, layerName, bandBias = 0) {
   const geometry = new THREE.BufferGeometry();
   const positions = [];
   const colors = [];
   const sizes = [];
 
   for (let i = 0; i < starCount; i++) {
-    // Random positions on a large sphere
     const theta = Math.random() * Math.PI * 2;
-    const phi = Math.random() * Math.PI;
-    const r = 5000 + Math.random() * 10000; // Distance range
+    let phi;
+    // Una frazione delle stelle è concentrata verso il piano galattico
+    // (banda densa della Via Lattea, come nei dati GAIA)
+    if (Math.random() < bandBias) {
+      // Gaussiana attorno all'equatore (phi ≈ π/2)
+      const g = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; // ~N(0,1) grezza
+      phi = Math.PI / 2 + g * 0.28;
+    } else {
+      phi = Math.acos(2 * Math.random() - 1); // distribuzione uniforme sulla sfera
+    }
+    const r = 5000 + Math.random() * 10000;
 
     positions.push(
       r * Math.sin(phi) * Math.cos(theta),
@@ -58,19 +66,20 @@ function createStarLayer(parallaxFactor, starCount, size, layerName) {
       r * Math.cos(phi)
     );
 
-    // Star colors (blue, white, yellow)
-    const colorChoice = Math.random();
-    if (colorChoice < 0.3) {
-      colors.push(0.6, 0.8, 1.0); // Blue stars
-    } else if (colorChoice < 0.7) {
-      colors.push(1.0, 1.0, 0.9); // White stars
-    } else {
-      colors.push(1.0, 0.9, 0.6); // Yellow stars
-    }
+    // Temperatura colore realistica: molte bianco-azzurre, alcune calde, poche rosse
+    const t = Math.random();
+    let cr, cg, cb;
+    if (t < 0.55) { cr = 0.78; cg = 0.86; cb = 1.0; }        // bianco-azzurro (maggioranza)
+    else if (t < 0.82) { cr = 1.0; cg = 1.0; cb = 0.96; }    // bianco
+    else if (t < 0.95) { cr = 1.0; cg = 0.88; cb = 0.66; }   // giallo-arancio
+    else { cr = 1.0; cg = 0.70; cb = 0.55; }                 // rossastra (rara)
 
-    // Vary star sizes with brightness
-    const brightness = Math.random();
-    sizes.push(0.3 + brightness * 2.0);
+    // Luminosità a legge di potenza: tantissime deboli, pochissime brillanti.
+    // Applicata al colore perché PointsMaterial ignora l'attributo size.
+    const brightness = Math.pow(Math.random(), 3.2);
+    const intensity = 0.35 + brightness * 0.65;
+    colors.push(cr * intensity, cg * intensity, cb * intensity);
+    sizes.push(0.25 + brightness * 3.5);
   }
 
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
