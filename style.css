@@ -196,7 +196,10 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 .ui-header .title { flex: 1; font-weight: 800; font-size: 1rem; background: linear-gradient(135deg, var(--text), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
 #ui .row { display: flex; align-items: center; gap: 7px; margin: 8px 0; }
+/* Bottoni nelle righe: larghezza uniforme, niente più affollamento */
+#ui .row > button { flex: 1 1 0; min-width: 0; justify-content: center; }
 .speed-row { gap: 8px; }
+.speed-row > button, .speed-row .pill { flex: 0 0 auto; }
 
 #ui button {
   border: 1px solid var(--border);
@@ -740,8 +743,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   min-width: 60px;
 }
 .btn-compact {
-  padding: 6px 10px !important;
+  padding: 7px 6px !important;
   font-size: 11px !important;
+  font-variant-numeric: tabular-nums;
   min-width: 0;
 }
 

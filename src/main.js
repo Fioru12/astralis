@@ -232,6 +232,10 @@ navFolder.add({ inner: () => { camera.position.set(0, 50, 100); camera.lookAt(0,
 navFolder.add({ outer: () => { camera.position.set(0, 400, 600); camera.lookAt(0, 0, 0); } }, 'outer').name('Outer System');
 navFolder.close();
 
+// Pannello avanzato (debug) nascosto di default — Shift+D per mostrarlo
+let guiVisible = false;
+gui.hide();
+
 function jumpToNow() {
   customDate = null;
   timeOffsetMs = 0;
@@ -554,6 +558,11 @@ window.addEventListener('keydown', e => {
     }
   }
   if (e.key === 'f' || e.key === 'F') { CAM.mode === 'fly' ? exitFly() : enterFly(); }
+  if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+    guiVisible = !guiVisible;
+    guiVisible ? gui.show() : gui.hide();
+    toast.info(guiVisible ? 'Pannello avanzato (debug) mostrato' : 'Pannello avanzato nascosto');
+  }
   if (e.key === '1') { exitFly(); }
   if (e.key === '2') { if (selectedBody) enterFollow(selectedBody); }
   if (e.key === '3') { enterFly(); }
