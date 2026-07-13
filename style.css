@@ -511,6 +511,81 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 }
 
 /* ════════════════════════════════════════════
+   STAR FACTS (spettro corpo nero + dati fisici)
+   ════════════════════════════════════════════ */
+.star-spectrum {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 2px 0 6px;
+  border-radius: 4px;
+}
+.star-visible {
+  display: flex; align-items: center; gap: 6px;
+  justify-content: flex-end;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-muted); cursor: pointer;
+  margin-bottom: 8px;
+}
+.star-visible input { accent-color: var(--accent); cursor: pointer; }
+.star-hr { height: 1px; background: var(--border); margin: 2px 0 10px; }
+.star-evo {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 8px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.star-evo > span {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted);
+}
+.star-evo > strong {
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+  font-size: 14px; font-weight: 700; color: var(--text);
+}
+.star-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: var(--border); border: 1px solid var(--border);
+  border-radius: 6px; overflow: hidden; margin-bottom: 4px;
+}
+.star-stat {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 8px 9px; background: var(--glass);
+}
+.star-stat > span {
+  font-size: 8.5px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-faint);
+}
+.star-stat > strong {
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px; font-weight: 600; color: var(--accent);
+}
+.wiki-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 4px; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text-muted); text-decoration: none;
+  font-size: 11px; letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+.wiki-link:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: var(--accent-dim);
+}
+
+/* — Tema Navigation Computer — */
+[data-hud="nav"] .star-evo > strong,
+[data-hud="nav"] .star-stat > strong { color: var(--nav-fg); }
+[data-hud="nav"] .star-stat > strong { font-variant-numeric: tabular-nums; }
+[data-hud="nav"] .star-stat { background: rgba(5,7,10,0.6); }
+[data-hud="nav"] .star-stats { background: var(--nav-dim); border-color: var(--nav-dim); }
+[data-hud="nav"] .star-evo,
+[data-hud="nav"] .star-hr { border-color: var(--nav-dim); }
+[data-hud="nav"] .star-hr { background: var(--nav-dim); }
+[data-hud="nav"] .wiki-link { font-family: var(--nav-mono); color: var(--nav-dim); border-color: var(--nav-dim); }
+[data-hud="nav"] .wiki-link:hover { color: var(--nav-fg); border-color: var(--nav-fg); background: transparent; }
+
+/* ════════════════════════════════════════════
    TRAVEL CALC (viaggio interstellare relativistico)
    ════════════════════════════════════════════ */
 .travel-calc {

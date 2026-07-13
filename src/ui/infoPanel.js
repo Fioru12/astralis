@@ -1,6 +1,8 @@
 import { AU } from '../utils/constants.js';
 import { escapeHtml } from '../utils/sanitize.js';
 import { travelCalc } from './travelCalc.js';
+import { STELLAR_DATA } from '../data/stellarData.js';
+import { drawBlackbodyCurve, stellarInfoRows } from './starSpectrum.js';
 
 export function setupInfoPanel(ui) {
   if (ui.infoClose) {
@@ -13,6 +15,13 @@ export function setupInfoPanel(ui) {
 export function showInfo(ui, body, zoomToBody, enterFollow) {
   if (!ui.infoPanel) return;
   if (ui.infoName) ui.infoName.textContent = (body.icon || '') + ' ' + body.label;
+
+  // Pannello "star facts" con spettro di corpo nero per le stelle note
+  const stellar = body.type === 'star' ? STELLAR_DATA[body.key] : null;
+  if (stellar) {
+    renderStarPanel(ui, body, stellar, zoomToBody, enterFollow);
+    return;
+  }
 
   const typeLabel = {
     planet: 'Planet', dwarf: 'Dwarf Planet', moon: 'Moon',
@@ -63,6 +72,38 @@ export function showInfo(ui, body, zoomToBody, enterFollow) {
 
   const zBtn = document.getElementById('zoomBtn');
   if (zBtn) zBtn.onclick = () => { zoomToBody(body, 1000); };
+  const fBtn = document.getElementById('followBtn');
+  if (fBtn) fBtn.onclick = () => enterFollow(body);
+  const tBtn = document.getElementById('travelBtn');
+  if (tBtn) tBtn.onclick = () => travelCalc.open(body);
+}
+
+function renderStarPanel(ui, body, s, zoomToBody, enterFollow) {
+  const wikiUrl = 'https://en.wikipedia.org/wiki/' + encodeURIComponent(s.wiki);
+  let html = '';
+  html += `<canvas id="starSpectrum" class="star-spectrum" width="292" height="94"></canvas>`;
+  html += `<label class="star-visible"><input type="checkbox" id="showVisibleChk" checked> Mostra visibile</label>`;
+  html += `<div class="star-hr"></div>`;
+  html += stellarInfoRows(s);
+  html += `<p class="info-desc">${escapeHtml(body.desc || '')}</p>`;
+  html += `<div class="info-actions">`;
+  html += `<button class="zoom-btn" id="zoomBtn">Zoom</button>`;
+  html += `<button class="follow-btn" id="followBtn">Follow</button>`;
+  if (body.distLY) html += `<button class="travel-btn" id="travelBtn">🚀 Viaggio</button>`;
+  html += `</div>`;
+  html += `<a class="wiki-link" href="${escapeHtml(wikiUrl)}" target="_blank" rel="noopener noreferrer">W · Articolo completo su Wikipedia ↗</a>`;
+
+  if (ui.infoBody) ui.infoBody.innerHTML = html;
+  ui.infoPanel.classList.add('visible');
+
+  const canvas = document.getElementById('starSpectrum');
+  const chk = document.getElementById('showVisibleChk');
+  const redraw = () => { if (canvas) drawBlackbodyCurve(canvas, s.t, chk ? chk.checked : true); };
+  redraw();
+  if (chk) chk.onchange = redraw;
+
+  const zBtn = document.getElementById('zoomBtn');
+  if (zBtn) zBtn.onclick = () => zoomToBody(body, 1000);
   const fBtn = document.getElementById('followBtn');
   if (fBtn) fBtn.onclick = () => enterFollow(body);
   const tBtn = document.getElementById('travelBtn');
