@@ -505,6 +505,95 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   line-height: 1.5;
 }
 
+.travel-btn {
+  background: linear-gradient(135deg, rgba(226,64,44,0.18), rgba(167,139,250,0.12)) !important;
+  border-color: rgba(226,64,44,0.35) !important;
+}
+
+/* ════════════════════════════════════════════
+   TRAVEL CALC (viaggio interstellare relativistico)
+   ════════════════════════════════════════════ */
+.travel-calc {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  width: 320px;
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  z-index: 112;
+  box-shadow: var(--shadow), 0 0 60px rgba(91,196,207,0.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s var(--ease), transform 0.28s var(--ease);
+}
+.travel-calc.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.tc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.tc-header h3 {
+  margin: 0; font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.tc-close {
+  width: 26px; height: 26px; padding: 0 !important;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,100,100,0.1);
+  border: 1px solid rgba(255,100,100,0.25);
+  border-radius: 6px; color: rgba(255,100,100,0.7);
+  cursor: pointer; font-size: 13px;
+}
+.tc-close:hover { background: rgba(255,100,100,0.2); color: #ff6b6b; }
+.tc-body { padding: 12px 14px 14px; }
+.tc-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px dotted rgba(255,255,255,0.06);
+}
+.tc-row > span {
+  color: var(--text-muted); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.tc-row > strong {
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent); font-weight: 600; font-size: 13px;
+}
+.tc-drive {
+  margin: 10px 0 12px;
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.5px;
+  color: var(--text-faint);
+}
+.tc-accel-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-muted); margin-bottom: 6px;
+}
+.tc-accel-head strong {
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+  color: var(--accent);
+}
+.tc-accel input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+.tc-accel-scale {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: var(--text-faint);
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+  margin-top: 2px;
+}
+
 .info-actions {
   display: flex;
   gap: 8px;
@@ -1458,7 +1547,8 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 [data-hud="nav"] .celestial-menu,
 [data-hud="nav"] .galaxy-guide,
 [data-hud="nav"] .search-input,
-[data-hud="nav"] #inventoryPanel {
+[data-hud="nav"] #inventoryPanel,
+[data-hud="nav"] .travel-calc {
   background: rgba(5, 7, 10, 0.82);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -1468,6 +1558,16 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   color: var(--nav-fg);
   font-family: var(--nav-mono);
 }
+[data-hud="nav"] .tc-header h3,
+[data-hud="nav"] .tc-row > strong,
+[data-hud="nav"] .tc-accel-head strong {
+  -webkit-text-fill-color: var(--nav-fg);
+  color: var(--nav-fg);
+  background: none;
+}
+[data-hud="nav"] .tc-row > strong { color: var(--nav-fg); }
+[data-hud="nav"] .tc-header { border-bottom-color: var(--nav-dim); }
+[data-hud="nav"] .tc-close { border-color: var(--nav-red) !important; color: var(--nav-red); background: transparent; }
 [data-hud="nav"] .pill,
 [data-hud="nav"] .cam-mode-pill {
   font-family: var(--nav-mono);

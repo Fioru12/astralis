@@ -1,5 +1,6 @@
 import { AU } from '../utils/constants.js';
 import { escapeHtml } from '../utils/sanitize.js';
+import { travelCalc } from './travelCalc.js';
 
 export function setupInfoPanel(ui) {
   if (ui.infoClose) {
@@ -48,9 +49,13 @@ export function showInfo(ui, body, zoomToBody, enterFollow) {
     }
   }
   rows += `<p class="info-desc">${escapeHtml(body.desc || '')}</p>`;
+  // Viaggio interstellare disponibile per stelle ed esopianeti (distanza nota)
+  const canTravel = (body.type === 'star' || body.type === 'exoplanet') && (body.distLY || body.distAU);
+
   rows += `<div class="info-actions">`;
   rows += `<button class="zoom-btn" id="zoomBtn">Zoom</button>`;
   rows += `<button class="follow-btn" id="followBtn">Follow</button>`;
+  if (canTravel) rows += `<button class="travel-btn" id="travelBtn">🚀 Viaggio</button>`;
   rows += `</div>`;
 
   if (ui.infoBody) ui.infoBody.innerHTML = rows;
@@ -60,4 +65,6 @@ export function showInfo(ui, body, zoomToBody, enterFollow) {
   if (zBtn) zBtn.onclick = () => { zoomToBody(body, 1000); };
   const fBtn = document.getElementById('followBtn');
   if (fBtn) fBtn.onclick = () => enterFollow(body);
+  const tBtn = document.getElementById('travelBtn');
+  if (tBtn) tBtn.onclick = () => travelCalc.open(body);
 }
