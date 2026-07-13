@@ -1400,7 +1400,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 
 /* — Bottoni: pillole outline, monospace, con puntino indicatore — */
 [data-hud="nav"] #ui button,
-[data-hud="nav"] .tab-btn {
+[data-hud="nav"] #ui .tab-btn {
   background: transparent;
   border: 1px solid var(--nav-dim);
   border-radius: 3px;
@@ -1415,7 +1415,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 }
 /* Riusa lo ::before (era gradiente) come puntino indicatore inline */
 [data-hud="nav"] #ui button::before,
-[data-hud="nav"] .tab-btn::before {
+[data-hud="nav"] #ui .tab-btn::before {
   content: '◦';
   position: static;
   inset: auto;
@@ -1430,26 +1430,123 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   display: none;
 }
 [data-hud="nav"] #ui button:hover,
-[data-hud="nav"] .tab-btn:hover {
+[data-hud="nav"] #ui .tab-btn:hover {
   background: rgba(207,227,240,0.06);
   border-color: var(--nav-fg);
   color: var(--nav-fg);
   transform: none;
 }
 [data-hud="nav"] #ui button:hover::before,
-[data-hud="nav"] .tab-btn:hover::before {
+[data-hud="nav"] #ui .tab-btn:hover::before {
   opacity: 1;
 }
 /* Stato attivo = bordo rosso segnale (come "PETROVA") */
-[data-hud="nav"] .tab-btn.active {
+[data-hud="nav"] #ui .tab-btn.active {
   background: transparent;
   color: var(--nav-red);
   border-color: var(--nav-red);
   box-shadow: 0 0 12px rgba(226,64,44,0.22);
   transform: none;
 }
-[data-hud="nav"] .tab-btn.active::before {
+[data-hud="nav"] #ui .tab-btn.active::before {
   opacity: 1;
+}
+
+/* — Colori: pannelli piatti stile strumento — */
+[data-hud="nav"] #ui,
+[data-hud="nav"] #infoPanel,
+[data-hud="nav"] .celestial-menu,
+[data-hud="nav"] .galaxy-guide,
+[data-hud="nav"] .search-input,
+[data-hud="nav"] #inventoryPanel {
+  background: rgba(5, 7, 10, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--nav-dim);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(5,7,10,0.6), 0 12px 40px rgba(0,0,0,0.6);
+  color: var(--nav-fg);
+  font-family: var(--nav-mono);
+}
+[data-hud="nav"] .pill,
+[data-hud="nav"] .cam-mode-pill {
+  font-family: var(--nav-mono);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 10px;
+  color: var(--nav-dim);
+  border-color: var(--nav-dim);
+  background: transparent;
+}
+[data-hud="nav"] .title {
+  font-family: var(--nav-mono);
+  letter-spacing: 3px;
+}
+[data-hud="nav"] .search-input {
+  border-radius: 3px;
+}
+[data-hud="nav"] .search-input::placeholder {
+  color: var(--nav-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+}
+
+/* — Informazioni: readout tabellare da computer di bordo — */
+[data-hud="nav"] .info-header h2,
+[data-hud="nav"] .menu-header h3,
+[data-hud="nav"] .guide-header h3 {
+  font-family: var(--nav-mono);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.92rem;
+  -webkit-text-fill-color: var(--nav-fg);
+  color: var(--nav-fg);
+  background: none;
+}
+[data-hud="nav"] .info-header,
+[data-hud="nav"] .menu-header,
+[data-hud="nav"] .guide-header {
+  border-bottom: 1px solid var(--nav-dim);
+}
+[data-hud="nav"] #infoBody {
+  font-family: var(--nav-mono);
+}
+[data-hud="nav"] .info-row {
+  border-bottom: 1px dotted rgba(93,118,137,0.3);
+  padding: 7px 0;
+}
+[data-hud="nav"] .info-row > span {
+  color: var(--nav-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 10px;
+}
+[data-hud="nav"] .info-row > strong {
+  color: var(--nav-fg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+[data-hud="nav"] .info-desc {
+  background: rgba(93,118,137,0.08);
+  border-left: 2px solid var(--nav-red);
+  border-radius: 0;
+  color: var(--nav-fg);
+  font-family: var(--nav-mono);
+  font-size: 11px;
+}
+[data-hud="nav"] #infoClose,
+[data-hud="nav"] #menuClose,
+[data-hud="nav"] #guideClose {
+  background: transparent;
+  border: 1px solid var(--nav-red) !important;
+  border-radius: 3px;
+  color: var(--nav-red);
+}
+[data-hud="nav"] #infoBody::-webkit-scrollbar-thumb,
+[data-hud="nav"] .menu-content::-webkit-scrollbar-thumb,
+[data-hud="nav"] .guide-content::-webkit-scrollbar-thumb {
+  background: var(--nav-dim);
 }
 
 /* ════════════════════════════════════════════

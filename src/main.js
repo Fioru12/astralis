@@ -20,6 +20,7 @@ import { updateLabels } from './ui/labels.js';
 import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
 import { setupTabs } from './ui/tabs.js';
 import { setupGlobalSearch } from './ui/search.js';
+import { createNavGrid, setNavGridVisible } from './core/navGrid.js';
 
 import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
@@ -486,6 +487,7 @@ const mouse = new THREE.Vector2();
 
 const pGroup = new THREE.Group(); scene.add(pGroup);
 const oGroup = new THREE.Group(); scene.add(oGroup);
+const navGrid = createNavGrid(); scene.add(navGrid);
 const cGroup = new THREE.Group(); scene.add(cGroup);
 const aGroup = new THREE.Group(); scene.add(aGroup);
 const hyperlaneGroup = new THREE.Group(); hyperlaneGroup.name = 'hyperlanes'; scene.add(hyperlaneGroup);
@@ -1194,8 +1196,14 @@ function startApp() {
     } else if (key === 'quality') {
       const labels = { low: 'Bassa', medium: 'Media', high: 'Alta' };
       toast.info(`Qualità grafica: ${labels[value] || value}`);
+    } else if (key === 'hud') {
+      setNavGridVisible(navGrid, value === 'nav');
+      toast.info(value === 'nav' ? 'HUD: Navigation Computer' : 'HUD: Standard');
     }
   });
+
+  // Applica lo stato iniziale della griglia in base alla preferenza salvata
+  setNavGridVisible(navGrid, document.documentElement.getAttribute('data-hud') === 'nav');
   
   showHint(ui, 'WASD muovi · Scroll zoom · H comandi · P impostazioni', hintTimerRef);
   toast.success('ASTRALIS pronto! Esplora il cosmo.', 3000);
