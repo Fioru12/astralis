@@ -46,6 +46,13 @@ class SettingsPanel {
               <option value="light">☀️ Chiaro</option>
             </select>
           </div>
+          <div class="settings-row">
+            <label for="hudSelect">Stile HUD</label>
+            <select id="hudSelect" class="settings-select">
+              <option value="standard">✨ Standard</option>
+              <option value="nav">🛰️ Navigation Computer</option>
+            </select>
+          </div>
         </div>
 
         <!-- Lingua -->
@@ -124,6 +131,12 @@ class SettingsPanel {
       this._setTheme(e.target.value);
     });
 
+    // HUD style select
+    const hudSelect = this.panel.querySelector('#hudSelect');
+    hudSelect?.addEventListener('change', (e) => {
+      this._setHud(e.target.value);
+    });
+
     // Language select
     const langSelect = this.panel.querySelector('#langSelect');
     langSelect?.addEventListener('change', (e) => {
@@ -169,6 +182,12 @@ class SettingsPanel {
     if (themeSelect && prefs.theme) {
       themeSelect.value = prefs.theme;
     }
+
+    // HUD style (apply to DOM, not just the control)
+    const hudSelect = this.panel.querySelector('#hudSelect');
+    const hud = prefs.hud || 'standard';
+    if (hudSelect) hudSelect.value = hud;
+    this._applyHud(hud);
 
     // Language
     const langSelect = this.panel.querySelector('#langSelect');
@@ -232,6 +251,20 @@ class SettingsPanel {
     }
     this._savePreferences({ theme });
     this._notifyChange('theme', theme);
+  }
+
+  _applyHud(hud) {
+    if (hud === 'nav') {
+      document.documentElement.setAttribute('data-hud', 'nav');
+    } else {
+      document.documentElement.removeAttribute('data-hud');
+    }
+  }
+
+  _setHud(hud) {
+    this._applyHud(hud);
+    this._savePreferences({ hud });
+    this._notifyChange('hud', hud);
   }
 
   _setLanguage(lang) {

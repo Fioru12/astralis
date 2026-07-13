@@ -1350,6 +1350,109 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 }
 
 /* ════════════════════════════════════════════
+   HUD "NAVIGATION COMPUTER" (tema opzionale)
+   Ispirato a Project Hail Mary / GAIA star map.
+   Attivato via data-hud="nav" sul root.
+   ════════════════════════════════════════════ */
+[data-hud="nav"] {
+  --nav-fg: #cfe3f0;
+  --nav-dim: #5d7689;
+  --nav-red: #e2402c;
+  --nav-mono: 'JetBrains Mono', 'SF Mono', Consolas, ui-monospace, monospace;
+}
+
+/* — Etichette: monospace, MAIUSCOLO, piatte, con puntino marcatore — */
+[data-hud="nav"] .label {
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 2px 3px;
+  font-family: var(--nav-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--nav-fg);
+  text-shadow: 0 0 6px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,0.95);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+[data-hud="nav"] .label::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 5px currentColor;
+  flex-shrink: 0;
+}
+[data-hud="nav"] .label:hover,
+[data-hud="nav"] .label.highlighted {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--nav-red);
+  text-shadow: 0 0 8px rgba(226,64,44,0.55), 0 0 2px rgba(0,0,0,0.95);
+}
+
+/* — Bottoni: pillole outline, monospace, con puntino indicatore — */
+[data-hud="nav"] #ui button,
+[data-hud="nav"] .tab-btn {
+  background: transparent;
+  border: 1px solid var(--nav-dim);
+  border-radius: 3px;
+  color: var(--nav-fg);
+  font-family: var(--nav-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  box-shadow: none;
+  transform: none;
+}
+/* Riusa lo ::before (era gradiente) come puntino indicatore inline */
+[data-hud="nav"] #ui button::before,
+[data-hud="nav"] .tab-btn::before {
+  content: '◦';
+  position: static;
+  inset: auto;
+  background: none;
+  opacity: 0.65;
+  margin-right: 3px;
+  font-size: 11px;
+  line-height: 1;
+}
+/* Disattiva il glow radiale del mouse */
+[data-hud="nav"] #ui button::after {
+  display: none;
+}
+[data-hud="nav"] #ui button:hover,
+[data-hud="nav"] .tab-btn:hover {
+  background: rgba(207,227,240,0.06);
+  border-color: var(--nav-fg);
+  color: var(--nav-fg);
+  transform: none;
+}
+[data-hud="nav"] #ui button:hover::before,
+[data-hud="nav"] .tab-btn:hover::before {
+  opacity: 1;
+}
+/* Stato attivo = bordo rosso segnale (come "PETROVA") */
+[data-hud="nav"] .tab-btn.active {
+  background: transparent;
+  color: var(--nav-red);
+  border-color: var(--nav-red);
+  box-shadow: 0 0 12px rgba(226,64,44,0.22);
+  transform: none;
+}
+[data-hud="nav"] .tab-btn.active::before {
+  opacity: 1;
+}
+
+/* ════════════════════════════════════════════
    GLOBAL GLOW & INTERACTION EFFECTS
    ════════════════════════════════════════════ */
 @keyframes glowPulse {
