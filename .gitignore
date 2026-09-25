@@ -1,11 +1,16 @@
 node_modules/
 dist/
+coverage/
 .env
 *.log
 .DS_Store
 .vscode/
-assets/textures/
+assets/textures/*
+!assets/textures/optimized/
+!assets/textures/optimized/*.webp
+test-results/
+playwright-report/
+blob-report/
 *.min.js
-.husky/
 
 backup_legacy/

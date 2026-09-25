@@ -5,55 +5,100 @@ import './dev-heartbeat.js'; // Keep dev server alive
 import { AU, DEG, SUN_R } from './utils/constants.js';
 import { julianDate, makeCanvasSprite, makeGlow, createTooltip } from './utils/helpers.js';
 import { textureLoader as TL } from './utils/textureLoader.js';
-import { getProceduralPlanetTexture, generateSaturnRingTexture, generateProceduralMilkyWay } from './utils/proceduralTextures.js';
+import {
+  getProceduralPlanetTexture,
+  generateSaturnRingTexture,
+  generateProceduralMilkyWay,
+} from './utils/proceduralTextures.js';
 import { keplerPos } from './utils/kepler.js';
-import { createCameraSystem, enterFly as enterFlyModule, exitFly as exitFlyModule, enterFollow as enterFollowModule } from './core/camera.js';
+import { createCameraSystem } from './core/camera.js';
 import { setupPostProcessing } from './core/postprocessing.js';
 import { createStarfield, updateStarfieldParallax, setMilkyWayVisible } from './core/starfield.js';
+import { create3DSpiralGalaxy } from './core/spiralGalaxy.js';
 import { setupControls } from './core/controls.js';
 import { rebuildOrbits } from './core/orbits.js';
 // (state.js - funzioni utilitarie non usate direttamente)
 
 import { createUIRefs, showHint, setCamLabel, timeMultiplier, speedText } from './ui/manager.js';
 import { setupInfoPanel, showInfo } from './ui/infoPanel.js';
-import { buildInventory, updateInventoryDistances, filterInventory, highlightInventory } from './ui/inventory.js';
-import { updateLabels } from './ui/labels.js';
+import {
+  buildInventory,
+  updateInventoryDistances,
+  filterInventory,
+  highlightInventory,
+} from './ui/inventory.js';
+import { updateLabels, refreshLabelLanguage } from './ui/labels.js';
 import { buildStarList, setupMenuUI } from './ui/celestialMenu.js';
 import { setupTabs } from './ui/tabs.js';
 import { setupGlobalSearch } from './ui/search.js';
 import { createNavGrid, setNavGridVisible } from './core/navGrid.js';
+import { createGalaxySectors } from './core/galaxyGrid.js';
+import { GalaxyModal } from './ui/galaxyModal.js';
 
-import { ORBITAL_ELEMENTS, PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, SPACE_PROBES, EXOPLANETS } from './data/celestialData.js';
+import {
+  ORBITAL_ELEMENTS,
+  PHYSICAL_DATA,
+  PLANETS,
+  MOONS,
+  ASTEROIDS,
+  COMETS,
+  NEARBY_STARS,
+  SPACE_PROBES,
+  EXOPLANETS,
+  getBodyLabel,
+} from './data/celestialData.js';
 import { createComets, updateComets } from './bodies/comets.js';
-import { generateAsteroidBelt, buildAsteroidBody, createDustBelts, createOortCloud, updateDustBelts, updateAsteroidBelts } from './bodies/asteroidBelts.js';
-import { createNearbyStars, createHyperlanes, createSpaceProbes, createExoplanets, createLocalBubbleConnections, createLocalBubbleAxes, createLocalBubbleDistanceLabels, cleanupLocalBubbleLabels } from './bodies/starsAndExoplanets.js';
+import {
+  generateAsteroidBelt,
+  buildAsteroidBody,
+  createDustBelts,
+  createOortCloud,
+  updateDustBelts,
+  updateAsteroidBelts,
+} from './bodies/asteroidBelts.js';
+import {
+  createNearbyStars,
+  createHyperlanes,
+  createSpaceProbes,
+  createExoplanets,
+  createLocalBubbleConnections,
+  createLocalBubbleAxes,
+  createLocalBubbleDistanceLabels,
+  cleanupLocalBubbleLabels,
+} from './bodies/starsAndExoplanets.js';
 import { customCursor } from './ui/customCursor.js';
 import { particleEffects } from './ui/particleEffects.js';
-import { ComparisonMode } from './ui/comparisonMode.js';
-import { creditsPage } from './ui/credits.js';
 import { toast } from './ui/toast.js';
 import { themeManager } from './core/theme.js';
 import { a11y } from './core/a11y.js';
 import { HUD } from './ui/hud.js';
 import { Screenshot } from './core/screenshot.js';
 import { XRManager } from './core/xr.js';
-import { SpaceNews } from './ui/spaceNews.js';
-import { Quiz } from './ui/quiz.js';
-import { TimeTravel } from './ui/timeTravel.js';
 import { ViewPresets } from './ui/viewPresets.js';
-import { GravitySandbox } from './ui/gravitySandbox.js';
 import { commandPalette } from './ui/commandPalette.js';
+import { HabitableZoneManager } from './core/habitableZone.js';
 import { urlState } from './core/urlState.js';
 import { soundManager } from './core/soundManager.js';
 import { shortcutsPanel } from './ui/shortcuts.js';
-import { getLang, setLang, applyI18nToDOM } from './i18n/index.js';
+import { getLang, setLang, applyI18nToDOM, onLangChange, t } from './i18n/index.js';
 import { settingsPanel } from './ui/settings.js';
-import { CameraBookmarks } from './ui/bookmarks.js';
-import { Observatory } from './core/observatory.js';
 import { createAdvancedSun, createSunCorona, updateSunShader } from './core/sunShader.js';
-import { showMissionsPanel } from './core/spaceMissions.js';
-import { MissionsSystem } from './ui/missions.js';
-import { addAtmosphereEffects, updateAtmosphereEffects, getAtmosphericPlanets } from './ui/atmosphereEffects.js';
+import {
+  addAtmosphereEffects,
+  updateAtmosphereEffects,
+  getAtmosphericPlanets,
+} from './ui/atmosphereEffects.js';
+import { onboarding } from './ui/onboarding.js';
+import { createLazyFeatures } from './ui/lazyFeatures.js';
+import { registerCommandActions } from './ui/commandActions.js';
+import { createTimeControls } from './core/timeControls.js';
+import { createNavigation } from './core/navigation.js';
+import { adaptiveQuality } from './core/adaptiveQuality.js';
+import { ConstellationManager } from './core/constellations.js';
+import { MeteorShowerManager } from './core/meteorShowers.js';
+import { EclipseSimulator } from './core/eclipses.js';
+import { Minimap } from './ui/minimap.js';
+import { travelCalc } from './ui/travelCalc.js';
 
 let paused = false;
 let timeOffsetMs = 0;
@@ -75,34 +120,45 @@ let mainBelt = null;
 let kuiperBelt = null;
 let cometObjects = null;
 let invDistFrame = 0;
-let hoveredBody = null;
+let activeGraphicsQuality = 'high';
 
-function getTimeOffset() { return timeOffsetMs; }
-function getSelectedBody() { return selectedBody; }
+function getTimeOffset() {
+  return timeOffsetMs;
+}
+function getSelectedBody() {
+  return selectedBody;
+}
 
 const loadingScreen = document.getElementById('loadingScreen');
 const loadingBar = document.getElementById('loadingBar');
 const loadingText = document.getElementById('loadingText');
+const loadingPct = document.getElementById('loadingPct');
 
 const manager = new THREE.LoadingManager();
 manager.onProgress = (_u, loaded, total) => {
   const p = Math.round((loaded / total) * 100);
   if (loadingBar) loadingBar.style.width = p + '%';
-  if (loadingText) loadingText.textContent = 'Loading... ' + p + '%';
+  if (loadingPct) loadingPct.textContent = p + '%';
+  if (loadingText) loadingText.textContent = `${t('load_textures')} (${p}%)`;
 };
 manager.onLoad = () => {
   if (loadingBar) loadingBar.style.width = '100%';
-  if (loadingText) loadingText.textContent = 'Ready!';
+  if (loadingPct) loadingPct.textContent = '100%';
+  if (loadingText) loadingText.textContent = t('load_ready');
   setTimeout(() => {
     if (loadingScreen) {
       loadingScreen.style.transition = 'opacity 0.8s ease';
       loadingScreen.style.opacity = '0';
-      setTimeout(() => { loadingScreen.style.display = 'none'; }, 850);
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+      }, 850);
     }
     startApp();
   }, 300);
 };
-manager.onError = url => console.warn('Texture not found:', url);
+manager.onError = () => {
+  if (loadingText) loadingText.textContent = t('load_alt');
+};
 TL.setManager(manager);
 
 const scene = new THREE.Scene();
@@ -118,7 +174,23 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.4;
 document.body.appendChild(renderer.domElement);
 
-const mwTex = TL.load('./assets/textures/8k_stars_milky_way.jpg', generateProceduralMilkyWay);
+renderer.domElement.addEventListener('webglcontextlost', (event) => {
+  event.preventDefault();
+  if (loadingScreen) {
+    loadingScreen.style.display = 'flex';
+    loadingScreen.style.opacity = '1';
+  }
+  if (loadingText) loadingText.textContent = t('load_restoring');
+});
+renderer.domElement.addEventListener('webglcontextrestored', () => {
+  // Recreate GPU-backed textures and post-processing safely after a context loss.
+  window.location.reload();
+});
+
+const mwTex = TL.load(
+  './assets/textures/optimized/8k_stars_milky_way.webp',
+  generateProceduralMilkyWay
+);
 mwTex.mapping = THREE.EquirectangularReflectionMapping;
 mwTex.minFilter = THREE.LinearFilter;
 mwTex.magFilter = THREE.LinearFilter;
@@ -127,51 +199,88 @@ scene.background = mwTex;
 
 const { composer, bloomPass, outlinePass } = setupPostProcessing(renderer, scene, camera);
 
-// Create dynamic starfield
+// Create dynamic starfield, constellations & meteor showers
 const starfield = createStarfield(scene);
+const constellationManager = new ConstellationManager(scene);
+const meteorShowerManager = new MeteorShowerManager(scene);
+const habitableZoneManager = new HabitableZoneManager(scene, { visible: false });
+
+const eclipseSimulator = new EclipseSimulator({
+  onDateChange: (d) => {
+    customDate = d;
+    timeOffsetMs = d.getTime() - Date.now();
+  },
+  onFocus: (bodyKey) => {
+    const body = allBodies.find((b) => b.key === bodyKey);
+    if (body) {
+      selectBody(body);
+      CAM.tRadius = bodyKey === 'Moon' ? 12 : 60;
+    }
+  },
+});
 
 // ═══ Setup nuove features ═══
 themeManager.apply();
 a11y.apply();
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
 const hud = new HUD();
-const screenshot = new Screenshot(renderer, scene, camera);
-new XRManager(renderer);
-const spaceNews = new SpaceNews();
-const quiz = new Quiz();
-const timeTravel = new TimeTravel({ onDateChange: (d) => { customDate = d; timeOffsetMs = d.getTime() - Date.now(); } });
-const viewPresets = new ViewPresets({ onSelect: (p) => { if (p.pos) { const target = new THREE.Vector3(...p.pos); if (p.target === 'earth') { const eb = allBodies.find(b => b.key === 'Earth'); if (eb) zoomToBody(eb); } else { zoomToPosition(target, Math.max(p.pos[1] * 0.6, 50)); } } } });
-const gravitySandbox = new GravitySandbox(scene);
-const observatory = new Observatory(scene, camera, renderer);
-
-const missions = new MissionsSystem();
-
-// Command palette actions
-commandPalette.registerActions({
-  pause: () => { if (ui.toggle) ui.toggle.click(); },
-  resume: () => { if (ui.toggle) ui.toggle.click(); },
-  reset_cam: () => { if (ui.resetCam) ui.resetCam.click(); },
-  toggle_orbits: () => { if (ui.orbits) { ui.orbits.checked = !ui.orbits.checked; } },
-  toggle_labels: () => { if (ui.labels) { ui.labels.checked = !ui.labels.checked; } },
-  toggle_theme: () => { themeManager.toggle(); },
-  help: () => shortcutsPanel.toggle(),
-  timetravel: () => timeTravel.toggle(),
-  screenshot: () => screenshot.capture(),
-  share: () => { urlState.setMany({ body: selectedBody?.key, date: (customDate || new Date()).toISOString() }); urlState.copyShareURL(); },
-  sound: () => soundManager.toggle(),
-  quiz: () => quiz.toggle(),
-  home: () => viewPresets._build && viewPresets.show(),
-  system: () => { exitFly(); CAM.tRadius = 800; CAM.tPhi = 1.2; CAM.tPivot.set(0,0,0); setCamLabel(ui, 'orbit'); },
-  goToBody: (b) => { const body = allBodies.find(x => x.key === b.key || x.label === b.name); if (body) selectBody(body); },
+const minimap = new Minimap({
+  onSelectBody: (body) => selectBody(body),
+  onSelectStar: (starKey) => zoomToStar(starKey),
+});
+const screenshot = new Screenshot(renderer, scene, camera, composer);
+const xrManager = new XRManager(renderer);
+const viewPresets = new ViewPresets({
+  onSelect: (p) => {
+    if (p.pos) {
+      const target = new THREE.Vector3(...p.pos);
+      if (p.target === 'earth') {
+        const eb = allBodies.find((b) => b.key === 'Earth');
+        if (eb) zoomToBody(eb);
+      } else {
+        zoomToPosition(target, Math.max(p.pos[1] * 0.6, 50));
+      }
+    }
+  },
 });
 
-// Apply URL state on load
-if (urlState.has('body')) {
-  const b = allBodies.find(x => x.key === urlState.get('body'));
-  if (b) setTimeout(() => selectBody(b), 1500);
-}
-if (urlState.has('date')) {
-  const d = new Date(urlState.get('date'));
-  if (!isNaN(d.getTime())) { customDate = d; timeOffsetMs = d.getTime() - Date.now(); }
+function applyInitialURLState() {
+  const lang = urlState.get('lang');
+  if (lang === 'it' || lang === 'en') setLang(lang);
+  const theme = urlState.get('theme');
+  if (theme === 'dark' || theme === 'light') themeManager.set(theme);
+  const speed = Number(urlState.get('speed'));
+  if (ui.speed && Number.isFinite(speed)) {
+    const min = Number(ui.speed.min);
+    const max = Number(ui.speed.max);
+    ui.speed.value = String(Math.min(max, Math.max(min, speed)));
+  }
+  const dateParam = urlState.get('date');
+  if (dateParam) {
+    const d = new Date(dateParam);
+    if (!Number.isNaN(d.getTime())) {
+      customDate = d;
+      timeOffsetMs = d.getTime() - Date.now();
+    }
+  }
+
+  const bodyKey = urlState.getBodyKey();
+  const view = urlState.get('view');
+  const presetBody = view === 'earth' ? 'Earth' : view === 'sun' ? 'Sun' : null;
+  const requestedBody = bodyKey || presetBody;
+  if (requestedBody) {
+    const body = allBodies.find((item) => item.key === requestedBody);
+    if (body) selectBody(body);
+  }
+  if (view === 'galaxy' && !galaxyMapMode) toggleGalaxyMap();
+  if (view === 'local-bubble' && !localBubbleMode) toggleLocalBubble();
+  if (view === 'timetravel') void toggleTimeTravel();
+  applyI18nToDOM();
 }
 
 window.addEventListener('resize', () => {
@@ -191,66 +300,131 @@ postFolder.add(outlinePass, 'edgeThickness', 0, 5).name('Outline Thickness');
 postFolder.close();
 
 const simFolder = gui.addFolder('Simulation');
-simFolder.add({ speed: 1 }, 'speed', -2, 7).name('Time Speed').onChange(v => {
-  const speedInput = document.getElementById('speed');
-  if (speedInput) speedInput.value = v;
-});
-simFolder.add({ paused: false }, 'paused').name('Pause').onChange(v => {
-  paused = v;
-  const toggleBtn = document.getElementById('toggle');
-  if (toggleBtn) toggleBtn.textContent = v ? 'Play' : 'Pause';
-});
+simFolder
+  .add({ speed: 1 }, 'speed', -2, 7)
+  .name('Time Speed')
+  .onChange((v) => {
+    const speedInput = document.getElementById('speed');
+    if (speedInput) speedInput.value = v;
+  });
+simFolder
+  .add({ paused: false }, 'paused')
+  .name('Pause')
+  .onChange((v) => {
+    paused = v;
+    const toggleBtn = document.getElementById('toggle');
+    if (toggleBtn) toggleBtn.textContent = v ? 'Play' : 'Pause';
+  });
 simFolder.open();
 
 const viewFolder = gui.addFolder('Display');
-viewFolder.add({ showOrbits: true }, 'showOrbits').name('Show Orbits').onChange(v => {
-  const orbitsCheckbox = document.getElementById('orbits');
-  if (orbitsCheckbox) orbitsCheckbox.checked = v;
-});
-viewFolder.add({ showLabels: true }, 'showLabels').name('Show Labels').onChange(v => {
-  const labelsCheckbox = document.getElementById('labels');
-  if (labelsCheckbox) labelsCheckbox.checked = v;
-});
+viewFolder
+  .add({ showOrbits: true }, 'showOrbits')
+  .name('Show Orbits')
+  .onChange((v) => {
+    const orbitsCheckbox = document.getElementById('orbits');
+    if (orbitsCheckbox) orbitsCheckbox.checked = v;
+  });
+viewFolder
+  .add({ showLabels: true }, 'showLabels')
+  .name('Show Labels')
+  .onChange((v) => {
+    const labelsCheckbox = document.getElementById('labels');
+    if (labelsCheckbox) labelsCheckbox.checked = v;
+  });
 viewFolder.close();
 
 const camFolder = gui.addFolder('Camera');
-camFolder.add(camera, 'fov', 30, 120).name('FOV').onChange(() => camera.updateProjectionMatrix());
-camFolder.add({ near: 0.1 }, 'near', 0.01, 10).name('Near Plane').onChange(v => { camera.near = v; camera.updateProjectionMatrix(); });
-camFolder.add({ far: 200000000 }, 'far', 10000, 500000000).name('Far Plane').onChange(v => { camera.far = v; camera.updateProjectionMatrix(); });
+camFolder
+  .add(camera, 'fov', 30, 120)
+  .name('FOV')
+  .onChange(() => camera.updateProjectionMatrix());
+camFolder
+  .add({ near: 0.1 }, 'near', 0.01, 10)
+  .name('Near Plane')
+  .onChange((v) => {
+    camera.near = v;
+    camera.updateProjectionMatrix();
+  });
+camFolder
+  .add({ far: 200000000 }, 'far', 10000, 500000000)
+  .name('Far Plane')
+  .onChange((v) => {
+    camera.far = v;
+    camera.updateProjectionMatrix();
+  });
 camFolder.close();
 
 const renderFolder = gui.addFolder('Rendering');
 renderFolder.add(renderer, 'toneMappingExposure', 0.5, 3).name('Exposure');
-renderFolder.add({ pixelRatio: Math.min(devicePixelRatio, 2) }, 'pixelRatio', 0.5, 3).name('Pixel Ratio').onChange(v => renderer.setPixelRatio(v));
+renderFolder
+  .add({ pixelRatio: Math.min(devicePixelRatio, 2) }, 'pixelRatio', 0.5, 3)
+  .name('Pixel Ratio')
+  .onChange((v) => renderer.setPixelRatio(v));
 renderFolder.close();
 
 const navFolder = gui.addFolder('Navigation');
-navFolder.add({ reset: () => { camera.position.set(0, 300, 500); camera.lookAt(0, 0, 0); selectedBody = null; } }, 'reset').name('Reset View');
-navFolder.add({ top: () => { camera.position.set(0, 800, 0); camera.lookAt(0, 0, 0); } }, 'top').name('Top View');
-navFolder.add({ side: () => { camera.position.set(800, 0, 0); camera.lookAt(0, 0, 0); } }, 'side').name('Side View');
-navFolder.add({ inner: () => { camera.position.set(0, 50, 100); camera.lookAt(0, 0, 0); } }, 'inner').name('Inner System');
-navFolder.add({ outer: () => { camera.position.set(0, 400, 600); camera.lookAt(0, 0, 0); } }, 'outer').name('Outer System');
+navFolder
+  .add(
+    {
+      reset: () => {
+        camera.position.set(0, 300, 500);
+        camera.lookAt(0, 0, 0);
+        selectedBody = null;
+      },
+    },
+    'reset'
+  )
+  .name('Reset View');
+navFolder
+  .add(
+    {
+      top: () => {
+        camera.position.set(0, 800, 0);
+        camera.lookAt(0, 0, 0);
+      },
+    },
+    'top'
+  )
+  .name('Top View');
+navFolder
+  .add(
+    {
+      side: () => {
+        camera.position.set(800, 0, 0);
+        camera.lookAt(0, 0, 0);
+      },
+    },
+    'side'
+  )
+  .name('Side View');
+navFolder
+  .add(
+    {
+      inner: () => {
+        camera.position.set(0, 50, 100);
+        camera.lookAt(0, 0, 0);
+      },
+    },
+    'inner'
+  )
+  .name('Inner System');
+navFolder
+  .add(
+    {
+      outer: () => {
+        camera.position.set(0, 400, 600);
+        camera.lookAt(0, 0, 0);
+      },
+    },
+    'outer'
+  )
+  .name('Outer System');
 navFolder.close();
 
 // Pannello avanzato (debug) nascosto di default — Shift+D per mostrarlo
 let guiVisible = false;
 gui.hide();
-
-function jumpToNow() {
-  customDate = null;
-  timeOffsetMs = 0;
-  const nowBtn = document.getElementById('now');
-  if (nowBtn) nowBtn.click();
-  showHint(ui, 'Back to present', hintTimerRef);
-}
-
-function jumpYears(years) {
-  const current = customDate || new Date(Date.now() + timeOffsetMs);
-  const newDate = new Date(Date.UTC(current.getUTCFullYear() + years, current.getUTCMonth(), current.getUTCDate()));
-  customDate = newDate;
-  timeOffsetMs = newDate.getTime() - Date.now();
-  showHint(ui, `${years > 0 ? '+' : ''}${years} years`, hintTimerRef);
-}
 
 const ui = createUIRefs();
 setupInfoPanel(ui);
@@ -259,48 +433,179 @@ setupInfoPanel(ui);
 ui.showSectors = document.getElementById('showSectors');
 ui.localBubbleBtn = document.getElementById('localBubbleBtn');
 
-if (ui.toggle) ui.toggle.onclick = () => { paused = !paused; ui.toggle.textContent = paused ? 'Play' : 'Pause'; lastPerf = performance.now(); };
-if (ui.now) ui.now.onclick = () => { jumpToNow(); };
-if (ui.resetCam) ui.resetCam.onclick = () => { exitFly(); CAM.zoomTarget = null; CAM.tRadius = 1400; CAM.tTheta = 0.9; CAM.tPhi = 1.05; CAM.tPivot.set(0, 0, 0); CAM.followBody = null; setCamLabel(ui, 'orbit'); };
-if (ui.yearBack) ui.yearBack.onclick = () => { jumpYears(-1); };
-if (ui.yearFwd) ui.yearFwd.onclick = () => { jumpYears(1); };
-if (ui.decBack) ui.decBack.onclick = () => { jumpYears(-10); };
-if (ui.decFwd) ui.decFwd.onclick = () => { jumpYears(10); };
+if (ui.toggle)
+  ui.toggle.onclick = () => {
+    paused = !paused;
+    ui.toggle.textContent = paused ? t('resume') : t('pause');
+    lastPerf = performance.now();
+  };
+if (ui.now)
+  ui.now.onclick = () => {
+    jumpToNow();
+  };
+if (ui.resetCam)
+  ui.resetCam.onclick = () => {
+    exitFly();
+    CAM.zoomTarget = null;
+    CAM.tRadius = 900;
+    CAM.tTheta = 0.9;
+    CAM.tPhi = 1.05;
+    CAM.tPivot.set(0, 0, 0);
+    CAM.followBody = null;
+    setCamLabel(ui, 'orbit');
+  };
+if (ui.yearBack)
+  ui.yearBack.onclick = () => {
+    jumpYears(-1);
+  };
+if (ui.yearFwd)
+  ui.yearFwd.onclick = () => {
+    jumpYears(1);
+  };
+if (ui.decBack)
+  ui.decBack.onclick = () => {
+    jumpYears(-10);
+  };
+if (ui.decFwd)
+  ui.decFwd.onclick = () => {
+    jumpYears(10);
+  };
 
 const CAM = createCameraSystem();
 CAM.DAMP_FAST = 0.15;
 
-function enterFly() { enterFlyModule(CAM, camera, renderer, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef)); }
-function exitFly() { exitFlyModule(CAM, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef)); }
-function enterFollow(body) { enterFollowModule(CAM, body, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef)); CAM.followDist = Math.max(body.visualR * 10, 40); }
+// ═══ Controlli temporali + navigazione (moduli estratti) ═══
+// Stessa logica di prima, solo spostata in core/timeControls.js e
+// core/navigation.js per ridurre il punto di composizione.
+const { jumpToNow, jumpYears } = createTimeControls({
+  getSimDate: () => customDate || new Date(Date.now() + timeOffsetMs),
+  setCustomDate: (d) => {
+    customDate = d;
+    timeOffsetMs = d ? d.getTime() - Date.now() : 0;
+  },
+  clickNowBtn: () => document.getElementById('now')?.click(),
+  showHintFn: (msg) => showHint(ui, msg, hintTimerRef),
+});
 
-function zoomToBody(body, duration = 1000) {
-  if (!body || !body.pivot) return;
-  CAM.zoomTarget = {
-    body,
-    finalRadius: Math.max(body.visualR * 10, 30),
-    startTime: performance.now(),
-    duration,
-    startRadius: CAM.radius,
-    startPivot: CAM.pivot.clone(),
-  };
-  CAM.mode = 'orbit';
-  CAM.followBody = null;
-  setCamLabel(ui, 'orbit');
-}
+const {
+  enterFly,
+  exitFly,
+  enterFollow,
+  zoomToBody,
+  zoomToPosition,
+  exploreBody,
+  exploreRandomBody,
+} = createNavigation({
+  CAM,
+  camera,
+  renderer,
+  ui,
+  allBodies,
+  hintTimerRef,
+  selectBody,
+  setCamLabel,
+  showHint,
+});
 
-function zoomToPosition(position, radius = 200) {
-  CAM.tRadius = radius;
-  CAM.tPivot.copy(position);
-  CAM.tPhi = Math.atan2(Math.sqrt(position.x * position.x + position.z * position.z), position.y);
-  CAM.tTheta = Math.atan2(position.z, position.x);
-  CAM.mode = 'orbit';
-  CAM.followBody = null;
-  setCamLabel(ui, 'orbit');
+// ═══ Lazy features + command palette (moduli estratti) ═══
+// Stessa logica di prima, solo spostata in ui/lazyFeatures.js e
+// ui/commandActions.js per ridurre il punto di composizione.
+const {
+  toggleSpaceNews,
+  toggleQuiz,
+  toggleTimeTravel,
+  toggleGravitySandbox,
+  toggleGrandTour,
+  toggleSystemsExplorer,
+  toggleComparison,
+  toggleCredits,
+  toggleMissions,
+  openSpaceMissions,
+  getBookmarks,
+  getMissionsIfCreated,
+  getObservatoryIfCreated,
+  toggleObservatory,
+} = createLazyFeatures({
+  scene,
+  camera,
+  renderer,
+  allBodies,
+  CAM,
+  getSelectedBody,
+  selectBody,
+  exitFly,
+  exitGalaxyMapIfActive: () => {
+    if (galaxyMapMode) toggleGalaxyMap();
+  },
+  setCamLabel: (mode) => setCamLabel(ui, mode),
+  setCustomDate: (d) => {
+    customDate = d;
+    timeOffsetMs = d.getTime() - Date.now();
+  },
+});
+
+registerCommandActions({
+  ui,
+  allBodies,
+  CAM,
+  commandPalette,
+  themeManager,
+  soundManager,
+  screenshot,
+  travelCalc,
+  viewPresets,
+  shortcutsPanel,
+  urlState,
+  constellationManager,
+  meteorShowerManager,
+  eclipseSimulator,
+  minimap,
+  getSelectedBody,
+  selectBody,
+  exitFly,
+  getGalaxyMapMode: () => galaxyMapMode,
+  getLocalBubbleMode: () => localBubbleMode,
+  getCustomDate: () => customDate,
+  setCamLabel: (mode) => setCamLabel(ui, mode),
+  toggleTimeTravel,
+  toggleGrandTour,
+  toggleSystemsExplorer,
+  toggleQuiz,
+  getLang,
+  t,
+});
+
+function applyViewMode(mode) {
+  const cinematic = mode === 'cinema';
+  const scientific = mode === 'science';
+  if (ui.orbits) ui.orbits.checked = !cinematic;
+  if (ui.labels) ui.labels.checked = !cinematic;
+  if (ui.labelsLayer) ui.labelsLayer.style.display = cinematic ? 'none' : 'block';
+  bloomPass.strength = cinematic ? 1.45 : scientific ? 0.7 : 1.2;
+  outlinePass.enabled = !cinematic;
+  renderer.toneMappingExposure = cinematic ? 1.22 : 1.4;
+  [ui.viewExplore, ui.viewCinema, ui.viewScience].forEach((button) =>
+    button?.classList.remove('active')
+  );
+  const activeButton = { explore: ui.viewExplore, cinema: ui.viewCinema, science: ui.viewScience }[
+    mode
+  ];
+  activeButton?.classList.add('active');
+  camera.fov = cinematic ? 48 : 55;
+  camera.updateProjectionMatrix();
+  showHint(
+    ui,
+    cinematic
+      ? t('view_hint_cinema')
+      : scientific
+      ? t('view_hint_science')
+      : t('view_hint_explore'),
+    hintTimerRef
+  );
 }
 
 function zoomToStar(starKey) {
-  const star = allBodies.find(b => b.key === starKey);
+  const star = allBodies.find((b) => b.key === starKey);
   if (!star) return;
   exitFly();
   CAM.zoomTarget = {
@@ -314,10 +619,14 @@ function zoomToStar(starKey) {
   CAM.mode = 'orbit';
   CAM.followBody = null;
   setCamLabel(ui, 'star');
-  showHint(ui, `Star system: ${star.label}. WASD/Arrows to navigate.`, hintTimerRef);
+  showHint(
+    ui,
+    `Star system: ${getBodyLabel(star, getLang())}. WASD/Arrows to navigate.`,
+    hintTimerRef
+  );
   if (galaxyMapMode) {
     galaxyMapMode = false;
-    if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = 'Galactic Map';
+    if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = t('galaxy_map');
     if (ui.minimapContainer) ui.minimapContainer.style.display = 'none';
   }
 }
@@ -327,33 +636,52 @@ function toggleGalaxyMap() {
   localBubbleMode = false; // Disable Local Bubble when switching to galaxy map
   if (galaxyMapMode) {
     setMilkyWayVisible(scene, true);
+    spiralGalaxy.visible = true;
+    earthBeaconGroup.visible = true;
     exitFly();
-    CAM.tRadius = 500000;
+    CAM.tRadius = 420000;
     CAM.tTheta = 0;
-    CAM.tPhi = 1.57;
+    CAM.tPhi = 0.15; // Vista dall'alto (Top-down view of galaxy)
     CAM.tPivot.set(0, 0, 0);
     CAM.followBody = null;
     setCamLabel(ui, 'galaxy');
-    showHint(ui, 'Galactic Map: Solar System centered. WASD/Arrows to navigate. Click star to zoom.', hintTimerRef);
-    if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = 'Back to Solar System';
+    showHint(ui, t('galaxy_hint'), hintTimerRef);
+    if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = t('galaxy_back');
+    ui.galaxyMapBtn?.setAttribute('aria-pressed', 'true');
     if (ui.galaxyGuide) ui.galaxyGuide.classList.add('open');
     buildStarList(ui.starList, allBodies, '', zoomToStar);
     if (ui.minimapContainer) ui.minimapContainer.style.display = 'block';
-    allBodies.filter(b => b.type === 'star').forEach(star => {
-      if (star.glow) { star.glow.scale.set(star.radius * 20, star.radius * 20, 1); star.glow.material.opacity = 0.9; }
-    });
+    allBodies
+      .filter((b) => b.type === 'star')
+      .forEach((star) => {
+        if (star.glow) {
+          star.glow.scale.set(star.radius * 20, star.radius * 20, 1);
+          star.glow.material.opacity = 0.9;
+        }
+      });
   } else {
     setMilkyWayVisible(scene, false, 'orbit');
+    spiralGalaxy.visible = false;
     exitFly();
-    CAM.tRadius = 1400; CAM.tTheta = 0.9; CAM.tPhi = 1.05; CAM.tPivot.set(0, 0, 0);
+    CAM.tRadius = 900;
+    CAM.tTheta = 0.9;
+    CAM.tPhi = 1.05;
+    CAM.tPivot.set(0, 0, 0);
     CAM.followBody = null;
+    earthBeaconGroup.visible = false;
     setCamLabel(ui, 'orbit');
-    if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = 'Galactic Map';
+    if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = t('galaxy_map');
+    ui.galaxyMapBtn?.setAttribute('aria-pressed', 'false');
     if (ui.galaxyGuide) ui.galaxyGuide.classList.remove('open');
     if (ui.minimapContainer) ui.minimapContainer.style.display = 'none';
-    allBodies.filter(b => b.type === 'star').forEach(star => {
-      if (star.glow) { star.glow.scale.set(star.radius * 7, star.radius * 7, 1); star.glow.material.opacity = 0.72; }
-    });
+    allBodies
+      .filter((b) => b.type === 'star')
+      .forEach((star) => {
+        if (star.glow) {
+          star.glow.scale.set(star.radius * 7, star.radius * 7, 1);
+          star.glow.material.opacity = 0.72;
+        }
+      });
   }
 }
 
@@ -372,8 +700,8 @@ function toggleLocalBubble() {
     CAM.tPivot.set(0, 0, 0);
     CAM.followBody = null;
     setCamLabel(ui, 'localbubble');
-    showHint(ui, 'Local Bubble: 3D graph of nearby stars. WASD/Arrows to navigate. Click star to zoom.', hintTimerRef);
-    if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Back to Solar System';
+    showHint(ui, t('lb_hint'), hintTimerRef);
+    if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = t('galaxy_back');
     if (ui.galaxyGuide) ui.galaxyGuide.classList.remove('open');
     if (ui.minimapContainer) ui.minimapContainer.style.display = 'none';
     // Show Local Bubble connections and hide hyperlanes
@@ -381,15 +709,23 @@ function toggleLocalBubble() {
     if (hyperlaneGroup) hyperlaneGroup.visible = false;
     if (sectorGroup) sectorGroup.visible = false;
     // Show stars with enhanced glow for graph visualization
-    allBodies.filter(b => b.type === 'star').forEach(star => {
-      if (star.glow) { star.glow.scale.set(star.radius * 15, star.radius * 15, 1); star.glow.material.opacity = 0.85; }
-      // Show distance labels
-      if (star.distanceLabel) star.distanceLabel.style.opacity = '1';
-    });
+    allBodies
+      .filter((b) => b.type === 'star')
+      .forEach((star) => {
+        if (star.glow) {
+          star.glow.scale.set(star.radius * 15, star.radius * 15, 1);
+          star.glow.material.opacity = 0.85;
+        }
+        // Show distance labels
+        if (star.distanceLabel) star.distanceLabel.style.opacity = '1';
+      });
   } else {
     setMilkyWayVisible(scene, false, 'orbit');
     exitFly();
-    CAM.tRadius = 1400; CAM.tTheta = 0.9; CAM.tPhi = 1.05; CAM.tPivot.set(0, 0, 0);
+    CAM.tRadius = 900;
+    CAM.tTheta = 0.9;
+    CAM.tPhi = 1.05;
+    CAM.tPivot.set(0, 0, 0);
     CAM.followBody = null;
     setCamLabel(ui, 'orbit');
     if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Local Bubble';
@@ -397,17 +733,37 @@ function toggleLocalBubble() {
     if (localBubbleGroup) localBubbleGroup.visible = false;
     if (hyperlaneGroup) hyperlaneGroup.visible = true;
     if (sectorGroup) sectorGroup.visible = true;
-    allBodies.filter(b => b.type === 'star').forEach(star => {
-      if (star.glow) { star.glow.scale.set(star.radius * 7, star.radius * 7, 1); star.glow.material.opacity = 0.72; }
-      // Hide distance labels
-      if (star.distanceLabel) star.distanceLabel.style.opacity = '0';
-    });
+    allBodies
+      .filter((b) => b.type === 'star')
+      .forEach((star) => {
+        if (star.glow) {
+          star.glow.scale.set(star.radius * 7, star.radius * 7, 1);
+          star.glow.material.opacity = 0.72;
+        }
+        // Hide distance labels
+        if (star.distanceLabel) star.distanceLabel.style.opacity = '0';
+      });
     // Cleanup distance labels to prevent memory leak
     cleanupLocalBubbleLabels(allBodies);
   }
 }
 
-if (ui.galaxyMapBtn) ui.galaxyMapBtn.onclick = () => toggleGalaxyMap();
+const galaxyModal = new GalaxyModal({
+  onEnterSolarSystem: () => {
+    exitFly();
+    CAM.tRadius = 900;
+    CAM.tTheta = 0.9;
+    CAM.tPhi = 1.05;
+    CAM.tPivot.set(0, 0, 0);
+    CAM.followBody = null;
+    selectedBody = allBodies.find((b) => b.key === 'Sun') || null;
+    if (galaxyMapMode) toggleGalaxyMap();
+    showHint(ui, t('welcome_sun'), hintTimerRef);
+  },
+});
+
+if (ui.galaxyMapBtn) ui.galaxyMapBtn.onclick = () => galaxyModal.open();
+window.openGalaxyModal = () => galaxyModal.open();
 if (ui.localBubbleBtn) ui.localBubbleBtn.onclick = () => toggleLocalBubble();
 
 // Toggle sectors visibility
@@ -421,52 +777,6 @@ if (ui.showSectors) {
   ui.showSectors.addEventListener('change', (e) => {
     if (sectorGroup) sectorGroup.visible = e.target.checked;
   });
-}
-
-// Minimap click handler for navigation
-if (ui.minimapCanvas) {
-  ui.minimapCanvas.addEventListener('click', (e) => {
-    if (!galaxyMapMode) return;
-    
-    const canvas = ui.minimapCanvas;
-    const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-    
-    const stars = allBodies.filter(b => b.type === 'star');
-    if (stars.length === 0) return;
-    
-    const positions = stars.map(s => s.pivot.position);
-    const xs = positions.map(p => p.x), ys = positions.map(p => p.z);
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
-    const padding = 20;
-    const width = canvas.width, height = canvas.height;
-    
-    const scale = (val, mn, mx, tMin, tMax) => tMin + ((val - mn) / (mx - mn)) * (tMax - tMin);
-    
-    // Find nearest star to click position
-    let nearestStar = null;
-    let minDistance = Infinity;
-    
-    stars.forEach(star => {
-      const x = scale(star.pivot.position.x, minX, maxX, padding, width - padding);
-      const y = scale(star.pivot.position.z, minY, maxY, padding, height - padding);
-      const distance = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
-      
-      if (distance < minDistance && distance < 20) { // 20px click radius
-        minDistance = distance;
-        nearestStar = star;
-      }
-    });
-    
-    if (nearestStar) {
-      zoomToStar(nearestStar.key);
-    }
-  });
-  
-  // Add cursor pointer on hover
-  ui.minimapCanvas.style.cursor = 'pointer';
 }
 
 function openInventory() {
@@ -485,22 +795,83 @@ function openInventory() {
 if (ui.invToggle) ui.invToggle.onclick = () => openInventory();
 const invCloseBtn = document.getElementById('inventoryClose');
 if (invCloseBtn) invCloseBtn.onclick = () => openInventory();
-if (ui.invSearch) ui.invSearch.addEventListener('input', () => filterInventory(ui.invList, ui.invSearch.value));
+if (ui.invSearch)
+  ui.invSearch.addEventListener('input', () => filterInventory(ui.invList, ui.invSearch.value));
 
 const tooltip = createTooltip();
 const mouseMove = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-const pGroup = new THREE.Group(); scene.add(pGroup);
-const oGroup = new THREE.Group(); scene.add(oGroup);
-const navGrid = createNavGrid(); scene.add(navGrid);
-const cGroup = new THREE.Group(); scene.add(cGroup);
-const aGroup = new THREE.Group(); scene.add(aGroup);
-const hyperlaneGroup = new THREE.Group(); hyperlaneGroup.name = 'hyperlanes'; scene.add(hyperlaneGroup);
-const sectorGroup = new THREE.Group(); sectorGroup.name = 'sectors'; scene.add(sectorGroup);
+const pGroup = new THREE.Group();
+scene.add(pGroup);
+const oGroup = new THREE.Group();
+scene.add(oGroup);
+const navGrid = createNavGrid();
+scene.add(navGrid);
+const cGroup = new THREE.Group();
+scene.add(cGroup);
+const aGroup = new THREE.Group();
+scene.add(aGroup);
+const hyperlaneGroup = new THREE.Group();
+hyperlaneGroup.name = 'hyperlanes';
+scene.add(hyperlaneGroup);
+const sectorGroup = new THREE.Group();
+sectorGroup.name = 'sectors';
+scene.add(sectorGroup);
 sectorGroup.visible = false; // Hidden by default, only visible in galactic map mode
-const localBubbleGroup = new THREE.Group(); localBubbleGroup.name = 'localBubble'; scene.add(localBubbleGroup);
+const localBubbleGroup = new THREE.Group();
+localBubbleGroup.name = 'localBubble';
+scene.add(localBubbleGroup);
+
+// ═══ 3D Spiral Galaxy (Milky Way) ═══
+const spiralGalaxy = create3DSpiralGalaxy();
+scene.add(spiralGalaxy);
+
+// ═══ Earth / Solar System Galactic Beacon (3D Red Pulsing Dot) ═══
+const earthBeaconGroup = new THREE.Group();
+earthBeaconGroup.name = 'earthBeaconGroup';
+earthBeaconGroup.visible = false;
+scene.add(earthBeaconGroup);
+
+const beaconCanvas = document.createElement('canvas');
+beaconCanvas.width = 128;
+beaconCanvas.height = 128;
+const bCtx = beaconCanvas.getContext('2d');
+if (bCtx) {
+  const grad = bCtx.createRadialGradient(64, 64, 2, 64, 64, 60);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.2, '#ff1144');
+  grad.addColorStop(0.5, 'rgba(255, 30, 70, 0.7)');
+  grad.addColorStop(1, 'transparent');
+  bCtx.fillStyle = grad;
+  bCtx.beginPath();
+  bCtx.arc(64, 64, 60, 0, Math.PI * 2);
+  bCtx.fill();
+}
+const beaconTexture = new THREE.CanvasTexture(beaconCanvas);
+const beaconSpriteMat = new THREE.SpriteMaterial({
+  map: beaconTexture,
+  transparent: true,
+  opacity: 0.95,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const earthBeaconSprite = new THREE.Sprite(beaconSpriteMat);
+earthBeaconSprite.scale.set(16000, 16000, 1);
+earthBeaconGroup.add(earthBeaconSprite);
+
+const beaconRingGeo = new THREE.RingGeometry(8000, 11000, 32);
+const beaconRingMat = new THREE.MeshBasicMaterial({
+  color: 0xff2255,
+  side: THREE.DoubleSide,
+  transparent: true,
+  opacity: 0.75,
+  blending: THREE.AdditiveBlending,
+});
+const beaconRing = new THREE.Mesh(beaconRingGeo, beaconRingMat);
+beaconRing.rotation.x = -Math.PI / 2;
+earthBeaconGroup.add(beaconRing);
 
 function selectBody(body) {
   selectedBody = body;
@@ -510,8 +881,9 @@ function selectBody(body) {
     return;
   }
   // ═══ Gamification: track body visited ═══
-  if (missions) missions.onBodyVisited(body.key);
-  showInfo(ui, body, zoomToBody, enterFollow);
+  getMissionsIfCreated()?.onBodyVisited(body.key);
+  soundManager.playBodyResonance(body.key);
+  showInfo(ui, body, zoomToBody, enterFollow, selectBody, allBodies);
   highlightInventory(ui.invList, body.key);
   if (CAM.mode === 'orbit') {
     zoomToBody(body, 1000);
@@ -521,7 +893,7 @@ function selectBody(body) {
 }
 
 function updateStarSelectionVisuals() {
-  allBodies.forEach(body => {
+  allBodies.forEach((body) => {
     if (body.type === 'star' && body.glow) {
       if (selectedStars.has(body.key)) {
         // Highlight selected stars with brighter glow
@@ -530,94 +902,175 @@ function updateStarSelectionVisuals() {
       } else {
         // Normal glow for unselected stars
         body.glow.material.opacity = galaxyMapMode ? 0.9 : 0.72;
-        body.glow.scale.set(body.radius * (galaxyMapMode ? 20 : 7), body.radius * (galaxyMapMode ? 20 : 7), 1);
+        body.glow.scale.set(
+          body.radius * (galaxyMapMode ? 20 : 7),
+          body.radius * (galaxyMapMode ? 20 : 7),
+          1
+        );
       }
     }
   });
 }
 
-setupControls(CAM, camera, renderer, ui, raycaster, mouse, mouseMove, meshList, hitboxList, allBodies, tooltip, (m) => setCamLabel(ui, m), (msg) => showHint(ui, msg, hintTimerRef), selectBody);
+setupControls(
+  CAM,
+  camera,
+  renderer,
+  ui,
+  raycaster,
+  mouse,
+  mouseMove,
+  meshList,
+  hitboxList,
+  allBodies,
+  tooltip,
+  (m) => setCamLabel(ui, m),
+  (msg) => showHint(ui, msg, hintTimerRef),
+  selectBody
+);
 
 const keys = {};
-window.addEventListener('keydown', e => {
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    commandPalette.toggle();
+    return;
+  }
   // Ignore keyboard shortcuts when typing in an input/textarea
   const tag = e.target.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) {
     return;
   }
   keys[e.key] = true;
+  if (e.repeat) return;
+  if (e.code === 'Space' || (!(e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'))) {
+    e.preventDefault();
+    ui.toggle?.click();
+  }
   if (e.key === 'Escape') {
-    if (observatory.active) { observatory.exit(); }
-    else if (CAM.mode !== 'orbit') exitFly();
+    const obs = getObservatoryIfCreated();
+    if (obs?.active) {
+      obs.exit();
+    } else if (CAM.mode !== 'orbit') exitFly();
     if (ui.infoPanel) ui.infoPanel.classList.remove('visible');
     // Clear multi-selection
     if (selectedStars.size > 0) {
       selectedStars.clear();
       updateStarSelectionVisuals();
-      showHint(ui, 'Selezione cancellata', hintTimerRef);
+      showHint(ui, t('sel_cleared'), hintTimerRef);
     }
   }
-  if (e.key === 'f' || e.key === 'F') { CAM.mode === 'fly' ? exitFly() : enterFly(); }
+  if (e.key === 'f' || e.key === 'F') {
+    CAM.mode === 'fly' ? exitFly() : enterFly();
+  }
   if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
     guiVisible = !guiVisible;
     guiVisible ? gui.show() : gui.hide();
-    toast.info(guiVisible ? 'Pannello avanzato (debug) mostrato' : 'Pannello avanzato nascosto');
+    toast.info(guiVisible ? t('toast_debug_on') : t('toast_debug_off'));
   }
-  if (e.key === '1') { exitFly(); }
-  if (e.key === '2') { if (selectedBody) enterFollow(selectedBody); }
-  if (e.key === '3') { enterFly(); }
-  if (e.key === 'Tab') { e.preventDefault(); if (ui.invPanel) ui.invPanel.classList.toggle('open'); }
+  if (e.key === '1') {
+    exitFly();
+  }
+  if (e.key === '2') {
+    if (selectedBody) enterFollow(selectedBody);
+  }
+  if (e.key === '3') {
+    enterFly();
+  }
+  if (e.key === 'j' || e.key === 'J') openInventory();
   if (e.key === 'Shift') CAM.flyBoost = true;
-  if (e.key === 'r' || e.key === 'R') { jumpToNow(); }
-  if (e.key === '[') { jumpYears(-1); }
-  if (e.key === ']') { jumpYears(1); }
-  if (e.key === '{') { jumpYears(-10); }
-  if (e.key === '}') { jumpYears(10); }
+  if (e.key === 'r' || e.key === 'R') {
+    jumpToNow();
+  }
+  if (e.key === '[') {
+    jumpYears(-1);
+  }
+  if (e.key === ']') {
+    jumpYears(1);
+  }
+  if (e.key === '{') {
+    jumpYears(-10);
+  }
+  if (e.key === '}') {
+    jumpYears(10);
+  }
   // ═══ Shortcuts nuove features ═══
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); commandPalette.toggle(); }
-  if (e.key === 'h' || e.key === 'H') { e.preventDefault(); shortcutsPanel.toggle(); }
-  if (e.key === 'v' || e.key === 'V') { e.preventDefault(); viewPresets.toggle(); }
-  if (e.key === 't' || e.key === 'T') { themeManager.toggle(); }
-  if (e.key === 'l' || e.key === 'L') { setLang(getLang() === 'it' ? 'en' : 'it'); applyI18nToDOM(); }
-  if (e.key === 'n' || e.key === 'N') { spaceNews.toggle(); }
-  if (e.key === 'q' || e.key === 'Q') { quiz.toggle(); }
-  if (e.key === 'g' || e.key === 'G') { gravitySandbox.toggle(); }
-  if (e.key === 'c' || e.key === 'C') { comparisonMode.toggle(); }
-  if (e.key === 'i' || e.key === 'I') { creditsPage.toggle(); }
-  if (e.key === 'p' || e.key === 'P') { e.preventDefault(); settingsPanel.toggle(); }
-  if (e.key === 'm' || e.key === 'M') { showMissionsPanel(); }
-  if (e.key === 'x' || e.key === 'X') { missions.toggle(); }
+  if (e.key === 'h' || e.key === 'H') {
+    e.preventDefault();
+    shortcutsPanel.toggle();
+  }
+  if (e.key === 'v' || e.key === 'V') {
+    e.preventDefault();
+    viewPresets.toggle();
+  }
+  if (e.key === 't' || e.key === 'T') {
+    themeManager.toggle();
+  }
+  if (e.key === 'l' || e.key === 'L') {
+    setLang(getLang() === 'it' ? 'en' : 'it');
+    applyI18nToDOM();
+    if (ui.toggle) ui.toggle.textContent = paused ? t('resume') : t('pause');
+  }
+  if (e.key === 'n' || e.key === 'N') {
+    void toggleSpaceNews();
+  }
+  if (e.key === 'q' || e.key === 'Q') {
+    void toggleQuiz();
+  }
+  if (e.key === 'g' || e.key === 'G') {
+    void toggleGravitySandbox();
+  }
+  if (e.key === 'c' || e.key === 'C') {
+    void toggleComparison();
+  }
+  if (e.key === 'i' || e.key === 'I') {
+    void toggleCredits();
+  }
+  if (e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    settingsPanel.toggle();
+  }
+  if (e.key === 'm' || e.key === 'M') {
+    const visible = minimap.toggle();
+    const cb = document.getElementById('minimapToggle');
+    if (cb) cb.checked = visible;
+    toast.info(visible ? 'Radar minimappa attivo' : 'Radar minimappa nascosto');
+  }
+  if (e.key === 'x' || e.key === 'X') {
+    void toggleMissions();
+  }
   // ═══ Observatory: shortcut O ═══
   if (e.key === 'o' || e.key === 'O') {
-    if (selectedBody && (selectedBody.type === 'planet' || selectedBody.type === 'dwarf')) {
-      const sunBody = allBodies.find(b => b.key === 'Sun');
-      const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3(0, 0, 0);
-      observatory.toggle(selectedBody, sunPos);
-    } else if (!observatory.active) {
-      toast.warning('Seleziona prima un pianeta per atterrare!');
-    } else {
-      observatory.exit();
-    }
+    void toggleObservatory();
   }
   // ═══ Bookmarks ═══
-  if (e.key === 'b' || e.key === 'B') { bookmarks.toggle(CAM); }
+  if (e.key === 'b' || e.key === 'B') {
+    void getBookmarks().then((tool) => tool.toggle(CAM));
+  }
   if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
     e.preventDefault();
-    const entry = bookmarks.save(CAM);
-    toast.success(`Bookmark salvato: ${entry.name}`, 2000);
+    void getBookmarks().then((tool) => {
+      const entry = tool.save(CAM);
+      toast.success(`Bookmark salvato: ${entry.name}`, 2000);
+    });
   }
 });
-window.addEventListener('keyup', e => { keys[e.key] = false; if (e.key === 'Shift') CAM.flyBoost = false; });
+window.addEventListener('keyup', (e) => {
+  keys[e.key] = false;
+  if (e.key === 'Shift') CAM.flyBoost = false;
+});
 
-window.addEventListener('mousedown', e => {
+window.addEventListener('mousedown', (e) => {
   if (CAM.pointerLocked) return;
   // Star zoom raycast (orbit mode only — controls.js handles drag & body clicks)
   mouseMove.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
   raycaster.setFromCamera(mouseMove, camera);
-  const hits = raycaster.intersectObjects([...meshList, ...hitboxList]).filter(h => h.object.userData.isStar);
+  const hits = raycaster
+    .intersectObjects([...meshList, ...hitboxList])
+    .filter((h) => h.object.userData.isStar);
   if (hits.length > 0 && hits[0].object.userData.starKey) {
     const starKey = hits[0].object.userData.starKey;
-    
+
     // Multi-selection with Ctrl+Click
     if (e.ctrlKey || e.metaKey) {
       if (selectedStars.has(starKey)) {
@@ -636,14 +1089,16 @@ window.addEventListener('mousedown', e => {
 });
 
 // ═══ Observatory mousemove handler ═══
-window.addEventListener('mousemove', e => {
-  if (!observatory.active) return;
+window.addEventListener('mousemove', (e) => {
+  const obs = getObservatoryIfCreated();
+  if (!obs?.active) return;
   const dx = e.movementX || 0;
   const dy = e.movementY || 0;
-  observatory.onMouseMove(dx, dy);
+  obs.onMouseMove(dx, dy);
 });
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+// Keep the dark side of planets genuinely dark; the Sun remains the dominant key light.
+scene.add(new THREE.HemisphereLight(0x6b84b8, 0x050507, 0.22));
 const sunLight = new THREE.PointLight(0xfff4e0, 8.0, 0);
 sunLight.castShadow = true;
 sunLight.shadow.mapSize.width = 2048;
@@ -653,23 +1108,80 @@ sunLight.shadow.camera.far = 8000;
 sunLight.shadow.bias = -0.001;
 scene.add(sunLight);
 
-const sun = createAdvancedSun(SUN_R, './assets/textures/2k_sun.jpg', manager);
-scene.add(sun);
+// A subtle camera-side fill keeps the selected body's night side readable.
+// It stays far weaker than the Sun and fades almost completely in free flight,
+// preserving terminators and the sense of depth without showing a black disc.
+const inspectionFill = new THREE.DirectionalLight(0xfff1dc, 0.05);
+inspectionFill.target.name = 'inspectionFillTarget';
+scene.add(inspectionFill, inspectionFill.target);
+
+const sun = createAdvancedSun(SUN_R, './assets/textures/optimized/2k_sun.webp', manager);
+const sunPivot = new THREE.Group();
+sunPivot.name = 'sunPivot';
+sun.userData.bodyKey = 'Sun';
+sunPivot.add(sun);
+scene.add(sunPivot);
+meshList.push(sun);
 
 // Corona solare
-const sunCorona = createSunCorona(SUN_R * 1.5, SUN_R * 4);
+const sunCorona = createSunCorona(SUN_R * 1.18, SUN_R * 3.1);
 scene.add(sunCorona);
 
-[[8, 128, 'rgba(255,200,50,0.9)', 'rgba(255,120,0,0.4)', SUN_R * 6],
- [2, 128, 'rgba(255,240,100,0.5)', 'rgba(255,160,0,0.1)', SUN_R * 14],
- [0, 128, 'rgba(255,180,30,0.18)', 'rgba(255,80,0,0)', SUN_R * 30]].forEach(([iR, , cIn, cOut, sc]) => {
-  const sp = makeCanvasSprite((ctx, s) => {
-    const g = ctx.createRadialGradient(s / 2, s / 2, iR, s / 2, s / 2, 128);
-    g.addColorStop(0, cIn); g.addColorStop(0.45, cOut); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
-  }, 256, sc);
+[
+  [8, 128, 'rgba(255,200,50,0.72)', 'rgba(255,120,0,0.24)', SUN_R * 4.5],
+  [2, 128, 'rgba(255,240,100,0.34)', 'rgba(255,160,0,0.07)', SUN_R * 9],
+  [0, 128, 'rgba(255,180,30,0.11)', 'rgba(255,80,0,0)', SUN_R * 16],
+].forEach(([iR, , cIn, cOut, sc]) => {
+  const sp = makeCanvasSprite(
+    (ctx, s) => {
+      const g = ctx.createRadialGradient(s / 2, s / 2, iR, s / 2, s / 2, 128);
+      g.addColorStop(0, cIn);
+      g.addColorStop(0.45, cOut);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, s, s);
+    },
+    256,
+    sc
+  );
   scene.add(sp);
   sp._isSunGlow = true;
+  sp._baseOpacity = sp.material.opacity;
+});
+
+let sunLabel = null;
+if (ui.labelsLayer) {
+  sunLabel = document.createElement('div');
+  sunLabel.className = 'label';
+  sunLabel.textContent = '☀ Sole';
+  sunLabel.dataset.iconPrefix = '☀ ';
+  sunLabel.style.pointerEvents = 'auto';
+  sunLabel.style.cursor = 'pointer';
+  sunLabel.addEventListener('click', () => {
+    const body = allBodies.find((candidate) => candidate.key === 'Sun');
+    if (body) selectBody(body);
+  });
+  ui.labelsLayer.appendChild(sunLabel);
+}
+allBodies.push({
+  key: 'Sun',
+  label: 'Sole',
+  labelEn: 'Sun',
+  icon: '☀',
+  type: 'star',
+  color: 0xffcc55,
+  radius: SUN_R,
+  visualR: SUN_R,
+  pivot: sunPivot,
+  mesh: sun,
+  labelEl: sunLabel,
+  distAU: 0,
+  period: null,
+  moons: 8,
+  desc: 'La stella al centro del Sistema Solare. Contiene oltre il 99,8% della massa dell’intero sistema.',
+  descEn:
+    'The star at the center of the Solar System. It holds over 99.8% of the entire system’s mass.',
+  getPos: () => new THREE.Vector3(0, 0, 0),
 });
 
 function makePlanetMesh(radius, texPath, color, key, bodyType) {
@@ -688,7 +1200,7 @@ function makePlanetMesh(radius, texPath, color, key, bodyType) {
     `;
     const fragShader = `
       uniform sampler2D dayTexture; uniform vec3 sunDirection; uniform float time;
-      varying vec2 vUv; varying vec3 vNormal; varying vec3 vWorldNormal;
+      varying vec2 vUv; varying vec3 vNormal; varying vec3 vWorldNormal; varying vec3 vPosition;
       float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
       float noise(vec2 p) {
         vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
@@ -719,9 +1231,14 @@ function makePlanetMesh(radius, texPath, color, key, bodyType) {
         float dayFactor = smoothstep(-0.15, 0.25, ndotl);
         vec3 dayColor = texture2D(dayTexture, vUv).rgb;
         vec3 nightColor = proceduralNight(vUv);
-        float specular = pow(max(0.0, ndotl), 32.0) * 0.3;
-        vec3 specColor = vec3(1.0) * specular;
+        vec3 viewDir = normalize(-vPosition);
+        vec3 reflected = reflect(-normalize(sunDirection), worldNormal);
+        float ocean = 1.0 - smoothstep(0.18, 0.33, max(dayColor.r, dayColor.g) - dayColor.b * 0.42);
+        float specular = pow(max(0.0, dot(reflected, viewDir)), 72.0) * ocean * 0.75;
+        vec3 specColor = vec3(0.72, 0.9, 1.0) * specular;
         vec3 finalColor = mix(nightColor, dayColor + specColor, dayFactor);
+        float limb = pow(1.0 - max(0.0, dot(viewDir, worldNormal)), 4.0);
+        finalColor += vec3(0.10, 0.34, 0.85) * limb * dayFactor * 0.45;
         gl_FragColor = vec4(finalColor, 1.0);
       }
     `;
@@ -736,14 +1253,33 @@ function makePlanetMesh(radius, texPath, color, key, bodyType) {
     });
     const highMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, segs, segs), mat);
     highMesh.castShadow = true;
-    const lowMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, Math.max(8, Math.floor(segs / 3)), Math.max(6, Math.floor(segs / 3))), mat.clone());
+    const lowMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        radius,
+        Math.max(8, Math.floor(segs / 3)),
+        Math.max(6, Math.floor(segs / 3))
+      ),
+      mat.clone()
+    );
     const lod = new THREE.LOD();
     lod.addLevel(highMesh, 0);
     lod.addLevel(lowMesh, radius * 30);
     return { mesh: highMesh, lod, lodMeshes: [highMesh, lowMesh] };
   }
 
-  const mat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0.05 });
+  const surfaceTuning = {
+    Mercury: { roughness: 0.98 },
+    Venus: { roughness: 0.9 },
+    Mars: { roughness: 0.96 },
+    Jupiter: { roughness: 0.55 },
+    Saturn: { roughness: 0.62 },
+    Uranus: { roughness: 0.48 },
+    Neptune: { roughness: 0.5 },
+  };
+  const mat = new THREE.MeshStandardMaterial({
+    roughness: surfaceTuning[key]?.roughness ?? 0.78,
+    metalness: 0.0,
+  });
   if (texPath) {
     mat.map = TL.load(texPath, procFallback);
   } else {
@@ -760,7 +1296,14 @@ function makePlanetMesh(radius, texPath, color, key, bodyType) {
 
   const highMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, segs, segs), mat);
   highMesh.castShadow = true;
-  const lowMesh = new THREE.Mesh(new THREE.SphereGeometry(radius, Math.max(8, Math.floor(segs / 3)), Math.max(6, Math.floor(segs / 3))), mat.clone());
+  const lowMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(
+      radius,
+      Math.max(8, Math.floor(segs / 3)),
+      Math.max(6, Math.floor(segs / 3))
+    ),
+    mat.clone()
+  );
   const lod = new THREE.LOD();
   lod.addLevel(highMesh, 0);
   lod.addLevel(lowMesh, radius * 20);
@@ -775,42 +1318,85 @@ function buildPlanet(def) {
   const mesh = pm.mesh || pm;
   const lod = pm.lod || null;
   const lodMeshes = pm.lodMeshes || [mesh];
-  lodMeshes.forEach(m => { if (m) m.userData.bodyKey = def.key; });
-  if (lod) { tiltGroup.add(lod); lodList.push(lod); }
-  else tiltGroup.add(mesh);
+  lodMeshes.forEach((m) => {
+    if (m) m.userData.bodyKey = def.key;
+  });
+  if (lod) {
+    tiltGroup.add(lod);
+    lodList.push(lod);
+  } else tiltGroup.add(mesh);
   pivot.add(tiltGroup);
   pGroup.add(pivot);
-  lodMeshes.forEach(m => { if (m) meshList.push(m); });
+  lodMeshes.forEach((m) => {
+    if (m) meshList.push(m);
+  });
 
   const glow = makeGlow(def.radius, def.color);
   pivot.add(glow);
 
   let atmosphere = null;
   if (def.hasAtmosphere) {
-    atmosphere = makeCanvasSprite((ctx, s) => {
-      const g = ctx.createRadialGradient(s / 2, s / 2, s * 0.28, s / 2, s / 2, s / 2);
-      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.65, 'rgba(50,120,255,0)');
-      g.addColorStop(0.80, 'rgba(60,140,255,0.28)'); g.addColorStop(0.90, 'rgba(80,160,255,0.18)'); g.addColorStop(1, 'rgba(0,60,200,0)');
-      ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
-    }, 256, def.radius * 2.85);
+    atmosphere = makeCanvasSprite(
+      (ctx, s) => {
+        const g = ctx.createRadialGradient(s / 2, s / 2, s * 0.28, s / 2, s / 2, s / 2);
+        g.addColorStop(0, 'rgba(0,0,0,0)');
+        g.addColorStop(0.65, 'rgba(50,120,255,0)');
+        g.addColorStop(0.8, 'rgba(60,140,255,0.28)');
+        g.addColorStop(0.9, 'rgba(80,160,255,0.18)');
+        g.addColorStop(1, 'rgba(0,60,200,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, s, s);
+      },
+      256,
+      def.radius * 2.85
+    );
     pivot.add(atmosphere);
   }
 
   if (def.key === 'Saturn') {
-    const ri = def.radius * 1.4, ro = def.radius * 2.7;
+    const ri = def.radius * 1.4,
+      ro = def.radius * 2.7;
     const rGeo = new THREE.RingGeometry(ri, ro, 256);
-    const pos = rGeo.attributes.position, uv = rGeo.attributes.uv, v3 = new THREE.Vector3();
-    for (let i = 0; i < pos.count; i++) { v3.fromBufferAttribute(pos, i); uv.setXY(i, (v3.length() - ri) / (ro - ri), 0); }
-    const rt = TL.load('./assets/textures/2k_saturn_ring_alpha.png', generateSaturnRingTexture);
-    const ring = new THREE.Mesh(rGeo, new THREE.MeshBasicMaterial({ map: rt, alphaMap: rt, color: 0xd4c070, side: THREE.DoubleSide, transparent: true, opacity: 0.88, depthWrite: false }));
-    ring.castShadow = true;
+    const pos = rGeo.attributes.position,
+      uv = rGeo.attributes.uv,
+      v3 = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      v3.fromBufferAttribute(pos, i);
+      uv.setXY(i, (v3.length() - ri) / (ro - ri), 0);
+    }
+    const rt = TL.load(
+      './assets/textures/optimized/2k_saturn_ring_alpha.webp',
+      generateSaturnRingTexture
+    );
+    const ring = new THREE.Mesh(
+      rGeo,
+      new THREE.MeshBasicMaterial({
+        map: rt,
+        alphaMap: rt,
+        color: 0xd4c070,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.88,
+        depthWrite: false,
+      })
+    );
+    ring.castShadow = false;
     ring.receiveShadow = true;
-    ring.rotation.x = Math.PI / 2; pivot.add(ring);
+    ring.rotation.x = Math.PI / 2;
+    pivot.add(ring);
   }
   if (def.key === 'Uranus') {
-    const ur = new THREE.Mesh(new THREE.RingGeometry(def.radius * 1.5, def.radius * 1.9, 64),
-      new THREE.MeshBasicMaterial({ color: 0x88eedd, side: THREE.DoubleSide, transparent: true, opacity: 0.25 }));
-    ur.rotation.x = Math.PI / 2; pivot.add(ur);
+    const ur = new THREE.Mesh(
+      new THREE.RingGeometry(def.radius * 1.5, def.radius * 1.9, 64),
+      new THREE.MeshBasicMaterial({
+        color: 0x88eedd,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.25,
+      })
+    );
+    ur.rotation.x = Math.PI / 2;
+    pivot.add(ur);
   }
 
   let labelEl = null;
@@ -826,8 +1412,15 @@ function buildPlanet(def) {
   }
 
   const body = {
-    ...def, pivot, mesh, glow, atmosphere, labelEl, visualR: def.radius,
-    getPos: def.type === 'moon' ? null : T => keplerPos(def.key, T, ORBITAL_ELEMENTS),
+    ...def,
+    ...(PHYSICAL_DATA[def.key] || {}),
+    pivot,
+    mesh,
+    glow,
+    atmosphereMesh: atmosphere,
+    labelEl,
+    visualR: def.radius,
+    getPos: def.type === 'moon' ? null : (T) => keplerPos(def.key, T, ORBITAL_ELEMENTS),
   };
   allBodies.push(body);
   return body;
@@ -835,8 +1428,8 @@ function buildPlanet(def) {
 
 PLANETS.forEach(buildPlanet);
 
-MOONS.forEach(def => {
-  const parentFn = () => allBodies.find(b => b.key === def.parent);
+MOONS.forEach((def) => {
+  const parentFn = () => allBodies.find((b) => b.key === def.parent);
   const pivot = new THREE.Group();
 
   let mesh;
@@ -844,25 +1437,35 @@ MOONS.forEach(def => {
     const irregularGeometry = new THREE.DodecahedronGeometry(def.radius, 0);
     const positions = irregularGeometry.attributes.position;
     for (let i = 0; i < positions.count; i++) {
-      const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
+      const x = positions.getX(i),
+        y = positions.getY(i),
+        z = positions.getZ(i);
       const noise = 0.8 + Math.random() * 0.4;
       positions.setXYZ(i, x * noise, y * noise, z * noise);
     }
     irregularGeometry.computeVertexNormals();
     const mat = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.1 });
     const procTex = getProceduralPlanetTexture({ key: def.key, type: 'moon', color: def.color });
-    if (procTex) { mat.map = procTex; mat.needsUpdate = true; }
-    else mat.color = new THREE.Color(def.color);
+    if (procTex) {
+      mat.map = procTex;
+      mat.needsUpdate = true;
+    } else mat.color = new THREE.Color(def.color);
     mesh = new THREE.Mesh(irregularGeometry, mat);
     mesh.castShadow = true;
   } else {
-  const pm = makePlanetMesh(def.radius, def.tex || null, def.color, def.key, def.type);
+    const pm = makePlanetMesh(def.radius, def.tex || null, def.color, def.key, def.type);
     mesh = pm.mesh || pm;
     const lodMeshes = pm.lodMeshes || [mesh];
-    lodMeshes.forEach(m => { if (m) m.userData.bodyKey = def.key; });
-    if (pm.lod) { pivot.add(pm.lod); lodList.push(pm.lod); }
-    else pivot.add(mesh);
-    lodMeshes.forEach(m => { if (m) meshList.push(m); });
+    lodMeshes.forEach((m) => {
+      if (m) m.userData.bodyKey = def.key;
+    });
+    if (pm.lod) {
+      pivot.add(pm.lod);
+      lodList.push(pm.lod);
+    } else pivot.add(mesh);
+    lodMeshes.forEach((m) => {
+      if (m) meshList.push(m);
+    });
   }
 
   const glow = makeGlow(def.radius, def.color);
@@ -877,28 +1480,43 @@ MOONS.forEach(def => {
     labelEl.style.pointerEvents = 'auto';
     labelEl.style.cursor = 'pointer';
     const capturedDef = def;
-    labelEl.addEventListener('click', () => { const b = allBodies.find(x => x.key === capturedDef.key); if (b) selectBody(b); });
+    labelEl.addEventListener('click', () => {
+      const b = allBodies.find((x) => x.key === capturedDef.key);
+      if (b) selectBody(b);
+    });
     ui.labelsLayer.appendChild(labelEl);
   }
 
   const body = {
-    ...def, pivot, mesh, glow, labelEl, visualR: def.radius,
+    ...def,
+    pivot,
+    mesh,
+    glow,
+    labelEl,
+    visualR: def.radius,
     getPos: () => {
-      const pb = parentFn(); if (!pb) return new THREE.Vector3();
+      const pb = parentFn();
+      if (!pb) return new THREE.Vector3();
       const ms = Date.now() + timeOffsetMs;
       const angle = ((ms / (def.period * 1000)) * Math.PI * 2) % (Math.PI * 2);
       const incl = (def.inclination || 5) * DEG;
-      return pb.pivot.position.clone().add(new THREE.Vector3(
-        Math.cos(angle) * def.dist,
-        Math.sin(angle) * def.dist * Math.sin(incl),
-        Math.sin(angle) * def.dist * Math.cos(incl * 0.3),
-      ));
+      return pb.pivot.position
+        .clone()
+        .add(
+          new THREE.Vector3(
+            Math.cos(angle) * def.dist,
+            Math.sin(angle) * def.dist * Math.sin(incl),
+            Math.sin(angle) * def.dist * Math.cos(incl * 0.3)
+          )
+        );
     },
   };
   allBodies.push(body);
 });
 
-ASTEROIDS.forEach(def => buildAsteroidBody(def, aGroup, meshList, hitboxList, ui, allBodies, selectBody, getTimeOffset));
+ASTEROIDS.forEach((def) =>
+  buildAsteroidBody(def, aGroup, meshList, hitboxList, ui, allBodies, selectBody, getTimeOffset)
+);
 
 mainBelt = generateAsteroidBelt(180, 280, 1000, 0x887766);
 mainBelt.userData.name = 'mainBelt';
@@ -911,7 +1529,7 @@ cometObjects = createComets(COMETS, cGroup, hitboxList, ui, allBodies, meshList,
 createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList, selectBody);
 createHyperlanes(allBodies, hyperlaneGroup);
 createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBody);
-createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, getTimeOffset);
+createExoplanets(EXOPLANETS, pGroup, ui, allBodies, meshList, selectBody, getTimeOffset);
 createDustBelts(scene);
 createOortCloud(scene);
 
@@ -922,18 +1540,15 @@ createLocalBubbleDistanceLabels(allBodies, ui);
 localBubbleGroup.visible = false; // Hidden by default
 
 // Create territorial sectors after stars are positioned
-createSectors();
+createGalaxySectors(allBodies, sectorGroup);
 
 // ═══ Aggiungi effetti atmosferici ai pianeti ═══
-getAtmosphericPlanets().forEach(planetKey => {
-  const planetBody = allBodies.find(b => b.key === planetKey);
+getAtmosphericPlanets().forEach((planetKey) => {
+  const planetBody = allBodies.find((b) => b.key === planetKey);
   if (planetBody) addAtmosphereEffects(planetBody, planetKey);
 });
 
 setupMenuUI(ui, allBodies, getSelectedBody, selectBody, zoomToStar, hyperlaneGroup);
-
-const comparisonMode = new ComparisonMode(allBodies);
-const bookmarks = new CameraBookmarks();
 
 function updateCamera(dt) {
   const distToTarget = CAM.zoomTarget ? Math.abs(CAM.radius - CAM.zoomTarget.finalRadius) : 0;
@@ -943,10 +1558,22 @@ function updateCamera(dt) {
 
   if (CAM.mode === 'orbit') {
     const moveSpeed = CAM.radius * 0.005 * dt * 60;
-    if (keys['w'] || keys['W'] || keys['ArrowUp']) { const fwd = new THREE.Vector3(-Math.sin(CAM.theta), 0, -Math.cos(CAM.theta)); CAM.tPivot.addScaledVector(fwd, moveSpeed); }
-    if (keys['s'] || keys['S'] || keys['ArrowDown']) { const fwd = new THREE.Vector3(-Math.sin(CAM.theta), 0, -Math.cos(CAM.theta)); CAM.tPivot.addScaledVector(fwd, -moveSpeed); }
-    if (keys['a'] || keys['A'] || keys['ArrowLeft']) { const right = new THREE.Vector3(-Math.cos(CAM.theta), 0, Math.sin(CAM.theta)); CAM.tPivot.addScaledVector(right, -moveSpeed); }
-    if (keys['d'] || keys['D'] || keys['ArrowRight']) { const right = new THREE.Vector3(-Math.cos(CAM.theta), 0, Math.sin(CAM.theta)); CAM.tPivot.addScaledVector(right, moveSpeed); }
+    if (keys['w'] || keys['W'] || keys['ArrowUp']) {
+      const fwd = new THREE.Vector3(-Math.sin(CAM.theta), 0, -Math.cos(CAM.theta));
+      CAM.tPivot.addScaledVector(fwd, moveSpeed);
+    }
+    if (keys['s'] || keys['S'] || keys['ArrowDown']) {
+      const fwd = new THREE.Vector3(-Math.sin(CAM.theta), 0, -Math.cos(CAM.theta));
+      CAM.tPivot.addScaledVector(fwd, -moveSpeed);
+    }
+    if (keys['a'] || keys['A'] || keys['ArrowLeft']) {
+      const right = new THREE.Vector3(-Math.cos(CAM.theta), 0, Math.sin(CAM.theta));
+      CAM.tPivot.addScaledVector(right, -moveSpeed);
+    }
+    if (keys['d'] || keys['D'] || keys['ArrowRight']) {
+      const right = new THREE.Vector3(-Math.cos(CAM.theta), 0, Math.sin(CAM.theta));
+      CAM.tPivot.addScaledVector(right, moveSpeed);
+    }
     if (keys['q'] || keys['Q']) CAM.tPivot.y += moveSpeed;
     if (keys['e'] || keys['E']) CAM.tPivot.y -= moveSpeed;
 
@@ -954,10 +1581,11 @@ function updateCamera(dt) {
       const pos = CAM.zoomTarget.body.pivot?.position;
       if (pos) {
         CAM.tRadius = CAM.zoomTarget.finalRadius;
-        CAM.tPhi = Math.atan2(Math.sqrt(pos.x * pos.x + pos.z * pos.z), pos.y);
-        CAM.tTheta = Math.atan2(pos.z, pos.x);
         CAM.tPivot.copy(pos);
-        if (Math.abs(CAM.radius - CAM.tRadius) < 0.5) { CAM.zoomTarget = null; CAM.isTransitioning = false; }
+        if (Math.abs(CAM.radius - CAM.tRadius) < 0.5) {
+          CAM.zoomTarget = null;
+          CAM.isTransitioning = false;
+        }
       }
     }
     CAM.radius += (CAM.tRadius - CAM.radius) * sp;
@@ -967,12 +1595,16 @@ function updateCamera(dt) {
     camera.position.set(
       CAM.pivot.x + CAM.radius * Math.sin(CAM.phi) * Math.cos(CAM.theta),
       CAM.pivot.y + CAM.radius * Math.cos(CAM.phi),
-      CAM.pivot.z + CAM.radius * Math.sin(CAM.phi) * Math.sin(CAM.theta),
+      CAM.pivot.z + CAM.radius * Math.sin(CAM.phi) * Math.sin(CAM.theta)
     );
     camera.lookAt(CAM.pivot);
   } else if (CAM.mode === 'fly') {
     const speed = CAM.flySpeed * (CAM.flyBoost ? 5 : 1) * dt;
-    const fwd = new THREE.Vector3(-Math.sin(CAM.flyYaw) * Math.cos(CAM.flyPitch), Math.sin(CAM.flyPitch), -Math.cos(CAM.flyYaw) * Math.cos(CAM.flyPitch));
+    const fwd = new THREE.Vector3(
+      -Math.sin(CAM.flyYaw) * Math.cos(CAM.flyPitch),
+      Math.sin(CAM.flyPitch),
+      -Math.cos(CAM.flyYaw) * Math.cos(CAM.flyPitch)
+    );
     const right = new THREE.Vector3(Math.cos(CAM.flyYaw), 0, -Math.sin(CAM.flyYaw));
     const up = new THREE.Vector3(0, 1, 0);
     if (keys['w'] || keys['W'] || keys['ArrowUp']) CAM.flyPos.addScaledVector(fwd, speed);
@@ -993,7 +1625,7 @@ function updateCamera(dt) {
     const offset = new THREE.Vector3(
       CAM.followDist * Math.sin(CAM.followPhi) * Math.cos(CAM.followTheta),
       CAM.followDist * Math.cos(CAM.followPhi),
-      CAM.followDist * Math.sin(CAM.followPhi) * Math.sin(CAM.followTheta),
+      CAM.followDist * Math.sin(CAM.followPhi) * Math.sin(CAM.followTheta)
     );
     camera.position.lerp(target.clone().add(offset), sp * 2);
     camera.lookAt(target);
@@ -1001,191 +1633,271 @@ function updateCamera(dt) {
   }
 }
 
-function createSectors() {
-  const stars = allBodies.filter(b => b.type === 'star');
-  if (stars.length === 0) return;
-  
-  const positions = stars.map(s => s.pivot.position);
-  const xs = positions.map(p => p.x), ys = positions.map(p => p.z);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  
-  // Divide galaxy into 4x4 grid sectors
-  const gridSize = 4;
-  const sectorWidth = (maxX - minX) / gridSize;
-  const sectorHeight = (maxY - minY) / gridSize;
-  
-  for (let i = 0; i < gridSize; i++) {
-    for (let j = 0; j < gridSize; j++) {
-      const x = minX + i * sectorWidth;
-      const z = minY + j * sectorHeight;
-      
-      // Create sector boundary
-      const geometry = new THREE.PlaneGeometry(sectorWidth, sectorHeight);
-      const material = new THREE.MeshBasicMaterial({
-        color: 0x4488ff,
-        transparent: true,
-        opacity: 0.05,
-        side: THREE.DoubleSide
-      });
-      const sector = new THREE.Mesh(geometry, material);
-      sector.rotation.x = -Math.PI / 2;
-      sector.position.set(x + sectorWidth / 2, 0, z + sectorHeight / 2);
-      sector.userData = { sectorX: i, sectorY: j };
-      sectorGroup.add(sector);
-      
-      // Add sector border
-      const borderGeometry = new THREE.EdgesGeometry(geometry);
-      const borderMaterial = new THREE.LineBasicMaterial({
-        color: 0x4488ff,
-        transparent: true,
-        opacity: 0.15
-      });
-      const border = new THREE.LineSegments(borderGeometry, borderMaterial);
-      border.rotation.x = -Math.PI / 2;
-      border.position.copy(sector.position);
-      sectorGroup.add(border);
-    }
-  }
-}
-
 function updateMinimap() {
-  if (!ui.minimapCanvas || !galaxyMapMode) return;
-  const canvas = ui.minimapCanvas;
-  const ctx = canvas.getContext('2d');
-  const width = canvas.width, height = canvas.height;
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-  ctx.fillRect(0, 0, width, height);
-  const stars = allBodies.filter(b => b.type === 'star');
-  if (stars.length === 0) return;
-  const positions = stars.map(s => s.pivot.position);
-  const xs = positions.map(p => p.x), ys = positions.map(p => p.z);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const padding = 20;
-  const scale = (val, mn, mx, tMin, tMax) => tMin + ((val - mn) / (mx - mn)) * (tMax - tMin);
-  stars.forEach(star => {
-    const x = scale(star.pivot.position.x, minX, maxX, padding, width - padding);
-    const y = scale(star.pivot.position.z, minY, maxY, padding, height - padding);
-    const color = '#' + star.color.toString(16).padStart(6, '0');
-    ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
-    if (star.key === 'Sun' || star.key.includes('Alpha') || star.key.includes('Sirius')) {
-      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 100, 0.3)'; ctx.fill();
-    }
+  minimap.render({
+    allBodies,
+    camera,
+    cameraSystem: CAM,
+    selectedBody,
+    isGalaxyMode: galaxyMapMode,
   });
-  const camX = scale(CAM.pivot.x, minX, maxX, padding, width - padding);
-  const camY = scale(CAM.pivot.z, minY, maxY, padding, height - padding);
-  ctx.beginPath(); ctx.arc(camX, camY, 5, 0, Math.PI * 2); ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2; ctx.stroke();
 }
 
-function animate() {
-  requestAnimationFrame(animate);
-  try {
-  const now = performance.now(), dt = Math.min((now - lastPerf) / 1000, 0.1);
-  lastPerf = now;
+function applyGraphicsQuality(quality) {
+  const presets = {
+    low: { pixelRatio: 0.85, shadows: false, bloom: 0, outline: false, dust: false, oort: false },
+    medium: {
+      pixelRatio: Math.min(devicePixelRatio, 1.25),
+      shadows: false,
+      bloom: 0.75,
+      outline: true,
+      dust: true,
+      oort: false,
+    },
+    high: {
+      pixelRatio: Math.min(devicePixelRatio, 1.75),
+      shadows: true,
+      bloom: 1.1,
+      outline: true,
+      dust: true,
+      oort: true,
+    },
+    ultra: {
+      pixelRatio: Math.min(devicePixelRatio, 2.5),
+      shadows: true,
+      bloom: 1.35,
+      outline: true,
+      dust: true,
+      oort: true,
+    },
+  };
+  const preset = presets[quality] || presets.high;
+  activeGraphicsQuality = presets[quality] ? quality : 'high';
+  renderer.setPixelRatio(preset.pixelRatio);
+  composer.setPixelRatio?.(preset.pixelRatio);
+  renderer.shadowMap.enabled = preset.shadows;
+  bloomPass.enabled = preset.bloom > 0;
+  bloomPass.strength = preset.bloom;
+  outlinePass.enabled = preset.outline;
+  if (scene.userData.belt?.geo)
+    scene.userData.belt.geo.setDrawRange(0, preset.dust ? scene.userData.belt.N : 0);
+  if (scene.userData.kuiper?.geo)
+    scene.userData.kuiper.geo.setDrawRange(0, preset.dust ? scene.userData.kuiper.N : 0);
+  const oort = scene.getObjectByName('oortCloud');
+  if (oort) oort.visible = preset.oort;
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+}
 
-  updateCamera(dt);
-
-  const mult = timeMultiplier(ui);
-  if (ui.speedLabel) ui.speedLabel.textContent = speedText(mult);
-  if (!paused) timeOffsetMs += dt * 1000 * (mult - 1);
-
-  const d = customDate || new Date(Date.now() + timeOffsetMs);
-  const locale = getLang() === 'it' ? 'it-IT' : 'en-US';
-  if (ui.clock) ui.clock.textContent = d.toLocaleString(locale, { hour12: false });
-  const T = (julianDate(d) - 2451545.0) / 36525.0;
-
-  allBodies.forEach(b => {
-    if (b.type === 'comet' || !b.pivot) return;
-    const pos = b.getPos ? b.getPos(T) : null;
-    if (pos) {
-      if (b.type === 'exoplanet') {
-        b.mesh.position.copy(pos.sub(b.pivot.position));
-      } else {
-        b.pivot.position.copy(pos);
-      }
-    }
-    if (b.mesh) b.mesh.rotation.y += 0.002 * dt * 60;
-    if (b.glow?.quaternion) b.glow.quaternion.copy(camera.quaternion);
-    if (b.atmosphere?.quaternion) b.atmosphere.quaternion.copy(camera.quaternion);
-    const isH = hoveredBody?.key === b.key || selectedBody?.key === b.key;
-    if (b.glow?.material) { b.glow.material.opacity = isH ? 0.95 : 0.72; const sc = b.radius * (isH ? 9 : 7); b.glow.scale.set(sc, sc, 1); }
-    if (b.key === 'Earth' && b.mesh?.material?.uniforms) {
-      b.mesh.material.uniforms.time.value = performance.now();
-      const sunBody = allBodies.find(s => s.key === 'Sun');
-      if (sunBody) {
-        const dir = new THREE.Vector3().copy(sunBody.pivot.position).sub(b.pivot.position).normalize();
-        b.mesh.material.uniforms.sunDirection.value.copy(dir);
-      }
-    }
-    if (b.type === 'star' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
-    if (b.type === 'exoplanet' && b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
+function updateSceneDetailVisibility() {
+  // Wide-scale belts are useful for orientation, but visually overpower a
+  // planet close-up. Restore them automatically as soon as the camera pulls back.
+  const closeFocus = !!selectedBody && CAM.radius < 160 && !galaxyMapMode && !localBubbleMode;
+  const quality = activeGraphicsQuality;
+  const showBelts = !closeFocus && quality !== 'low';
+  const selectedIsComet = selectedBody?.type === 'comet';
+  const selectedIsAsteroid = selectedBody?.type === 'asteroid';
+  const closeSunFocus =
+    selectedBody?.key === 'Sun' && camera.position.distanceTo(sunPivot.position) < 260;
+  allBodies.forEach((body) => {
+    if (body.pivot) body.pivot.visible = !closeSunFocus || body.key === 'Sun';
   });
-
-  updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused);
-  updateComets(cometObjects, dt, mult, paused, ui, camera);
-  updateDustBelts(scene, dt, mult);
-  // ═══ Atmosphere effects update ═══
-  allBodies.forEach(b => { if (b.clouds || b.upperClouds || b.aurora || b.atmosphereGlow) updateAtmosphereEffects(b, camera); });
-  
-  // ═══ Update Local Bubble distance labels position ═══
-  if (localBubbleMode) {
-    allBodies.filter(b => b.type === 'star' && b.distanceLabel).forEach(star => {
-      const label = star.distanceLabel;
-      const pos = star.pivot.position.clone();
-      pos.project(camera);
-      
-      const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (pos.y * -0.5 + 0.5) * window.innerHeight;
-      
-      // Hide if behind camera
-      if (pos.z > 1) {
-        label.style.display = 'none';
-      } else {
-        label.style.display = 'block';
-        label.style.left = `${x}px`;
-        label.style.top = `${y}px`;
+  if (mainBelt) mainBelt.visible = showBelts;
+  if (kuiperBelt) kuiperBelt.visible = showBelts;
+  // Small moving objects are useful in the overview, but at planet scale
+  // they can pass directly in front of the camera and read as large squares.
+  // Keep the relevant collection visible when the user is actually exploring it.
+  cGroup.visible = !closeFocus || selectedIsComet;
+  aGroup.visible = !closeFocus || selectedIsAsteroid;
+  const mainDust = scene.getObjectByName('mainDustBelt');
+  const kuiperDust = scene.getObjectByName('kuiperDustBelt');
+  const oort = scene.getObjectByName('oortCloud');
+  if (mainDust) mainDust.visible = !closeFocus && quality !== 'low';
+  if (kuiperDust) kuiperDust.visible = !closeFocus && quality !== 'low';
+  if (oort) oort.visible = !closeFocus && quality === 'high';
+  if (closeFocus) {
+    allBodies.forEach((body) => {
+      if ((body.type === 'comet' || body.type === 'asteroid') && body.labelEl) {
+        body.labelEl.style.display = body === selectedBody ? 'block' : 'none';
       }
     });
   }
+}
 
-  if (ui.orbits) oGroup.visible = ui.orbits.checked;
-  rebuildOrbits(T, oGroup, lastOrbitTRef);
+function animate() {
+  try {
+    const now = performance.now(),
+      dt = Math.min((now - lastPerf) / 1000, 0.1);
+    lastPerf = now;
 
-  sun.rotation.y += 0.0006;
-  scene.children.forEach(c => { if (c._isSunGlow) c.quaternion.copy(camera.quaternion); });
-  // ═══ Advanced sun shader update ═══
-  updateSunShader(sun, sunCorona);
-  if (sunCorona) sunCorona.quaternion.copy(camera.quaternion);
+    adaptiveQuality.update(now);
 
-  invDistFrame++;
-  if (invDistFrame % 60 === 0) updateInventoryDistances(allBodies, AU);
+    updateCamera(dt);
 
-  updateLabels(allBodies, camera, ui, selectedBody);
-  updateMinimap();
+    inspectionFill.position.copy(camera.position);
+    inspectionFill.target.position.copy(selectedBody?.pivot?.position || CAM.pivot);
+    inspectionFill.intensity = THREE.MathUtils.lerp(
+      inspectionFill.intensity,
+      selectedBody && selectedBody.key !== 'Sun' ? 1.8 : 0.05,
+      Math.min(1, dt * 5)
+    );
 
-  // ═══ Observatory update ═══
-  if (observatory.active) {
-    const sunBody = allBodies.find(b => b.key === 'Sun');
-    const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3();
-    observatory.update(dt, sunPos);
-  }
+    const mult = timeMultiplier(ui);
+    if (ui.speedLabel) ui.speedLabel.textContent = speedText(mult);
+    if (!paused) timeOffsetMs += dt * 1000 * (mult - 1);
 
-  for (let i = 0; i < lodList.length; i++) lodList[i].update(camera);
+    const d = customDate || new Date(Date.now() + timeOffsetMs);
+    const locale = getLang() === 'it' ? 'it-IT' : 'en-US';
+    if (ui.clock) ui.clock.textContent = d.toLocaleString(locale, { hour12: false });
+    const T = (julianDate(d) - 2451545.0) / 36525.0;
 
-  hud.updateFPS(1 / Math.max(dt, 0.001));
-  if (selectedBody) hud.setBody(selectedBody.label); else hud.setBody('Libero');
-  if (d) hud.setDate(d);
+    allBodies.forEach((b) => {
+      if (b.type === 'comet' || !b.pivot) return;
+      const pos = b.getPos ? b.getPos(T) : null;
+      if (pos) b.pivot.position.copy(pos);
+      if (b.mesh) b.mesh.rotation.y += 0.002 * dt * 60;
+      if (b.glow?.quaternion) b.glow.quaternion.copy(camera.quaternion);
+      if (b.atmosphereMesh?.quaternion) b.atmosphereMesh.quaternion.copy(camera.quaternion);
+      const isH = ui.hoveredBody?.key === b.key || selectedBody?.key === b.key;
+      if (b.glow?.material) {
+        b.glow.material.opacity = isH ? 0.9 : 0.42;
+        const sc = b.radius * (isH ? 7 : 5.5);
+        b.glow.scale.set(sc, sc, 1);
+      }
+      if (b.key === 'Earth' && b.mesh?.material?.uniforms) {
+        b.mesh.material.uniforms.time.value = performance.now();
+        const sunBody = allBodies.find((s) => s.key === 'Sun');
+        if (sunBody) {
+          const dir = new THREE.Vector3()
+            .copy(sunBody.pivot.position)
+            .sub(b.pivot.position)
+            .normalize();
+          b.mesh.material.uniforms.sunDirection.value.copy(dir);
+        }
+      }
+      if (b.type === 'star' && b.mesh?.material?.uniforms)
+        b.mesh.material.uniforms.time.value = performance.now();
+      if (b.type === 'exoplanet') {
+        if (b.mesh?.material?.uniforms) b.mesh.material.uniforms.time.value = performance.now();
+        if (typeof b.updatePos === 'function') b.updatePos();
+      }
+    });
 
-  // Update starfield parallax
-  updateStarfieldParallax(starfield, camera);
+    updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused);
+    updateComets(cometObjects, dt, mult, paused, ui, camera);
+    updateDustBelts(scene, dt, mult);
+    // ═══ Paesaggio Sonoro Cosmico Generativo & Audio 8D ═══
+    soundManager.update8DAudio(now, CAM.radius, selectedBody);
 
-  composer.render();
+    // ═══ Atmosphere effects update ═══
+    allBodies.forEach((b) => {
+      if (b.clouds || b.upperClouds || b.aurora || b.atmosphereGlow)
+        updateAtmosphereEffects(b, camera);
+    });
+
+    // ═══ Update Local Bubble distance labels position ═══
+    if (localBubbleMode) {
+      allBodies
+        .filter((b) => b.type === 'star' && b.distanceLabel)
+        .forEach((star) => {
+          const label = star.distanceLabel;
+          const pos = star.pivot.position.clone();
+          pos.project(camera);
+
+          const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (pos.y * -0.5 + 0.5) * window.innerHeight;
+
+          // Hide if behind camera
+          if (pos.z > 1) {
+            label.style.display = 'none';
+          } else {
+            label.style.display = 'block';
+            label.style.left = `${x}px`;
+            label.style.top = `${y}px`;
+          }
+        });
+    }
+
+    if (earthBeaconGroup.visible) {
+      const pulse = 1 + Math.sin(performance.now() * 0.005) * 0.3;
+      earthBeaconSprite.scale.set(16000 * pulse, 16000 * pulse, 1);
+      beaconRing.scale.set(pulse, pulse, pulse);
+    }
+
+    if (spiralGalaxy.visible) {
+      spiralGalaxy.rotation.y += 0.0003;
+    }
+
+    if (ui.orbits) oGroup.visible = ui.orbits.checked;
+    rebuildOrbits(T, oGroup, lastOrbitTRef);
+
+    sun.rotation.y += 0.0006;
+    scene.children.forEach((c) => {
+      if (c._isSunGlow) c.quaternion.copy(camera.quaternion);
+    });
+    // ═══ Advanced sun shader update ═══
+    updateSunShader(sun, sunCorona);
+    const sunDistance = camera.position.distanceTo(sunPivot.position);
+    const farFromSun = THREE.MathUtils.smoothstep(sunDistance, SUN_R * 4, SUN_R * 16);
+    if (sun.userData.material?.uniforms?.intensity) {
+      sun.userData.material.uniforms.intensity.value = THREE.MathUtils.lerp(0.68, 1.1, farFromSun);
+    }
+    if (sunCorona) {
+      sunCorona.quaternion.copy(camera.quaternion);
+      sunCorona.userData.material.uniforms.intensity.value = THREE.MathUtils.lerp(
+        0.18,
+        0.72,
+        farFromSun
+      );
+    }
+    scene.children.forEach((child) => {
+      if (child._isSunGlow && child.material) {
+        child.material.opacity = child._baseOpacity * THREE.MathUtils.lerp(0.16, 1, farFromSun);
+      }
+    });
+
+    invDistFrame++;
+    if (invDistFrame % 60 === 0) updateInventoryDistances(allBodies, AU);
+
+    updateLabels(allBodies, camera, ui, selectedBody);
+    updateMinimap();
+    updateSceneDetailVisibility();
+
+    // The outline pass is deliberately limited to the active target, keeping the
+    // scene readable while giving click/hover feedback that is impossible to miss.
+    const outlinedBody = ui.hoveredBody || selectedBody;
+    outlinePass.selectedObjects = outlinedBody?.mesh ? [outlinedBody.mesh] : [];
+
+    // ═══ Observatory update ═══
+    const obs = getObservatoryIfCreated();
+    if (obs?.active) {
+      const sunBody = allBodies.find((b) => b.key === 'Sun');
+      const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3();
+      obs.update(dt, sunPos);
+    }
+
+    for (let i = 0; i < lodList.length; i++) lodList[i].update(camera);
+
+    hud.updateFPS(1 / Math.max(dt, 0.001));
+    if (selectedBody) hud.setBody(getBodyLabel(selectedBody, getLang()));
+    else hud.setBody(t('hud_free'));
+    if (d) hud.setDate(d);
+
+    // Update starfield parallax, meteor showers & spatial audio
+    updateStarfieldParallax(starfield, camera);
+    meteorShowerManager.update(dt, d);
+    habitableZoneManager.update(performance.now());
+    const camDist = selectedBody?.pivot
+      ? camera.position.distanceTo(selectedBody.pivot.position)
+      : camera.position.length();
+    soundManager.updateSpatialAudio(camDist);
+
+    composer.render();
   } catch (err) {
     // Log SOLO il primo errore identico (non cascata) e continua il rendering
     if (!animate._lastErr || animate._lastErr !== err.message) {
       animate._lastErr = err.message;
-      console.error('[ASTRALIS animate]', err);
+      toast.warning('Un dettaglio grafico non è disponibile: l’esplorazione continua.');
     }
   }
 }
@@ -1197,89 +1909,264 @@ function startApp() {
   // Ensure we start in orbit mode (not galaxy/local bubble)
   galaxyMapMode = false;
   localBubbleMode = false;
-  CAM.tRadius = 1400;
+  CAM.tRadius = 900;
   CAM.tTheta = 0.9;
   CAM.tPhi = 1.05;
   CAM.tPivot.set(0, 0, 0);
-  if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = 'Galactic Map';
+  if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = t('galaxy_map');
   if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Local Bubble';
   if (ui.galaxyGuide) ui.galaxyGuide.classList.remove('open');
   if (ui.celestialMenu) ui.celestialMenu.classList.remove('open');
-  if (ui.minimapContainer) ui.minimapContainer.style.display = 'none';
+  if (ui.minimapContainer) ui.minimapContainer.style.display = 'block';
 
   rebuildOrbits((julianDate(new Date()) - 2451545.0) / 36525.0, oGroup, lastOrbitTRef);
   buildInventory(ui.invList, allBodies, selectBody);
   // Build star list AFTER allBodies is populated
   if (ui.starList) buildStarList(ui.starList, allBodies, '', zoomToStar);
+  // Cambio lingua: ri-localizza etichette 3D, inventario e pannello aperto.
+  // Registrato una sola volta (startApp è idempotente via __solarStarted).
+  if (!window.__astralisLangHook) {
+    window.__astralisLangHook = true;
+    onLangChange((lang) => {
+      refreshLabelLanguage(allBodies, lang);
+      if (ui.invList) buildInventory(ui.invList, allBodies, selectBody);
+      if (ui.starList) buildStarList(ui.starList, allBodies, '', zoomToStar);
+      if (selectedBody && ui.infoPanel?.classList.contains('visible')) {
+        showInfo(ui, selectedBody, zoomToBody, enterFollow, selectBody, allBodies);
+      }
+    });
+  }
   setCamLabel(ui, 'orbit');
-  
+
   // Init nuovi moduli
   setupTabs();
   setupGlobalSearch(allBodies, selectBody, zoomToBody);
+  habitableZoneManager.init(allBodies);
+
+  commandPalette.registerActions({
+    toggle_habitable_zone: () => {
+      const isVis = habitableZoneManager.toggle();
+      toast.info(isVis ? 'Zona Abitabile: Visibile' : 'Zona Abitabile: Nascosta');
+    },
+    space_travel: () => {
+      travelCalc.openModal();
+    },
+  });
+
+  travelCalc.init({
+    allBodies,
+    selectBody,
+    zoomToBody,
+    onTravelExecute: (days, arrivalDate) => {
+      timeOffsetMs += days * 86400 * 1000;
+      customDate = arrivalDate;
+    },
+  });
   hud.init();
   customCursor.init();
   particleEffects.init();
-  toast.init();
-  settingsPanel.init();
-  
-  // Bind bottoni UI con feedback toast
-  if (ui.compareBtn) ui.compareBtn.onclick = () => {
-    comparisonMode.toggle();
-    toast.info('Modalità confronto attivata');
-  };
-  if (ui.creditsBtn) ui.creditsBtn.onclick = () => {
-    creditsPage.toggle();
-    toast.info('Credits & About');
-  };
-  if (ui.settingsBtn) ui.settingsBtn.onclick = () => {
-    settingsPanel.toggle();
-  };
-  const missionsBtn = document.getElementById('missionsBtn');
-  if (missionsBtn) missionsBtn.onclick = () => {
-    missions.toggle();
-    toast.info('Missioni astronautiche');
-  };
-  const spaceMissionsBtn = document.getElementById('spaceMissionsBtn');
-  if (spaceMissionsBtn) spaceMissionsBtn.onclick = () => {
-    showMissionsPanel();
-    toast.info('Missioni spaziali reali');
-  };
-  const observatoryBtn = document.getElementById('observatoryBtn');
-  if (observatoryBtn) observatoryBtn.onclick = () => {
-    if (selectedBody && (selectedBody.type === 'planet' || selectedBody.type === 'dwarf')) {
-      const sunBody = allBodies.find(b => b.key === 'Sun');
-      const sunPos = sunBody ? sunBody.pivot.position : new THREE.Vector3(0, 0, 0);
-      observatory.toggle(selectedBody, sunPos);
-    } else if (!observatory.active) {
-      toast.warning('Seleziona prima un pianeta per atterrare!');
+  document.addEventListener('visibilitychange', () => {
+    const reduceMotion = document.documentElement.getAttribute('data-reduce-motion') === '1';
+    if (document.hidden || reduceMotion) {
+      particleEffects.hide();
+      customCursor.hide();
     } else {
-      observatory.exit();
+      particleEffects.show();
+      customCursor.show();
     }
-  };
-  
+  });
+  toast.init();
+  window.addEventListener('offline', () =>
+    toast.warning('Sei offline: le risorse già visitate restano disponibili.')
+  );
+  window.addEventListener('online', () => toast.success('Connessione ripristinata.', 1800));
+  settingsPanel.init();
+  applyI18nToDOM();
+  ui.viewExplore?.addEventListener('click', () => applyViewMode('explore'));
+  ui.viewCinema?.addEventListener('click', () => applyViewMode('cinema'));
+  ui.viewScience?.addEventListener('click', () => applyViewMode('science'));
+  document.getElementById('quickEarth')?.addEventListener('click', () => exploreBody('Earth'));
+  document.getElementById('quickSun')?.addEventListener('click', () => exploreBody('Sun'));
+  document.getElementById('quickRandom')?.addEventListener('click', exploreRandomBody);
+  const constCheckbox = document.getElementById('constellations');
+  if (constCheckbox) {
+    constCheckbox.addEventListener('change', (e) => {
+      constellationManager.setVisible(e.target.checked);
+      toast.info(e.target.checked ? 'Costellazioni visibili' : 'Costellazioni nascoste');
+    });
+  }
+  const minimapCheckbox = document.getElementById('minimapToggle');
+  if (minimapCheckbox) {
+    minimapCheckbox.addEventListener('change', (e) => {
+      minimap.setVisible(e.target.checked);
+      toast.info(e.target.checked ? 'Radar minimappa attivo' : 'Radar minimappa nascosto');
+    });
+  }
+  const initialQuality = settingsPanel.getQuality();
+  if (initialQuality === 'auto') {
+    adaptiveQuality.setAutoScale(true);
+    applyGraphicsQuality(adaptiveQuality.getQualityLevel());
+  } else {
+    adaptiveQuality.setQualityLevel(initialQuality, true);
+    applyGraphicsQuality(initialQuality);
+  }
+
+  adaptiveQuality.onChange((level) => {
+    applyGraphicsQuality(level);
+    if (settingsPanel.getQuality() === 'auto') {
+      const labels = { low: 'Bassa', medium: 'Media', high: 'Alta', ultra: 'Ultra' };
+      toast.info(`Qualità dinamica adattata: ${labels[level] || level}`, 2500);
+    }
+  });
+  if (hud.el) hud.el.style.display = settingsPanel.shouldShowFPS() ? 'flex' : 'none';
+  void xrManager.init();
+  if (
+    'serviceWorker' in navigator &&
+    import.meta.env.PROD &&
+    (location.protocol === 'https:' ||
+      location.hostname === 'localhost' ||
+      location.hostname === '127.0.0.1')
+  ) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  } else if ('serviceWorker' in navigator && import.meta.env.DEV) {
+    // A SW productionale non deve intercettare gli asset Vite/HMR durante lo sviluppo:
+    // in caso di server riavviato restituirebbe fallback 503 al posto dell'errore reale.
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) =>
+        Promise.all(registrations.map((registration) => registration.unregister()))
+      )
+      .catch(() => {});
+  }
+
+  // Bind bottoni UI con feedback toast
+  if (ui.compareBtn)
+    ui.compareBtn.onclick = () => {
+      void toggleComparison();
+      toast.info(t('toast_compare'));
+    };
+  if (ui.creditsBtn)
+    ui.creditsBtn.onclick = () => {
+      void toggleCredits();
+      toast.info('Credits & About');
+    };
+  if (ui.settingsBtn)
+    ui.settingsBtn.onclick = () => {
+      settingsPanel.toggle();
+    };
+  const spaceTravelQuickBtn = document.getElementById('spaceTravelQuickBtn');
+  if (spaceTravelQuickBtn) {
+    spaceTravelQuickBtn.onclick = () => {
+      travelCalc.openModal();
+    };
+  }
+  const cmdPaletteQuickBtn = document.getElementById('cmdPaletteQuickBtn');
+  if (cmdPaletteQuickBtn) {
+    cmdPaletteQuickBtn.onclick = () => {
+      commandPalette.toggle();
+    };
+  }
+  const missionsBtn = document.getElementById('missionsBtn');
+  if (missionsBtn)
+    missionsBtn.onclick = () => {
+      void toggleMissions();
+      toast.info(t('toast_astronaut'));
+    };
+  const spaceMissionsBtn = document.getElementById('spaceMissionsBtn');
+  if (spaceMissionsBtn)
+    spaceMissionsBtn.onclick = () => {
+      void openSpaceMissions();
+      toast.info(t('toast_spacereal'));
+    };
+  const quizBtn = document.getElementById('quizBtn');
+  if (quizBtn)
+    quizBtn.onclick = () => {
+      void toggleQuiz();
+    };
+  const timeTravelBtn = document.getElementById('timeTravelBtn');
+  if (timeTravelBtn)
+    timeTravelBtn.onclick = () => {
+      void toggleTimeTravel();
+    };
+  const grandTourBtn = document.getElementById('grandTourBtn');
+  if (grandTourBtn)
+    grandTourBtn.onclick = () => {
+      void toggleGrandTour();
+      toast.info(t('toast_grandtour'));
+    };
+  const observatoryBtn = document.getElementById('observatoryBtn');
+  if (observatoryBtn)
+    observatoryBtn.onclick = () => {
+      void toggleObservatory();
+    };
+  const systemsBtn = document.getElementById('systemsBtn');
+  if (systemsBtn)
+    systemsBtn.onclick = () => {
+      void toggleSystemsExplorer();
+    };
+
   // Settings panel onChange callback
   settingsPanel.onChange((key, value) => {
     if (key === 'theme') {
-      toast.info(value === 'light' ? 'Tema chiaro attivato' : 'Tema scuro attivato');
+      toast.info(value === 'light' ? t('toast_theme_light') : t('toast_theme_dark'));
     } else if (key === 'language') {
-      toast.info(value === 'it' ? 'Lingua: Italiano' : 'Language: English');
+      toast.info(value === 'it' ? t('toast_lang_it') : t('toast_lang_en'));
     } else if (key === 'quality') {
-      const labels = { low: 'Bassa', medium: 'Media', high: 'Alta' };
-      toast.info(`Qualità grafica: ${labels[value] || value}`);
+      const qualityLabel = (q) =>
+        ({
+          low: t('quality_low'),
+          medium: t('quality_medium'),
+          high: t('quality_high'),
+          ultra: t('quality_ultra'),
+        }[q] || q);
+      if (value === 'auto') {
+        adaptiveQuality.setAutoScale(true);
+        const effectiveQuality = adaptiveQuality.getQualityLevel();
+        applyGraphicsQuality(effectiveQuality);
+        toast.info(
+          `${t('toast_quality')}: ${t('toast_quality_auto')} (${qualityLabel(effectiveQuality)})`
+        );
+      } else {
+        adaptiveQuality.setQualityLevel(value, true);
+        applyGraphicsQuality(value);
+        toast.info(`${t('toast_quality')}: ${qualityLabel(value)}`);
+      }
+    } else if (key === 'showFPS') {
+      if (hud.el) hud.el.style.display = value ? 'flex' : 'none';
+    } else if (key === 'reduceMotion') {
+      if (value) {
+        particleEffects.hide();
+        customCursor.hide();
+      } else {
+        particleEffects.show();
+        customCursor.show();
+      }
     } else if (key === 'hud') {
       setNavGridVisible(navGrid, value === 'nav');
-      toast.info(value === 'nav' ? 'HUD: Navigation Computer' : 'HUD: Standard');
+      toast.info(value === 'nav' ? t('toast_hud_nav') : t('toast_hud_std'));
     }
   });
 
   // Applica lo stato iniziale della griglia in base alla preferenza salvata
   setNavGridVisible(navGrid, document.documentElement.getAttribute('data-hud') === 'nav');
-  
-  showHint(ui, 'WASD muovi · Scroll zoom · H comandi · P impostazioni', hintTimerRef);
-  toast.success('ASTRALIS pronto! Esplora il cosmo.', 3000);
-  animate();
+  applyInitialURLState();
+
+  // PWA install prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.__pwaInstallPrompt = e;
+    toast.info(t('install_pwa'), 5000);
+  });
+
+  showHint(ui, t('hint_controls'), hintTimerRef);
+  toast.success(t('toast_ready'), 3000);
+  setTimeout(() => onboarding.show(), 500);
+  renderer.setAnimationLoop(animate);
 }
 
-setTimeout(() => { if (!window.__solarStarted) { if (loadingScreen) loadingScreen.style.display = 'none'; startApp(); } }, 8000);
-
-
+setTimeout(() => {
+  if (!window.__solarStarted) {
+    if (loadingScreen) loadingScreen.style.display = 'none';
+    startApp();
+  }
+}, 8000);

@@ -56,4 +56,46 @@ describe('AsyncTextureLoader', () => {
     const manager = new THREE.LoadingManager();
     expect(() => loader.setManager(manager)).not.toThrow();
   });
+
+  it('disposes a single cached texture', () => {
+    const url = '/dispose-me.jpg';
+    loader.load(url);
+    expect(loader.has(url)).toBe(true);
+    expect(loader.dispose(url)).toBe(true);
+    expect(loader.has(url)).toBe(false);
+  });
+
+  it('calls dispose on the GPU texture when clearing one entry', () => {
+    let disposed = 0;
+    loader.cache.set('/gpu.jpg', { dispose: () => disposed++ });
+    expect(loader.dispose('/gpu.jpg')).toBe(true);
+    expect(disposed).toBe(1);
+    expect(loader.size).toBe(0);
+  });
+
+  it('returns false when disposing an unknown path', () => {
+    expect(loader.dispose('/never-loaded.jpg')).toBe(false);
+  });
+
+  it('clears the whole cache', () => {
+    loader.load('/a.jpg');
+    loader.load('/b.jpg');
+    expect(loader.size).toBe(2);
+    loader.clear();
+    expect(loader.size).toBe(0);
+  });
+
+  it('rewrites KTX2/Basis paths to WebP equivalent', () => {
+    const webp = loader.load('/tex/earth.webp');
+    const ktx = loader.load('/tex/earth.ktx2');
+    expect(ktx).toBe(webp);
+    const basis = loader.load('/tex/earth.basis');
+    expect(basis).toBe(webp);
+  });
+
+  it('loadAsync rewrites KTX2 paths to WebP', async () => {
+    const fake = { image: {}, dispose: () => {} };
+    loader.cache.set('/tex/mars.webp', fake);
+    await expect(loader.loadAsync('/tex/mars.ktx2')).resolves.toBe(fake);
+  });
 });

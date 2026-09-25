@@ -1,31 +1,52 @@
-// convert_textures.js
-// Simple texture conversion script using sharp.
-// Install with: npm install --save-dev sharp
+import { mkdir, readdir } from 'node:fs/promises';
+import path from 'node:path';
+import sharp from 'sharp';
 
-const fs = require('fs');
-const path = require('path');
-const sharp = require('sharp');
-
-const SRC_DIR = path.join(__dirname, 'assets', 'textures');
-const OUT_DIR = path.join(SRC_DIR, 'optimized');
-
-if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
+const sourceDir = path.resolve('assets/textures');
+const outputDir = path.join(sourceDir, 'optimized');
+const supported = /\.(png|jpe?g|tga)$/i;
+// JPG pubblici serviti dalla root di dist (es. milky_way_topdown.jpg, 823 KB):
+// generano il .webp affiancato usato con fallback (vedi TEXTURE_OPTIMIZATION.md).
+const publicDir = path.resolve('public');
+const publicSources = ['milky_way_topdown.jpg'];
 
 async function convertFile(file) {
-  const inPath = path.join(SRC_DIR, file);
+  const input = path.join(sourceDir, file);
   const base = path.parse(file).name;
-  const outWebp = path.join(OUT_DIR, base + '.webp');
-  const outAvif = path.join(OUT_DIR, base + '.avif');
-  try {
-    await sharp(inPath).resize({ width: 2048 }).toFile(outWebp);
-    await sharp(inPath).resize({ width: 2048 }).avif({ quality: 50 }).toFile(outAvif);
-    console.log('Converted', file);
-  } catch (e) {
-    console.warn('Failed', file, e.message);
-  }
+  await sharp(input)
+    .resize({ width: 2048, withoutEnlargement: true })
+    .webp({ quality: 82, effort: 5 })
+    .toFile(path.join(outputDir, `${base}.webp`));
+  return file;
 }
 
-fs.readdir(SRC_DIR, (err, files) => {
-  if (err) return console.error(err);
-  files.filter(f => /\.(png|jpe?g|tga)$/i.test(f)).forEach(f => convertFile(f));
+async function convertPublicAsset(file) {
+  const input = path.join(publicDir, file);
+  const base = path.parse(file).name;
+  await sharp(input)
+    .resize({ width: 2048, withoutEnlargement: true })
+    .webp({ quality: 80, effort: 6 })
+    .toFile(path.join(publicDir, `${base}.webp`));
+  return `public/${file} -> public/${base}.webp`;
+}
+
+await mkdir(outputDir, { recursive: true });
+const files = (await readdir(sourceDir)).filter((file) => supported.test(file));
+const results = await Promise.allSettled(files.map(convertFile));
+
+results.forEach((result, index) => {
+  if (result.status === 'fulfilled') console.log(`Converted ${result.value}`);
+  else console.error(`Failed ${files[index]}: ${result.reason?.message || result.reason}`);
 });
+
+const publicResults = await Promise.allSettled(publicSources.map(convertPublicAsset));
+publicResults.forEach((result, index) => {
+  if (result.status === 'fulfilled') console.log(`Converted ${result.value}`);
+  else console.error(`Failed ${publicSources[index]}: ${result.reason?.message || result.reason}`);
+});
+
+if (
+  results.some((result) => result.status === 'rejected') ||
+  publicResults.some((result) => result.status === 'rejected')
+)
+  process.exitCode = 1;

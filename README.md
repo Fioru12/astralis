@@ -23,17 +23,18 @@ Realizzato con **Three.js** e **Vite**, con una UI moderna, effetti visivi profe
 ### **Important: Recent Improvements**
 
 Recent repository improvements were applied:
+
 - ✅ **Code Quality:** ESLint, Prettier, Husky pre-commit hooks
 - ✅ **Performance:** LOD system, async texture loading, bundle chunking
-- ✅ **Testing:** Vitest suite with smoke tests
-- ✅ **CI/CD:** GitHub Actions workflow template
+- ✅ **Testing:** Vitest unit/integration tests and Playwright browser flows
+- ✅ **CI/CD:** workflow GitHub Actions attivo (`.github/workflows/ci.yml`)
 - ✅ **Documentation:** Architecture, texture optimization, deployment guides
 
 **To activate these features locally:**
+
 ```bash
 npm install
 npm run prepare
-# Then copy CI_WORKFLOW.yml → .github/workflows/ci.yml
 ```
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TEXTURE_OPTIMIZATION.md](./TEXTURE_OPTIMIZATION.md) for details.
@@ -71,32 +72,29 @@ Avvia_Build.bat
 ```
 Solar-System/
 ├── src/
-│   ├── main.js              # Codice principale
-│   ├── data/
-│   │   └── celestialData.js # Dati corpi celesti
-│   ├── utils/
-│   │   ├── constants.js     # Costanti globali
-│   │   └── kepler.js        # Funzioni orbitali
-│   ├── core/
-│   │   ├── scene.js         # Setup scena Three.js
-│   │   ├── camera.js        # Sistema camera
-│   │   ├── controls.js      # Controlli input
-│   │   └── postprocessing.js # Effetti post-processing
-│   ├── bodies/
-│   │   └── creator.js       # Creazione corpi celesti
-│   └── ui/
-│       └── manager.js       # Gestione UI
-├── assets/textures/         # Texture planetarie
-├── dist/                    # Build production
+│   ├── main.js              # Composizione scena + render loop
+│   ├── data/                # celestialData (IT+EN), stellarData, cataloghi
+│   ├── utils/               # kepler, textureLoader, dispose, sanitize, focusTrap
+│   ├── core/                # scene, camera, timeControls, navigation,
+│   │                        # orbits, xr, urlState, adaptiveQuality, ...
+│   ├── bodies/              # creator, asteroidBelts, comets, starsAndExoplanets
+│   ├── ui/                  # lazyFeatures, commandActions, infoPanel, search,
+│   │                        # minimap, quiz, missions, galaxyModal, ...
+│   └── i18n/                # dizionari it/en
+├── tests/e2e/               # Suite Playwright (14 test)
+├── public/                  # manifest, service worker, milky_way WebP
+├── assets/textures/         # Texture planetarie (WebP ottimizzati)
+├── dist/                    # Build production (gitignored)
 ├── index.html              # Pagina principale
 ├── style.css               # Styling
-├── package.json            # Dipendenze
-└── vite.config.js          # Configurazione Vite
+├── package.json            # Dipendenze (engines: node >= 20)
+└── vite.config.js          # Configurazione Vite + budget bundle
 ```
 
 ## 🎮 Controlli
 
 ### Mouse
+
 - **Trascina**: Ruota la camera
 - **Scroll**: Zoom in/out
 - **Shift + Trascina**: Pan della camera
@@ -104,14 +102,19 @@ Solar-System/
 - **Click su pianeta**: Mostra informazioni
 
 ### Tastiera
+
 - **F**: Attiva/disattiva volo libero
+- **W / Freccia su**: Avanza
+- **S / Freccia giù**: Indietreggia
+- **A / D**: Spostamento laterale
 - **1**: Modalità orbita
 - **2**: Segui corpo selezionato
 - **3**: Volo libero
-- **TAB**: Apri/chiudi inventario
+- **J**: Apri/chiudi inventario
 - **ESC**: Esci dalla modalità corrente
 
 ### Touch (Mobile)
+
 - **1 dito**: Ruota
 - **2 dita**: Zoom
 
@@ -134,44 +137,53 @@ Per trasferire il progetto su un altro computer:
 ## 🎨 Personalizzazione
 
 ### Modificare i colori UI
+
 Modifica le variabili CSS in `style.css`:
+
 ```css
 :root {
-  --accent: #5bc4cf;  /* Colore principale */
-  --glass: rgba(8, 10, 20, 0.80);  /* Sfondo pannelli */
+  --accent: #5bc4cf; /* Colore principale */
+  --glass: rgba(8, 10, 20, 0.8); /* Sfondo pannelli */
 }
 ```
 
 ### Aggiungere nuovi corpi celesti
+
 Modifica `src/data/celestialData.js` aggiungendo nuovi oggetti agli array `PLANETS`, `MOONS`, `ASTEROIDS` o `COMETS`.
 
 ## 🛠️ Stack Tecnologico
 
 - **Three.js** v0.170.0 - Rendering 3D
-- **Vite** v6.0.0 - Build tool e dev server
+- **Vite** v8 - Build tool e dev server con minificazione OXC
 - **JavaScript ES6+** - Linguaggio
 - **CSS3** - Styling con glassmorphism
 
 ## 📊 Corpi Celesti Inclusi
 
 ### Pianeti (8)
+
 Mercurio, Venere, Terra, Marte, Giove, Saturno, Urano, Nettuno
 
 ### Pianeti Nani (5)
+
 Cerere, Plutone, Eris, Makemake, Haumea
 
 ### Lune Principali (9)
+
 Luna, Phobos, Deimos, Io, Europa, Ganimede, Callisto, Titano, Tritone
 
 ### Asteroidi (7)
+
 Vesta, Pallas, Hygiea, Eros, Apophis, Itokawa, Bennu
 
 ### Comete (6)
+
 Halley, Hale-Bopp, 67P/Churyumov, Tempel 1, Encke, Borrelly
 
 ## 🔬 Accuratezza Scientifica
 
 Le orbite sono calcolate usando elementi orbitali kepleriani NASA/JPL (epoca J2000):
+
 - Semiasse maggiore (a)
 - Eccentricità (e)
 - Inclinazione (I)
