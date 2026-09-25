@@ -57,31 +57,20 @@ export function keplerPos(name, T, elements) {
   const xP = a * (Math.cos(E) - e);
   const yP = a * (Math.sqrt(1 - e * e) * Math.sin(E));
 
-  const ci = Math.cos(I), si = Math.sin(I);
-  const cO = Math.cos(O), sO = Math.sin(O);
-  const cw = Math.cos(w), sw = Math.sin(w);
+  const ci = Math.cos(I),
+    si = Math.sin(I);
+  const cO = Math.cos(O),
+    sO = Math.sin(O);
+  const cw = Math.cos(w),
+    sw = Math.sin(w);
 
   return new THREE.Vector3(
     (cw * cO - sw * sO * ci) * xP + (-sw * cO - cw * sO * ci) * yP,
-    (sw * si) * xP + (cw * si) * yP,
+    sw * si * xP + cw * si * yP,
     (cw * sO + sw * cO * ci) * xP + (-sw * sO + cw * cO * ci) * yP
   ).multiplyScalar(AU);
 }
 
-/**
- * Calcola data Giuliana
- */
-export function julianDate(d) {
-  let Y = d.getUTCFullYear(), M = d.getUTCMonth() + 1;
-  const D = d.getUTCDate() + (d.getUTCHours() + (d.getUTCMinutes() + (d.getUTCSeconds() + d.getUTCMilliseconds() / 1000) / 60) / 60) / 24;
-  if (M <= 2) { Y--; M += 12; }
-  const A = Math.floor(Y / 100), B = 2 - A + Math.floor(A / 4);
-  return Math.floor(365.25 * (Y + 4716)) + Math.floor(30.6001 * (M + 1)) + D + B - 1524.5;
-}
-
-/**
- * Calcola tempo T in secoli dall'epoca J2000
- */
-export function currentT(date) {
-  return (julianDate(date) - 2451545.0) / 36525.0;
-}
+// julianDate/currentT vivono in helpers.js (singola fonte di verità);
+// qui riesportati per compatibilità con gli import esistenti.
+export { julianDate, currentT } from './helpers.js';
