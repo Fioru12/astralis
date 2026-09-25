@@ -17,6 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "check:bundle": "node scripts/check-bundle-size.js",
     "test:e2e": "playwright test",
+    "test:e2e:offline": "playwright test --config=playwright.offline.config.js",
     "prepare": "husky install",
     "serve-dist": "npx http-server dist -p 5000",
     "convert-textures": "node convert_textures.js",

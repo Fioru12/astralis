@@ -92,7 +92,10 @@ layout mobile, modale galattico, vista galaxy da URL, confronto, osservatorio,
 quiz, time travel, missioni astronautiche, missioni spaziali reali, palette
 comandi, esploratore di sistemi, sandbox e bookmark da tastiera, bolla locale,
 credits, volo completo con cockpit e abort, assenza del pulsante VR senza
-sessione `immersive-vr`.
+sessione `immersive-vr`. Più 1 test offline (`offline.spec.js`, config
+`playwright.offline.config.js` contro `vite preview`): dopo una visita online
+la app si riavvia senza rete grazie al precache SW (chunk + texture iniettati
+dalla build).
 
 ## Debito tecnico residuo
 

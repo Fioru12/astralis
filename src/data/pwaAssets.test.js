@@ -29,12 +29,21 @@ describe('PWA assets', () => {
     expect(assets.length).toBeGreaterThan(0);
     assets.forEach((src) => {
       const rel = src.replace(/^\.\//, '');
-      const candidates = [resolve(rel), resolve('public', rel)];
+      const candidates = [resolve(rel), resolve('public', rel), resolve('dist', rel)];
       expect(
         candidates.some((p) => existsSync(p)),
         `${src} is missing: SW install would fail`
       ).toBe(true);
     });
+  });
+
+  it('injects hashed build assets into dist/sw.js precache', () => {
+    const built = resolve('dist/sw.js');
+    if (!existsSync(built)) return; // verificato in CI dopo npm run build
+    const sw = readFileSync(built, 'utf8');
+    expect(sw).toContain('"./assets/');
+    expect(sw).toContain('"./assets/textures/optimized/');
+    expect(sw).not.toContain('const BUILD_ASSETS = [];');
   });
 
   it('ships the loading-screen logo through the public directory', () => {

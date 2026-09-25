@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
-import { cpSync } from 'node:fs';
-import { extname, resolve } from 'node:path';
+import { cpSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { extname, join, resolve } from 'node:path';
 import { configDefaults } from 'vitest/config';
 
 export default defineConfig({
@@ -26,6 +26,31 @@ export default defineConfig({
           recursive: true,
           filter: (source) => extname(source) === '' || extname(source) === '.webp',
         });
+        // Inietta i chunk JS/CSS con hash nel precache del SW: senza,
+        // i chunk richiesti prima del clients.claim() non entrano mai in
+        // cache e il reload offline fallisce (ERR_FAILED).
+        const assetsDir = resolve('dist/assets');
+        const chunks = readdirSync(assetsDir)
+          .filter((f) => f.endsWith('.js') || f.endsWith('.css'))
+          .map((f) => `./assets/${f}`)
+          .sort();
+        // Precarica anche le texture ottimizzate (12 WebP): primo avvio
+        // offline completo dopo una sola visita online.
+        const texturesDir = resolve('dist/assets/textures/optimized');
+        const textures = readdirSync(texturesDir)
+          .filter((f) => f.endsWith('.webp'))
+          .map((f) => `./assets/textures/optimized/${f}`)
+          .sort();
+        const swPath = join('dist', 'sw.js');
+        const sw = readFileSync(swPath, 'utf8');
+        const out = sw
+          .replace('const BUILD_ASSETS = [];', `const BUILD_ASSETS = ${JSON.stringify(chunks)};`)
+          .replace(
+            'const TEXTURE_ASSETS = [];',
+            `const TEXTURE_ASSETS = ${JSON.stringify(textures)};`
+          );
+        if (out === sw) throw new Error('SW placeholders not found in dist/sw.js');
+        writeFileSync(swPath, out);
       },
     },
   ],
