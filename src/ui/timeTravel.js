@@ -75,10 +75,10 @@ export class TimeTravel {
     });
 
     this.panel.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 id="timeTravelTitle" style="margin:0;font-size:1.05rem;font-weight:800;color:#5bc4cf;">${t(
-          'timetravel_title'
-        )}</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;position:sticky;top:-18px;background:rgba(8,10,20,0.96);z-index:2;padding:8px 0;">
+      <h2 id="timeTravelTitle" style="margin:0;font-size:1.05rem;font-weight:800;color:#5bc4cf;">${t(
+        'timetravel_title'
+      )}</h2>
         <button id="ttClose" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
           color:rgba(228,234,248,0.7);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;">✕</button>
       </div>

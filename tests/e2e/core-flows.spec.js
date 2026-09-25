@@ -116,6 +116,8 @@ test('rende scopribili e utilizzabili Quiz e Viaggio nel tempo', async ({ page }
   await expect(timeTravel).toHaveAttribute('role', 'dialog');
   await expect(timeTravel.locator('[data-tt-event]')).toHaveCount(8);
   await timeTravel.locator('[data-tt-event="apollo11"]').click();
-  await timeTravel.locator('#ttClose').click();
+  const ttClose = timeTravel.locator('#ttClose');
+  await ttClose.scrollIntoViewIfNeeded();
+  await ttClose.click();
   await expect(timeTravel).toBeHidden();
 });
