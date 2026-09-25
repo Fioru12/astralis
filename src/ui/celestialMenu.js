@@ -1,22 +1,30 @@
 import { escapeHtml } from '../utils/sanitize.js';
+import { getLang } from '../i18n/index.js';
+import { getBodyLabel } from '../data/celestialData.js';
 
-export function buildCelestialMenu(menuContent, allBodies, selectedBody, selectBody, celestialMenu) {
+export function buildCelestialMenu(
+  menuContent,
+  allBodies,
+  selectedBody,
+  selectBody,
+  celestialMenu
+) {
   if (!menuContent) return;
   menuContent.innerHTML = '';
 
   const sections = [
-    { title: 'Sun', filter: b => b.key === 'Sun' },
-    { title: 'Planets', filter: b => b.type === 'planet' },
-    { title: 'Moons', filter: b => b.type === 'moon' },
-    { title: 'Dwarf Planets', filter: b => b.type === 'dwarf' },
-    { title: 'Comets', filter: b => b.type === 'comet' },
-    { title: 'Asteroids', filter: b => b.type === 'asteroid' },
-    { title: 'Nearby Stars', filter: b => b.type === 'star' },
-    { title: 'Exoplanets', filter: b => b.type === 'exoplanet' },
-    { title: 'Space Probes', filter: b => b.type === 'probe' },
+    { title: 'Sun', filter: (b) => b.key === 'Sun' },
+    { title: 'Planets', filter: (b) => b.type === 'planet' },
+    { title: 'Moons', filter: (b) => b.type === 'moon' },
+    { title: 'Dwarf Planets', filter: (b) => b.type === 'dwarf' },
+    { title: 'Comets', filter: (b) => b.type === 'comet' },
+    { title: 'Asteroids', filter: (b) => b.type === 'asteroid' },
+    { title: 'Nearby Stars', filter: (b) => b.type === 'star' },
+    { title: 'Exoplanets', filter: (b) => b.type === 'exoplanet' },
+    { title: 'Space Probes', filter: (b) => b.type === 'probe' },
   ];
 
-  sections.forEach(sec => {
+  sections.forEach((sec) => {
     const bodies = allBodies.filter(sec.filter);
     if (!bodies.length) return;
 
@@ -31,20 +39,20 @@ export function buildCelestialMenu(menuContent, allBodies, selectedBody, selectB
     const itemsDiv = document.createElement('div');
     itemsDiv.className = 'menu-section-items';
 
-    bodies.forEach(body => {
+    bodies.forEach((body) => {
       const itemDiv = document.createElement('div');
       itemDiv.className = 'menu-item';
       if (selectedBody?.key === body.key) itemDiv.classList.add('selected');
 
       itemDiv.innerHTML = `
         <span class="menu-item-icon">${escapeHtml(body.icon || '&#8226;')}</span>
-        <span class="menu-item-name">${escapeHtml(body.label)}</span>
+        <span class="menu-item-name">${escapeHtml(getBodyLabel(body, getLang()))}</span>
         <span class="menu-item-type">${escapeHtml(body.type)}</span>
       `;
 
       itemDiv.onclick = () => {
         selectBody(body);
-        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('selected'));
+        document.querySelectorAll('.menu-item').forEach((i) => i.classList.remove('selected'));
         itemDiv.classList.add('selected');
         if (celestialMenu) celestialMenu.classList.remove('open');
       };
@@ -60,39 +68,65 @@ export function buildCelestialMenu(menuContent, allBodies, selectedBody, selectB
 
 export function buildStarList(starList, allBodies, filter, zoomToStar) {
   if (!starList) return;
-  const stars = allBodies.filter(b => b.type === 'star');
+  const stars = allBodies.filter((b) => b.type === 'star');
   const search = (filter || '').toLowerCase();
-  const filteredStars = stars.filter(s =>
-    s.label.toLowerCase().includes(search) || s.key.toLowerCase().includes(search),
+  const filteredStars = stars.filter((s) =>
+    [s.label, s.labelEn, s.key]
+      .filter(Boolean)
+      .some((v) => String(v).toLowerCase().includes(search))
   );
 
   starList.innerHTML = '';
-  filteredStars.forEach(star => {
+  filteredStars.forEach((star) => {
     const item = document.createElement('div');
-    item.style.cssText = 'padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.2s; display: flex; flex-direction: column; gap: 2px;';
+    item.style.cssText =
+      'padding: 8px; cursor: pointer; border-radius: 4px; transition: background 0.2s; display: flex; flex-direction: column; gap: 2px;';
 
-    const planets = allBodies.filter(b => b.type === 'exoplanet' && b.parent === star.key);
+    const planets = allBodies.filter((b) => b.type === 'exoplanet' && b.parent === star.key);
     const planetCount = planets.length;
 
     item.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-weight: 500;">${escapeHtml(String(star.icon))} ${escapeHtml(star.label)}</span>
-        <span style="color: rgba(255,255,255,0.5); font-size: 11px;">${star.distLY ? escapeHtml(star.distLY + ' ly') : ''}</span>
+        <span style="font-weight: 500;">${escapeHtml(String(star.icon))} ${escapeHtml(
+      getBodyLabel(star, getLang())
+    )}</span>
+        <span style="color: rgba(255,255,255,0.5); font-size: 11px;">${
+          star.distLY ? escapeHtml(star.distLY + ' ly') : ''
+        }</span>
       </div>
-      ${planetCount > 0 ? `<div style="font-size: 10px; color: rgba(255,255,255,0.4);">${escapeHtml(String(planetCount))} confirmed planets</div>` : ''}
+      ${
+        planetCount > 0
+          ? `<div style="font-size: 10px; color: rgba(255,255,255,0.4);">${escapeHtml(
+              String(planetCount)
+            )} confirmed planets</div>`
+          : ''
+      }
     `;
-    item.onmouseover = () => item.style.background = 'rgba(255,255,255,0.1)';
-    item.onmouseout = () => item.style.background = 'transparent';
+    item.onmouseover = () => (item.style.background = 'rgba(255,255,255,0.1)');
+    item.onmouseout = () => (item.style.background = 'transparent');
     item.onclick = () => zoomToStar(star.key);
     starList.appendChild(item);
   });
 }
 
-export function setupMenuUI(ui, allBodies, selectedBodyRef, selectBody, zoomToStar, hyperlaneGroup) {
+export function setupMenuUI(
+  ui,
+  allBodies,
+  selectedBodyRef,
+  selectBody,
+  zoomToStar,
+  hyperlaneGroup
+) {
   if (ui.menuToggle) {
     ui.menuToggle.onclick = () => {
       if (ui.celestialMenu) ui.celestialMenu.classList.toggle('open');
-      buildCelestialMenu(ui.menuContent, allBodies, selectedBodyRef(), selectBody, ui.celestialMenu);
+      buildCelestialMenu(
+        ui.menuContent,
+        allBodies,
+        selectedBodyRef(),
+        selectBody,
+        ui.celestialMenu
+      );
     };
   }
   if (ui.menuClose && ui.celestialMenu) {

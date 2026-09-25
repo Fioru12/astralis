@@ -3,18 +3,14 @@ import { AU } from '../utils/constants.js';
 import { makeGlow } from '../utils/helpers.js';
 
 export function createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList, selectBody) {
-  NEARBY_STARS.forEach(def => {
+  NEARBY_STARS.forEach((def) => {
     const pivot = new THREE.Group();
-    
+
     // Usa coordinate 3D reali se disponibili, altrimenti posizione casuale
     if (def.x !== undefined && def.y !== undefined && def.z !== undefined) {
       // Converti da anni luce a unità Three.js (1 anno luce ≈ 63241 AU)
       const lyToAU = 63241;
-      pivot.position.set(
-        def.x * lyToAU,
-        def.y * lyToAU,
-        def.z * lyToAU
-      );
+      pivot.position.set(def.x * lyToAU, def.y * lyToAU, def.z * lyToAU);
     } else {
       // Fallback a posizione casuale per compatibilità
       const angle = Math.random() * Math.PI * 2;
@@ -22,7 +18,7 @@ export function createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList,
       pivot.position.set(
         Math.cos(angle) * Math.cos(phi) * def.distAU,
         Math.sin(phi) * def.distAU,
-        Math.sin(angle) * Math.cos(phi) * def.distAU,
+        Math.sin(angle) * Math.cos(phi) * def.distAU
       );
     }
 
@@ -105,8 +101,8 @@ export function createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList,
       }
     `;
 
-    const r = (def.color >> 16) & 0xff, g = (def.color >> 8) & 0xff, b = def.color & 0xff;
-    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    const r = (def.color >> 16) & 0xff,
+      b = def.color & 0xff;
     const estTemp = 3000 + (b / Math.max(r, 1)) * 5000;
     const starMaterial = new THREE.ShaderMaterial({
       uniforms: {
@@ -144,11 +140,12 @@ export function createNearbyStars(NEARBY_STARS, pGroup, ui, allBodies, meshList,
       labelEl = document.createElement('div');
       labelEl.className = 'label';
       labelEl.textContent = def.icon + ' ' + def.label;
+      labelEl.dataset.iconPrefix = (def.icon || '') + ' ';
       labelEl.style.pointerEvents = 'auto';
       labelEl.style.cursor = 'pointer';
       const capturedDef = def;
       labelEl.addEventListener('click', () => {
-        const b = allBodies.find(x => x.key === capturedDef.key);
+        const b = allBodies.find((x) => x.key === capturedDef.key);
         if (b) selectBody(b);
       });
       ui.labelsLayer.appendChild(labelEl);
@@ -178,31 +175,58 @@ function getStarTypeColor(def) {
 }
 
 export function createHyperlanes(allBodies, hyperlaneGroup) {
-  const stars = allBodies.filter(b => b.type === 'star');
-  const maxDistance = 150000;
+  hyperlaneGroup.clear();
+  const stars = allBodies.filter((b) => b.type === 'star' && b.pivot);
+  if (!stars.length) return;
 
-  stars.forEach((star1, i) => {
-    stars.forEach((star2, j) => {
-      if (i >= j) return;
-      const distance = star1.pivot.position.distanceTo(star2.pivot.position);
-      if (distance < maxDistance) {
-        const points = [star1.pivot.position.clone(), star2.pivot.position.clone()];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({
-          color: 0x4488ff,
-          transparent: true,
-          opacity: 0.3,
-        });
-        const line = new THREE.Line(geometry, material);
-        line.userData = { from: star1.key, to: star2.key, distance };
-        hyperlaneGroup.add(line);
+  const connectedPairs = new Set();
+  const linePositions = [];
+  const maxDistance = 70000;
+  const maxNeighborsPerStar = 2;
+
+  stars.forEach((star1) => {
+    // Find closest neighbors for star1
+    const neighbors = stars
+      .filter((star2) => star2.key !== star1.key)
+      .map((star2) => ({
+        star: star2,
+        dist: star1.pivot.position.distanceTo(star2.pivot.position),
+      }))
+      .filter((n) => n.dist <= maxDistance)
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, maxNeighborsPerStar);
+
+    neighbors.forEach(({ star: star2 }) => {
+      const pairKey = [star1.key, star2.key].sort().join('--');
+      if (!connectedPairs.has(pairKey)) {
+        connectedPairs.add(pairKey);
+        const p1 = star1.pivot.position;
+        const p2 = star2.pivot.position;
+        linePositions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
       }
     });
   });
+
+  if (!linePositions.length) return;
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+
+  const material = new THREE.LineBasicMaterial({
+    color: 0x5bc4cf,
+    transparent: true,
+    opacity: 0.22,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const lines = new THREE.LineSegments(geometry, material);
+  lines.name = 'hyperlaneSegments';
+  hyperlaneGroup.add(lines);
 }
 
 export function createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBody) {
-  SPACE_PROBES.forEach(def => {
+  SPACE_PROBES.forEach((def) => {
     const pivot = new THREE.Group();
     const angle = Math.random() * Math.PI * 2;
     const phi = (Math.random() - 0.5) * Math.PI;
@@ -211,12 +235,12 @@ export function createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBod
     pivot.position.set(
       Math.cos(angle) * Math.cos(phi) * distUnits,
       Math.sin(phi) * distUnits,
-      Math.sin(angle) * Math.cos(phi) * distUnits,
+      Math.sin(angle) * Math.cos(phi) * distUnits
     );
 
     const mesh = new THREE.Mesh(
       new THREE.SphereGeometry(def.radius, 16, 16),
-      new THREE.MeshBasicMaterial({ color: def.color, transparent: true, opacity: 0.9 }),
+      new THREE.MeshBasicMaterial({ color: def.color, transparent: true, opacity: 0.9 })
     );
     mesh.userData.bodyKey = def.key;
     pivot.add(mesh);
@@ -230,11 +254,12 @@ export function createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBod
       labelEl = document.createElement('div');
       labelEl.className = 'label';
       labelEl.textContent = def.icon + ' ' + def.label;
+      labelEl.dataset.iconPrefix = (def.icon || '') + ' ';
       labelEl.style.pointerEvents = 'auto';
       labelEl.style.cursor = 'pointer';
       const capturedDef = def;
       labelEl.addEventListener('click', () => {
-        const b = allBodies.find(x => x.key === capturedDef.key);
+        const b = allBodies.find((x) => x.key === capturedDef.key);
         if (b) selectBody(b);
       });
       ui.labelsLayer.appendChild(labelEl);
@@ -245,13 +270,23 @@ export function createSpaceProbes(SPACE_PROBES, pGroup, ui, allBodies, selectBod
   });
 }
 
-export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, timeOffsetMsFn) {
-  EXOPLANETS.forEach(def => {
-    const parentStar = allBodies.find(b => b.key === def.parent);
+export function createExoplanets(
+  EXOPLANETS,
+  pGroup,
+  ui,
+  allBodies,
+  meshList,
+  selectBody,
+  timeOffsetMsFn
+) {
+  EXOPLANETS.forEach((def) => {
+    const parentStar = allBodies.find((b) => b.key === def.parent);
     if (!parentStar) return;
 
+    const systemGroup = new THREE.Group();
+    systemGroup.position.copy(parentStar.pivot.position);
+    pGroup.add(systemGroup);
     const pivot = new THREE.Group();
-    pivot.position.copy(parentStar.pivot.position);
     // Fix: usa Math.max per garantire che il pianeta sia sempre FUORI dalla stella
     // Il pianeta deve essere almeno a 3x il raggio della stella
     const minOrbitRadius = parentStar.radius * 3.5;
@@ -368,17 +403,21 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
 
     // Scale planets appropriately - larger for better visibility
     const planetScale = 0.9; // Increased from 0.5 to 0.9
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(def.radius * planetScale, 32, 32), material);
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(def.radius * planetScale, 32, 32),
+      material
+    );
     mesh.userData.bodyKey = def.key;
     mesh.userData.isGasGiant = isGasGiant;
     pivot.add(mesh);
-    pGroup.add(pivot);
+    systemGroup.add(pivot);
+    meshList.push(mesh);
 
     // Add rings to large gas giants only
-    if (isGasGiant && def.radius > 3.0 && Math.random() > 0.4) {
+    if (isGasGiant && def.radius > 3.0 && def.hasRings) {
       // Rings are proportional to planet size and much more subtle
-      const ringInner = (def.radius * planetScale) * 1.2;
-      const ringOuter = (def.radius * planetScale) * 1.6;
+      const ringInner = def.radius * planetScale * 1.2;
+      const ringOuter = def.radius * planetScale * 1.6;
       const ringGeo = new THREE.RingGeometry(ringInner, ringOuter, 64);
 
       // More realistic ring colors (greyish with slight tint)
@@ -394,26 +433,26 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
         depthWrite: false,
       });
       const rings = new THREE.Mesh(ringGeo, ringMat);
-      rings.rotation.x = (Math.random() - 0.5) * 0.6; // More tilted
+      rings.rotation.x = ((def.ringTilt || 0) * Math.PI) / 180;
       pivot.add(rings);
     }
 
     const glow = makeGlow(def.radius * 1.5, def.color);
-    glow.scale.set(0.5, 0.5, 0.5);
     pivot.add(glow);
 
     // Add atmospheric glow for habitable/ocean planets (bluish planets)
+    let atmosphere = null;
     const c = new THREE.Color(def.color);
     const isBluish = !isGasGiant && c.b > 0.5 && c.b > c.r;
     if (isBluish) {
-      const atmosphereGeo = new THREE.SphereGeometry(def.radius * 0.53, 16, 16);
+      const atmosphereGeo = new THREE.SphereGeometry(def.radius * planetScale * 1.06, 24, 24);
       const atmosphereMat = new THREE.MeshBasicMaterial({
         color: new THREE.Color(def.color).multiplyScalar(1.5),
         transparent: true,
         opacity: 0.2,
         side: THREE.BackSide,
       });
-      const atmosphere = new THREE.Mesh(atmosphereGeo, atmosphereMat);
+      atmosphere = new THREE.Mesh(atmosphereGeo, atmosphereMat);
       pivot.add(atmosphere);
     }
 
@@ -423,11 +462,7 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
     for (let i = 0; i <= segments; i++) {
       const angle = (i / segments) * Math.PI * 2;
       orbitPoints.push(
-        new THREE.Vector3(
-          Math.cos(angle) * orbitRadius,
-          0,
-          Math.sin(angle) * orbitRadius
-        )
+        new THREE.Vector3(Math.cos(angle) * orbitRadius, 0, Math.sin(angle) * orbitRadius)
       );
     }
     const orbitLineGeo = new THREE.BufferGeometry().setFromPoints(orbitPoints);
@@ -439,64 +474,117 @@ export function createExoplanets(EXOPLANETS, pGroup, ui, allBodies, selectBody, 
       fog: false,
     });
     const orbitLine = new THREE.Line(orbitLineGeo, orbitLineMat);
-    pivot.add(orbitLine);
+    systemGroup.add(orbitLine);
 
     let labelEl = null;
     if (ui.labelsLayer) {
       labelEl = document.createElement('div');
       labelEl.className = 'label';
       labelEl.textContent = def.icon + ' ' + def.label;
+      labelEl.dataset.iconPrefix = (def.icon || '') + ' ';
       labelEl.style.opacity = '0.5';
       labelEl.style.fontSize = '11px';
       labelEl.style.pointerEvents = 'auto';
       labelEl.style.cursor = 'pointer';
       const capturedDef = def;
       labelEl.addEventListener('click', () => {
-        const b = allBodies.find(x => x.key === capturedDef.key);
+        const b = allBodies.find((x) => x.key === capturedDef.key);
         if (b) selectBody(b);
       });
       ui.labelsLayer.appendChild(labelEl);
     }
 
-    const getPos = () => {
+    const phase = [...def.key].reduce((sum, char) => sum + char.charCodeAt(0), 0) * 0.173;
+    const updatePos = () => {
       const ms = Date.now() + (typeof timeOffsetMsFn === 'function' ? timeOffsetMsFn() : 0);
-      const periodMs = parseFloat(def.period) * 24 * 60 * 60 * 1000;
-      const angle = ((ms / periodMs) * Math.PI * 2) % (Math.PI * 2);
-      return parentStar.pivot.position.clone().add(new THREE.Vector3(
-        Math.cos(angle) * orbitRadius, 0, Math.sin(angle) * orbitRadius,
-      ));
+      const periodDays = def.periodDays ?? (parseFloat(def.period) || 30);
+      const periodMs = periodDays * 24 * 60 * 60 * 1000;
+      const angle = ((ms / periodMs) * Math.PI * 2 + phase) % (Math.PI * 2);
+      pivot.position.set(Math.cos(angle) * orbitRadius, 0, Math.sin(angle) * orbitRadius);
+    };
+    updatePos();
+
+    const getPos = () => {
+      return parentStar.pivot.position.clone().add(pivot.position);
     };
 
     const body = {
-      ...def, pivot, mesh, glow, labelEl, visualR: def.radius * 0.5,
-      type: 'exoplanet', getPos, orbitRadius,
+      ...def,
+      pivot,
+      mesh,
+      glow,
+      atmosphereMesh: atmosphere,
+      labelEl,
+      visualR: def.radius * planetScale,
+      type: 'exoplanet',
+      hostLabel: parentStar.label,
+      distLY: parentStar.distLY,
+      getPos,
+      updatePos,
+      orbitRadius,
+      orbitLine,
+      systemGroup,
     };
     allBodies.push(body);
   });
 }
 
 export function createLocalBubbleConnections(allBodies, localBubbleGroup) {
-  const stars = allBodies.filter(b => b.type === 'star');
-  const maxDistLY = 50; // Distanza massima per connessione nella Local Bubble (in anni luce)
+  const stars = allBodies.filter((b) => b.type === 'star');
   const lyToAU = 63241;
-  const maxDistAU = maxDistLY * lyToAU;
-  
+  const solPos = new THREE.Vector3(0, 0, 0);
+
+  // 1. Draw elegant radial vectors from Sol to each star with drop stem lines to reference plane
+  stars.forEach((star) => {
+    if (star.key === 'sun') return;
+    const starPos = star.pivot.position;
+    const distance = solPos.distanceTo(starPos);
+    const distLY = distance / lyToAU;
+
+    // Radial vector from Sol to Star
+    const points = [solPos.clone(), starPos.clone()];
+    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+    const opacity = Math.max(0.18, 0.45 - (distLY / 50) * 0.25);
+    const material = new THREE.LineDashedMaterial({
+      color: 0x5bc4cf,
+      transparent: true,
+      opacity: opacity,
+      dashSize: 25000,
+      gapSize: 12000,
+    });
+    const line = new THREE.Line(geometry, material);
+    line.computeLineDistances();
+    line.userData = { from: 'sun', to: star.key, distance, distLY };
+    localBubbleGroup.add(line);
+
+    // Stem line perpendicular to galactic equatorial reference plane (Y=0)
+    const planePoint = new THREE.Vector3(starPos.x, 0, starPos.z);
+    const stemGeom = new THREE.BufferGeometry().setFromPoints([starPos.clone(), planePoint]);
+    const stemMat = new THREE.LineBasicMaterial({
+      color: 0x3b82f6,
+      transparent: true,
+      opacity: 0.22,
+    });
+    const stemLine = new THREE.Line(stemGeom, stemMat);
+    localBubbleGroup.add(stemLine);
+  });
+
+  // 2. Connect ONLY immediate nearest stellar neighbors (< 12 Light Years) to prevent clutter
   stars.forEach((star1, i) => {
     stars.forEach((star2, j) => {
       if (i >= j) return;
+      if (star1.key === 'sun' || star2.key === 'sun') return;
       const distance = star1.pivot.position.distanceTo(star2.pivot.position);
-      if (distance < maxDistAU) {
+      const distLY = distance / lyToAU;
+
+      if (distLY < 12) {
         const points = [star1.pivot.position.clone(), star2.pivot.position.clone()];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        
-        // Calculate distance in light-years for opacity
-        const distLY = distance / lyToAU;
-        const opacity = Math.max(0.1, 0.6 - (distLY / maxDistLY) * 0.4);
-        
         const material = new THREE.LineBasicMaterial({
           color: 0x88ccff,
           transparent: true,
-          opacity: opacity,
+          opacity: 0.18,
         });
         const line = new THREE.Line(geometry, material);
         line.userData = { from: star1.key, to: star2.key, distance, distLY };
@@ -508,89 +596,106 @@ export function createLocalBubbleConnections(allBodies, localBubbleGroup) {
 
 export function createLocalBubbleAxes(localBubbleGroup) {
   const lyToAU = 63241;
-  const axisLength = 50 * lyToAU; // 50 light-years in AU
-  
-  // Create axes helper
+  const bubbleRadiusLY = 35;
+  const bubbleRadiusAU = bubbleRadiusLY * lyToAU;
+
+  // 1. Visible 3D Translucent Plasma Sphere representing the Local Bubble cavity
+  const sphereGeom = new THREE.SphereGeometry(bubbleRadiusAU, 32, 24);
+  const sphereMat = new THREE.MeshBasicMaterial({
+    color: 0x1e3a8a,
+    transparent: true,
+    opacity: 0.1,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const bubbleMesh = new THREE.Mesh(sphereGeom, sphereMat);
+  bubbleMesh.name = 'localBubbleMesh';
+  localBubbleGroup.add(bubbleMesh);
+
+  // 2. Glowing Wireframe Shell for 3D spatial depth perception
+  const wireframeGeom = new THREE.SphereGeometry(bubbleRadiusAU * 1.001, 18, 12);
+  const wireframeMat = new THREE.MeshBasicMaterial({
+    color: 0x5bc4cf,
+    transparent: true,
+    opacity: 0.22,
+    wireframe: true,
+    depthWrite: false,
+  });
+  const wireframeMesh = new THREE.Mesh(wireframeGeom, wireframeMat);
+  wireframeMesh.name = 'localBubbleWireframe';
+  localBubbleGroup.add(wireframeMesh);
+
+  // 3. Concentric Equatorial Reference Distance Rings on Plane (10, 20, 30, 40 LY)
+  const ringDistancesLY = [10, 20, 30, 40];
+  ringDistancesLY.forEach((rLY) => {
+    const rAU = rLY * lyToAU;
+    const ringSegments = 64;
+    const ringPoints = [];
+    for (let i = 0; i <= ringSegments; i++) {
+      const theta = (i / ringSegments) * Math.PI * 2;
+      ringPoints.push(new THREE.Vector3(Math.cos(theta) * rAU, 0, Math.sin(theta) * rAU));
+    }
+    const ringGeom = new THREE.BufferGeometry().setFromPoints(ringPoints);
+    const ringMat = new THREE.LineBasicMaterial({
+      color: 0x3b82f6,
+      transparent: true,
+      opacity: 0.28,
+    });
+    const ringLine = new THREE.Line(ringGeom, ringMat);
+    localBubbleGroup.add(ringLine);
+  });
+
+  // 4. Subtle Axes Helper at Origin
+  const axisLength = 45 * lyToAU;
   const axesHelper = new THREE.AxesHelper(axisLength);
   axesHelper.name = 'localBubbleAxes';
   localBubbleGroup.add(axesHelper);
-  
-  // Add scale markers (every 10 light-years)
-  const markerInterval = 10 * lyToAU; // 10 light-years
-  const markerCount = Math.floor(axisLength / markerInterval);
-  
-  for (let i = 1; i <= markerCount; i++) {
-    const dist = i * markerInterval;
-    
-    // X-axis marker (red)
-    const xMarker = new THREE.Mesh(
-      new THREE.SphereGeometry(500, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 })
-    );
-    xMarker.position.set(dist, 0, 0);
-    localBubbleGroup.add(xMarker);
-    
-    // Y-axis marker (green)
-    const yMarker = new THREE.Mesh(
-      new THREE.SphereGeometry(500, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 })
-    );
-    yMarker.position.set(0, dist, 0);
-    localBubbleGroup.add(yMarker);
-    
-    // Z-axis marker (blue)
-    const zMarker = new THREE.Mesh(
-      new THREE.SphereGeometry(500, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 })
-    );
-    zMarker.position.set(0, 0, dist);
-    localBubbleGroup.add(zMarker);
-  }
-  
-  // Add origin marker (Sun position)
+
+  // Sun Origin Marker
   const originMarker = new THREE.Mesh(
-    new THREE.SphereGeometry(1000, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.8 })
+    new THREE.SphereGeometry(1500, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.9 })
   );
   originMarker.name = 'sunOrigin';
   localBubbleGroup.add(originMarker);
-  
-  // Add grid at origin for reference
-  const gridHelper = new THREE.GridHelper(axisLength, 10, 0x444444, 0x222222);
-  gridHelper.name = 'localBubbleGrid';
-  localBubbleGroup.add(gridHelper);
 }
 
 export function createLocalBubbleDistanceLabels(allBodies, ui) {
-  const stars = allBodies.filter(b => b.type === 'star');
+  const stars = allBodies.filter((b) => b.type === 'star');
   const lyToAU = 63241;
-  
+
   // Remove existing distance labels to prevent memory leak
   const existingLabels = ui.labelsLayer?.querySelectorAll('.local-bubble-label');
-  existingLabels?.forEach(label => label.remove());
-  
-  stars.forEach(star => {
+  existingLabels?.forEach((label) => label.remove());
+
+  stars.forEach((star) => {
     if (!ui.labelsLayer) return;
-    
+
     const distAU = star.pivot.position.length();
     const distLY = (distAU / lyToAU).toFixed(1);
-    
+
     const labelEl = document.createElement('div');
     labelEl.className = 'label local-bubble-label';
-    labelEl.style.fontSize = '10px';
-    labelEl.style.color = '#88ccff';
+    labelEl.style.fontSize = '10.5px';
+    labelEl.style.color = '#5bc4cf';
+    labelEl.style.background = 'rgba(8, 12, 24, 0.78)';
+    labelEl.style.padding = '2px 7px';
+    labelEl.style.borderRadius = '6px';
+    labelEl.style.border = '1px solid rgba(91, 196, 207, 0.4)';
+    labelEl.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6)';
+    labelEl.style.backdropFilter = 'blur(6px)';
     labelEl.style.opacity = '0';
     labelEl.style.transition = 'opacity 0.3s';
     labelEl.textContent = `${distLY} ly`;
     labelEl.dataset.starKey = star.key;
-    
+
     ui.labelsLayer.appendChild(labelEl);
     star.distanceLabel = labelEl;
   });
 }
 
 export function cleanupLocalBubbleLabels(allBodies) {
-  allBodies.forEach(star => {
+  allBodies.forEach((star) => {
     if (star.distanceLabel) {
       star.distanceLabel.remove();
       star.distanceLabel = null;

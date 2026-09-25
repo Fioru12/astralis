@@ -5,6 +5,8 @@
 
 import * as THREE from 'three';
 import { CAMERA_DAMP } from '../utils/constants.js';
+import { getLang, t } from '../i18n/index.js';
+import { getBodyLabel } from '../data/celestialData.js';
 
 /**
  * Crea il sistema camera con 3 modalità
@@ -13,9 +15,13 @@ export function createCameraSystem() {
   return {
     mode: 'orbit',
     // Orbit
-    radius: 1400, tRadius: 1400,
-    theta: 0.9, tTheta: 0.9,
-    phi: 1.05, tPhi: 1.05,
+    // Keep the initial system readable while preserving the full-system presets.
+    radius: 900,
+    tRadius: 900,
+    theta: 0.9,
+    tTheta: 0.9,
+    phi: 1.05,
+    tPhi: 1.05,
     pivot: new THREE.Vector3(),
     tPivot: new THREE.Vector3(),
     DAMP: CAMERA_DAMP,
@@ -30,7 +36,8 @@ export function createCameraSystem() {
     maxRadius: 500000,
     // Fly
     flyPos: new THREE.Vector3(0, 200, 1400),
-    flyYaw: 0, flyPitch: 0,
+    flyYaw: 0,
+    flyPitch: 0,
     flySpeed: 300,
     flyBoost: false,
     // Follow
@@ -39,8 +46,10 @@ export function createCameraSystem() {
     followTheta: 0.9,
     followPhi: 1.2,
     // Drag
-    dragging: false, isDragging: false,
-    lastX: 0, lastY: 0,
+    dragging: false,
+    isDragging: false,
+    lastX: 0,
+    lastY: 0,
     downPos: new THREE.Vector2(),
     pointerLocked: false,
     zoomTarget: null,
@@ -61,7 +70,9 @@ export function enterFly(cam, camera, renderer, setCamLabel, showHint) {
   cam.flyYaw = Math.atan2(-dir.x, -dir.z);
   cam.followBody = null;
   setCamLabel('fly');
-  showHint('🚀 Volo libero — WASD muovi · Q/E su/giù · Shift boost · ESC torna in orbita');
+  showHint(
+    '🚀 Volo libero — W avanti · S indietro · A/D laterali · Q/E su/giù · Shift boost · ESC torna in orbita'
+  );
   renderer.domElement.requestPointerLock?.();
 }
 
@@ -94,7 +105,11 @@ export function enterFollow(cam, body, setCamLabel, showHint) {
   cam.followTheta = cam.theta;
   cam.followPhi = 1.2;
   setCamLabel('follow');
-  showHint('🔭 Segui ' + body.label + ' — trascina per orbitare · scroll per zoom · ESC per uscire');
+  showHint(
+    `🔭 ${t('info_follow')} ${getBodyLabel(body, getLang())} — ${t('shortcut_rotate')} · ${t(
+      'shortcut_zoom'
+    )} · ${t('shortcut_esc')}`
+  );
 }
 
 /**
@@ -143,10 +158,13 @@ export function updateCamera(cam, camera, dt, keys) {
       cam.pivot.z + cam.radius * Math.sin(cam.phi) * Math.sin(cam.theta)
     );
     camera.lookAt(cam.pivot);
-
   } else if (cam.mode === 'fly') {
     const speed = cam.flySpeed * (cam.flyBoost ? 5 : 1) * dt;
-    const fwd = new THREE.Vector3(Math.sin(cam.flyYaw) * Math.cos(cam.flyPitch), Math.sin(cam.flyPitch), Math.cos(cam.flyYaw) * Math.cos(cam.flyPitch));
+    const fwd = new THREE.Vector3(
+      Math.sin(cam.flyYaw) * Math.cos(cam.flyPitch),
+      Math.sin(cam.flyPitch),
+      Math.cos(cam.flyYaw) * Math.cos(cam.flyPitch)
+    );
     const right = new THREE.Vector3(Math.cos(cam.flyYaw), 0, -Math.sin(cam.flyYaw));
     const up = new THREE.Vector3(0, 1, 0);
     if (keys['w'] || keys['W'] || keys['ArrowUp']) cam.flyPos.addScaledVector(fwd, speed);
@@ -159,10 +177,9 @@ export function updateCamera(cam, camera, dt, keys) {
     camera.rotation.order = 'YXZ';
     camera.rotation.y = cam.flyYaw;
     camera.rotation.x = cam.flyPitch;
-
   } else if (cam.mode === 'follow' && cam.followBody) {
     const target = cam.followBody.pivot?.position || new THREE.Vector3();
-    cam.followDist += ((Math.max(cam.followBody.visualR * 10, 40)) - cam.followDist) * 0.001;
+    cam.followDist += (Math.max(cam.followBody.visualR * 10, 40) - cam.followDist) * 0.001;
     const offset = new THREE.Vector3(
       cam.followDist * Math.sin(cam.followPhi) * Math.cos(cam.followTheta),
       cam.followDist * Math.cos(cam.followPhi),

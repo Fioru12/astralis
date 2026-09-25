@@ -18,7 +18,9 @@ export class GravitySandbox {
     this._tickHandler = null;
   }
 
-  toggle() { this.isOpen ? this.hide() : this.show(); }
+  toggle() {
+    this.isOpen ? this.hide() : this.show();
+  }
 
   show() {
     if (this.panel) return;
@@ -31,6 +33,7 @@ export class GravitySandbox {
     if (!this.panel) return;
     this.panel.style.opacity = '0';
     setTimeout(() => {
+      this._clearAll();
       this.panel?.remove();
       this.panel = null;
       this._stopSim();
@@ -42,7 +45,9 @@ export class GravitySandbox {
     this.panel = document.createElement('div');
     this.panel.id = 'sandboxPanel';
     Object.assign(this.panel.style, {
-      position: 'fixed', top: '60px', right: '20px',
+      position: 'fixed',
+      top: '60px',
+      right: '20px',
       width: 'min(320px, 92vw)',
       padding: '18px',
       background: 'rgba(8, 10, 20, 0.95)',
@@ -52,28 +57,35 @@ export class GravitySandbox {
       boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
       color: '#e4eaf8',
       zIndex: '9960',
-      opacity: '0', transition: 'opacity 0.25s ease',
+      opacity: '0',
+      transition: 'opacity 0.25s ease',
     });
 
     this.panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="margin:0;font-size:1.05rem;font-weight:800;color:#5bc4cf;">${t('sandbox_title')}</h2>
+        <h2 style="margin:0;font-size:1.05rem;font-weight:800;color:#5bc4cf;">${t(
+          'sandbox_title'
+        )}</h2>
         <button id="sbClose" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
           color:rgba(228,234,248,0.7);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;">X</button>
       </div>
       <div style="display:flex;gap:6px;margin-bottom:10px;">
         <button id="sbAdd" style="flex:1;background:linear-gradient(135deg,#5bc4cf,#8be0ea);border:none;
-          color:#000;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;">+ ${t('sandbox_add')}</button>
+          color:#000;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;">+ ${t(
+            'sandbox_add'
+          )}</button>
         <button id="sbPause" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);
           color:#e4eaf8;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">⏸</button>
         <button id="sbClear" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);
-          color:#e4eaf8;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">${t('sandbox_clear')}</button>
+          color:#e4eaf8;padding:9px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">${t(
+            'sandbox_clear'
+          )}</button>
       </div>
       <div id="sbList" style="max-height:300px;overflow-y:auto;font-size:11.5px;color:rgba(228,234,248,0.7);">
-        <div style="text-align:center;padding:18px 0;opacity:0.5;">Nessun corpo aggiunto</div>
+        <div style="text-align:center;padding:18px 0;opacity:0.5;">${t('sandbox_empty')}</div>
       </div>
       <p style="font-size:10.5px;color:rgba(228,234,248,0.4);margin:10px 0 0;line-height:1.4;">
-        I corpi aggiunti interagiscono gravitazionalmente. Sperimenta configurazioni diverse!
+        ${t('sandbox_hint')}
       </p>
     `;
 
@@ -92,16 +104,19 @@ export class GravitySandbox {
     const dist = 30 + Math.random() * 50;
     const mass = 0.5 + Math.random() * 2;
     const r = 0.5 + Math.random() * 1.2;
-    const speed = Math.sqrt(G * 10 / dist) * (0.8 + Math.random() * 0.4);
+    const speed = Math.sqrt((G * 10) / dist) * (0.8 + Math.random() * 0.4);
     const body = {
       pos: new THREE.Vector3(Math.cos(angle) * dist, 0, Math.sin(angle) * dist),
       vel: new THREE.Vector3(-Math.sin(angle) * speed, 0, Math.cos(angle) * speed),
-      mass, radius: r,
+      mass,
+      radius: r,
       mesh: null,
       trail: [],
     };
     const geom = new THREE.SphereGeometry(r, 12, 12);
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color().setHSL(Math.random(), 0.7, 0.6) });
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color().setHSL(Math.random(), 0.7, 0.6),
+    });
     body.mesh = new THREE.Mesh(geom, mat);
     body.mesh.position.copy(body.pos);
     this.scene.add(body.mesh);
@@ -110,7 +125,7 @@ export class GravitySandbox {
   }
 
   _clearAll() {
-    this.bodies.forEach(b => {
+    this.bodies.forEach((b) => {
       this.scene.remove(b.mesh);
       b.mesh.geometry.dispose();
       b.mesh.material.dispose();
@@ -122,15 +137,20 @@ export class GravitySandbox {
   _updateList() {
     const el = this.panel.querySelector('#sbList');
     if (this.bodies.length === 0) {
-      el.innerHTML = '<div style="text-align:center;padding:18px 0;opacity:0.5;">Nessun corpo aggiunto</div>';
+      el.innerHTML = `<div style="text-align:center;padding:18px 0;opacity:0.5;">${t(
+        'sandbox_empty'
+      )}</div>`;
       return;
     }
-    el.innerHTML = this.bodies.map((b, i) =>
-      `<div style="padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:4px;display:flex;justify-content:space-between;">
-        <span>Corpo ${i+1}</span>
+    el.innerHTML = this.bodies
+      .map(
+        (b, i) =>
+          `<div style="padding:6px 8px;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:4px;display:flex;justify-content:space-between;">
+        <span>${t('sandbox_body')} ${i + 1}</span>
         <span style="opacity:0.6;">m=${b.mass.toFixed(2)}</span>
       </div>`
-    ).join('');
+      )
+      .join('');
   }
 
   _startSim() {
@@ -150,7 +170,8 @@ export class GravitySandbox {
     const forces = this.bodies.map(() => new THREE.Vector3());
     for (let i = 0; i < this.bodies.length; i++) {
       for (let j = i + 1; j < this.bodies.length; j++) {
-        const a = this.bodies[i], b = this.bodies[j];
+        const a = this.bodies[i],
+          b = this.bodies[j];
         const dir = new THREE.Vector3().subVectors(b.pos, a.pos);
         const distSq = dir.lengthSq() + 0.5; // softening
         const f = (G * a.mass * b.mass) / distSq;

@@ -1,28 +1,36 @@
 import { escapeHtml } from '../utils/sanitize.js';
+import { getLang } from '../i18n/index.js';
+import { getBodyLabel } from '../data/celestialData.js';
 
 const invSections = [
-  { title: 'Planets', filter: b => b.type === 'planet' },
-  { title: 'Moons', filter: b => b.type === 'moon' },
-  { title: 'Dwarf Planets', filter: b => b.type === 'dwarf' },
-  { title: 'Comets', filter: b => b.type === 'comet' },
-  { title: 'Asteroids', filter: b => b.type === 'asteroid' },
+  { title: 'Pianeti', filter: (b) => b.type === 'planet' },
+  { title: 'Lune', filter: (b) => b.type === 'moon' },
+  { title: 'Pianeti nani', filter: (b) => b.type === 'dwarf' },
+  { title: 'Comete', filter: (b) => b.type === 'comet' },
+  { title: 'Asteroidi', filter: (b) => b.type === 'asteroid' },
 ];
 
 export function buildInventory(invList, allBodies, selectBody) {
   if (!invList) return;
   invList.innerHTML = '';
-  invSections.forEach(sec => {
+  invSections.forEach((sec) => {
     const bodies = allBodies.filter(sec.filter);
     if (!bodies.length) return;
     const header = document.createElement('div');
     header.className = 'inv-section-header';
     header.textContent = sec.title;
     invList.appendChild(header);
-    bodies.forEach(body => {
-      const item = document.createElement('div');
+    bodies.forEach((body) => {
+      const item = document.createElement('button');
+      item.type = 'button';
       item.className = 'inv-item';
       item.dataset.key = body.key;
-      item.innerHTML = `<span class="inv-icon">${escapeHtml(body.icon)}</span><span class="inv-name">${escapeHtml(body.label)}</span><span class="inv-dist" id="idist_${body.key}">--</span>`;
+      item.setAttribute('aria-label', `Esplora ${getBodyLabel(body, getLang())}`);
+      item.innerHTML = `<span class="inv-icon">${escapeHtml(
+        body.icon
+      )}</span><span class="inv-name">${escapeHtml(
+        getBodyLabel(body, getLang())
+      )}</span><span class="inv-dist" id="idist_${body.key}">--</span>`;
       item.addEventListener('click', () => selectBody(body));
       invList.appendChild(item);
     });
@@ -30,7 +38,7 @@ export function buildInventory(invList, allBodies, selectBody) {
 }
 
 export function updateInventoryDistances(allBodies, AU) {
-  allBodies.forEach(b => {
+  allBodies.forEach((b) => {
     const el = document.getElementById('idist_' + b.key);
     if (!el || !b.pivot) return;
     const distAU = b.pivot.position.length() / AU;
@@ -41,19 +49,19 @@ export function updateInventoryDistances(allBodies, AU) {
 export function filterInventory(invList, q) {
   if (!invList) return;
   const query = q.toLowerCase();
-  invList.querySelectorAll('.inv-item').forEach(item => {
+  invList.querySelectorAll('.inv-item').forEach((item) => {
     const name = item.querySelector('.inv-name')?.textContent.toLowerCase() || '';
     item.style.display = name.includes(query) ? '' : 'none';
   });
-  invList.querySelectorAll('.inv-section-header').forEach(h => {
+  invList.querySelectorAll('.inv-section-header').forEach((h) => {
     const next = h.nextElementSibling;
-    h.style.display = (next && next.style.display !== 'none') ? '' : 'none';
+    h.style.display = next && next.style.display !== 'none' ? '' : 'none';
   });
 }
 
 export function highlightInventory(invList, key) {
   if (!invList) return;
-  invList.querySelectorAll('.inv-item').forEach(item => {
+  invList.querySelectorAll('.inv-item').forEach((item) => {
     item.classList.toggle('active', item.dataset.key === key);
   });
 }

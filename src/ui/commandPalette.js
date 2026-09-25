@@ -2,13 +2,19 @@
  * Command Palette (Ctrl+K) - Ricerca fuzzy + comandi rapidi
  * Stile VS Code / GitHub
  */
-import { t } from '../i18n/index.js';
+import { getLang, t } from '../i18n/index.js';
 import { escapeHtml } from '../utils/sanitize.js';
-import { PLANETS, MOONS, ASTEROIDS, COMETS, NEARBY_STARS, EXOPLANETS } from '../data/celestialData.js';
+import {
+  PLANETS,
+  MOONS,
+  ASTEROIDS,
+  COMETS,
+  NEARBY_STARS,
+  EXOPLANETS,
+  getBodyLabel,
+} from '../data/celestialData.js';
 
-const BODIES = [
-  ...PLANETS, ...MOONS, ...ASTEROIDS, ...COMETS, ...NEARBY_STARS, ...EXOPLANETS
-];
+const BODIES = [...PLANETS, ...MOONS, ...ASTEROIDS, ...COMETS, ...NEARBY_STARS, ...EXOPLANETS];
 
 // Fuzzy search semplice
 function fuzzyMatch(query, str) {
@@ -21,9 +27,10 @@ function fuzzyMatch(query, str) {
   return qi === q.length;
 }
 
-function score(query, str) {
+function score(query, str = '') {
+  if (!str) return 0;
   const q = query.toLowerCase();
-  const s = str.toLowerCase();
+  const s = String(str).toLowerCase();
   if (s.startsWith(q)) return 100;
   if (s.includes(q)) return 50;
   if (fuzzyMatch(q, s)) return 10;
@@ -77,7 +84,8 @@ export class CommandPalette {
     this.panel.id = 'commandPalette';
     Object.assign(this.panel.style, {
       position: 'fixed',
-      top: '15%', left: '50%',
+      top: '15%',
+      left: '50%',
       transform: 'translateX(-50%)',
       width: 'min(600px, 92vw)',
       maxHeight: '70vh',
@@ -90,7 +98,8 @@ export class CommandPalette {
       overflow: 'hidden',
       opacity: '0',
       transition: 'opacity 0.18s ease',
-      display: 'flex', flexDirection: 'column',
+      display: 'flex',
+      flexDirection: 'column',
     });
 
     this.panel.innerHTML = `
@@ -125,7 +134,11 @@ export class CommandPalette {
   }
 
   _onKey(e) {
-    if (e.key === 'Escape') { this.hide(); return; }
+    if (e.key === 'Escape' || ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K'))) {
+      e.preventDefault();
+      this.hide();
+      return;
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       this.selectedIndex = Math.min(this.selectedIndex + 1, this.currentItems.length - 1);
@@ -144,32 +157,88 @@ export class CommandPalette {
 
   _getAllItems() {
     const actions = [
-      { type: 'action', icon: '⏸', label: t('cmd_action_pause'),        id: 'pause' },
-      { type: 'action', icon: '▶', label: t('cmd_action_resume'),       id: 'resume' },
-      { type: 'action', icon: '🎯', label: t('cmd_action_reset_cam'),    id: 'reset_cam' },
+      { type: 'action', icon: '⏸', label: t('cmd_action_pause'), id: 'pause' },
+      { type: 'action', icon: '▶', label: t('cmd_action_resume'), id: 'resume' },
+      { type: 'action', icon: '🎯', label: t('cmd_action_reset_cam'), id: 'reset_cam' },
       { type: 'action', icon: '🛰️', label: t('cmd_action_toggle_orbits'), id: 'toggle_orbits' },
       { type: 'action', icon: '🏷️', label: t('cmd_action_toggle_labels'), id: 'toggle_labels' },
+      {
+        type: 'action',
+        icon: '✨',
+        label: t('cmd_action_toggle_constellations') || 'Costellazioni',
+        id: 'toggle_constellations',
+      },
+      {
+        type: 'action',
+        icon: '📡',
+        label: t('cmd_action_toggle_minimap') || 'Radar Minimappa',
+        id: 'toggle_minimap',
+      },
       { type: 'action', icon: '🌓', label: t('cmd_action_toggle_theme'), id: 'toggle_theme' },
-      { type: 'action', icon: '📖', label: t('cmd_action_open_help'),    id: 'help' },
-      { type: 'action', icon: '⏰', label: t('cmd_action_timetravel'),    id: 'timetravel' },
-      { type: 'action', icon: '📷', label: t('cmd_action_screenshot'),   id: 'screenshot' },
-      { type: 'action', icon: '🔗', label: t('cmd_action_share'),        id: 'share' },
-      { type: 'action', icon: '🔊', label: t('cmd_action_sound'),        id: 'sound' },
-      { type: 'action', icon: '🎓', label: t('cmd_action_quiz'),         id: 'quiz' },
-      { type: 'action', icon: '⚙️', label: t('cmd_action_settings') || 'Impostazioni', id: 'settings' },
-      { type: 'view',   icon: '🏠', label: t('cmd_view_home'),    id: 'home' },
-      { type: 'view',   icon: '🪐', label: t('cmd_view_system'),  id: 'system' },
-      { type: 'view',   icon: '🔥', label: t('cmd_view_inner'),   id: 'inner' },
-      { type: 'view',   icon: '🌑', label: t('cmd_view_outer'),   id: 'outer' },
-      { type: 'view',   icon: '☄️', label: t('cmd_view_belt'),    id: 'belt' },
-      { type: 'view',   icon: '❄️', label: t('cmd_view_kuiper'),  id: 'kuiper' },
-      { type: 'view',   icon: '🌌', label: t('cmd_view_galaxy'),  id: 'galaxy' },
+      { type: 'action', icon: '📖', label: t('cmd_action_open_help'), id: 'help' },
+      { type: 'action', icon: '⏰', label: t('cmd_action_timetravel'), id: 'timetravel' },
+      {
+        type: 'action',
+        icon: '🌘',
+        label: t('cmd_action_eclipses') || 'Simulatore Eclissi',
+        id: 'eclipses',
+      },
+      {
+        type: 'action',
+        icon: '🌠',
+        label: t('cmd_action_meteors') || 'Stelle Cadenti',
+        id: 'meteors',
+      },
+      {
+        type: 'action',
+        icon: '🎬',
+        label: t('cmd_action_grand_tour') || 'Grand Tour',
+        id: 'grand_tour',
+      },
+      {
+        type: 'action',
+        icon: '🌌',
+        label: t('cmd_action_systems') || 'Mondi Alieni & Sistemi Stellari',
+        id: 'systems',
+      },
+      { type: 'action', icon: '📷', label: t('cmd_action_screenshot'), id: 'screenshot' },
+      { type: 'action', icon: '🔗', label: t('cmd_action_share'), id: 'share' },
+      { type: 'action', icon: '🔊', label: t('cmd_action_sound'), id: 'sound' },
+      { type: 'action', icon: '🎓', label: t('cmd_action_quiz'), id: 'quiz' },
+      {
+        type: 'action',
+        icon: '🌿',
+        label: t('cmd_action_habitable_zone') || 'Zona Abitabile (Goldilocks Zone)',
+        id: 'toggle_habitable_zone',
+      },
+      {
+        type: 'action',
+        icon: '🚀',
+        label: t('cmd_action_space_travel') || 'Simulatore Viaggio Spaziale',
+        id: 'space_travel',
+      },
+      {
+        type: 'action',
+        icon: '⚙️',
+        label: t('cmd_action_settings') || 'Impostazioni',
+        id: 'settings',
+      },
+      { type: 'view', icon: '🏠', label: t('cmd_view_home'), id: 'home' },
+      { type: 'view', icon: '🪐', label: t('cmd_view_system'), id: 'system' },
+      { type: 'view', icon: '🔥', label: t('cmd_view_inner'), id: 'inner' },
+      { type: 'view', icon: '🌑', label: t('cmd_view_outer'), id: 'outer' },
+      { type: 'view', icon: '☄️', label: t('cmd_view_belt'), id: 'belt' },
+      { type: 'view', icon: '❄️', label: t('cmd_view_kuiper'), id: 'kuiper' },
+      { type: 'view', icon: '🌌', label: t('cmd_view_galaxy'), id: 'galaxy' },
     ];
-    const bodies = BODIES.map(b => ({
+    const lang = getLang();
+    const bodies = BODIES.map((b) => ({
       type: 'body',
       icon: b.icon || '🌍',
-      label: b.name,
-      id: b.id || b.name,
+      label: getBodyLabel(b, lang) || b.name || '',
+      // Ricerca bilingue: punteggio sul migliore tra label IT/EN.
+      keywords: [b.label, b.labelEn, b.name].filter(Boolean).join(' '),
+      id: b.id || b.key || b.name || b.label,
       body: b,
     }));
     return [...actions, ...bodies];
@@ -180,8 +249,11 @@ export class CommandPalette {
     let items = this._getAllItems();
     if (q) {
       items = items
-        .map(it => ({ ...it, _score: score(q, it.label) }))
-        .filter(it => it._score > 0)
+        .map((it) => ({
+          ...it,
+          _score: Math.max(score(q, it.label), it.keywords ? score(q, it.keywords) : 0),
+        }))
+        .filter((it) => it._score > 0)
         .sort((a, b) => b._score - a._score)
         .slice(0, 30);
     } else {
@@ -191,39 +263,59 @@ export class CommandPalette {
     this.selectedIndex = 0;
 
     if (items.length === 0) {
-      this.results.innerHTML = `<div style="padding:30px;text-align:center;color:rgba(228,234,248,0.4);">${escapeHtml(t('cmd_no_results'))}</div>`;
+      this.results.innerHTML = `<div style="padding:30px;text-align:center;color:rgba(228,234,248,0.4);">${escapeHtml(
+        t('cmd_no_results')
+      )}</div>`;
       return;
     }
 
     const sections = { action: [], view: [], body: [] };
     items.forEach((it, idx) => sections[it.type]?.push({ ...it, _idx: idx }));
 
-    const sectionLabels = { action: t('cmd_section_actions'), view: t('cmd_section_nav'), body: t('cmd_section_nav') };
-    const html = Object.entries(sections).filter(([, arr]) => arr.length).map(([key, arr]) => `
+    const sectionLabels = {
+      action: t('cmd_section_actions'),
+      view: t('cmd_section_nav'),
+      body: t('cmd_section_nav'),
+    };
+    const html = Object.entries(sections)
+      .filter(([, arr]) => arr.length)
+      .map(
+        ([key, arr]) => `
       <div style="padding:6px 14px 4px;font-size:10px;font-weight:700;color:rgba(228,234,248,0.4);
         text-transform:uppercase;letter-spacing:1px;">${sectionLabels[key]}</div>
-      ${arr.map(it => `
+      ${arr
+        .map(
+          (it) => `
         <div data-cmd-item="${it._idx}" class="cmd-item"
           style="padding:8px 14px;margin:2px 6px;border-radius:8px;cursor:pointer;
           display:flex;align-items:center;gap:10px;transition:background 0.1s;
           ${it._idx === this.selectedIndex ? 'background:rgba(91,196,207,0.15);' : ''}">
-          <span style="font-size:16px;width:22px;text-align:center;">${escapeHtml(it.icon || '⚡')}</span>
+          <span style="font-size:16px;width:22px;text-align:center;">${escapeHtml(
+            it.icon || '⚡'
+          )}</span>
           <span style="color:#e4eaf8;font-size:13px;flex:1;">${escapeHtml(it.label)}</span>
         </div>
-      `).join('')}
-    `).join('');
+      `
+        )
+        .join('')}
+    `
+      )
+      .join('');
 
     this.results.innerHTML = html;
   }
 
   _highlight() {
-    this.results.querySelectorAll('.cmd-item').forEach((el, i) => {
+    const items = this.results.querySelectorAll('.cmd-item');
+    items.forEach((el, i) => {
       const isSel = i === this.selectedIndex;
       el.style.background = isSel ? 'rgba(91,196,207,0.18)' : 'transparent';
       el.style.borderLeft = isSel ? '2px solid #5bc4cf' : '2px solid transparent';
     });
-    const sel = this.results.querySelector('.cmd-item:nth-child(' + (this.selectedIndex + 1) + ')');
-    sel?.scrollIntoView({ block: 'nearest' });
+    const sel = items[this.selectedIndex];
+    if (typeof sel?.scrollIntoView === 'function') {
+      sel.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   _execute(item) {
