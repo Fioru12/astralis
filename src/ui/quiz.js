@@ -180,8 +180,8 @@ export class Quiz {
         i === q.correct
           ? 'rgba(72,200,100,0.18)'
           : i === idx
-          ? 'rgba(220,80,80,0.18)'
-          : 'rgba(255,255,255,0.04)';
+            ? 'rgba(220,80,80,0.18)'
+            : 'rgba(255,255,255,0.04)';
       b.style.borderColor =
         i === q.correct ? '#48c864' : i === idx ? '#dc5050' : 'rgba(255,255,255,0.1)';
       b.style.cursor = 'default';

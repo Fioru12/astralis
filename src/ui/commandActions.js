@@ -106,8 +106,8 @@ export function registerCommandActions(deps) {
       const view = deps.getGalaxyMapMode()
         ? 'galaxy'
         : deps.getLocalBubbleMode()
-        ? 'local-bubble'
-        : undefined;
+          ? 'local-bubble'
+          : undefined;
       deps.urlState.setMany({
         body: deps.getSelectedBody()?.key,
         view,

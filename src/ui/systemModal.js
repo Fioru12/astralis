@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { getLang, t } from '../i18n/index.js';
 
 const L = (localized) =>
-  typeof localized === 'string' ? localized : localized?.[getLang()] ?? localized?.it;
+  typeof localized === 'string' ? localized : (localized?.[getLang()] ?? localized?.it);
 
 export const EXTRASOLAR_SYSTEMS_DATA = {
   Trappist1: {
@@ -772,10 +772,10 @@ export class SystemInspectorModal {
       .map(
         (exo) => `
       <button class="sys-exo-bar-btn" data-exoid="${exo.id}" style="background:${
-          exo.habitable ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'
-        };border:1px solid ${
-          exo.color
-        }77;color:#eef2ff;padding:6px 12px;border-radius:999px;cursor:pointer;font-size:0.78rem;font-weight:700;display:flex;align-items:center;gap:6px;transition:all 0.2s;white-space:nowrap;">
+        exo.habitable ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'
+      };border:1px solid ${
+        exo.color
+      }77;color:#eef2ff;padding:6px 12px;border-radius:999px;cursor:pointer;font-size:0.78rem;font-weight:700;display:flex;align-items:center;gap:6px;transition:all 0.2s;white-space:nowrap;">
         <span style="width:8px;height:8px;border-radius:50%;background:${
           exo.color
         };box-shadow:0 0 8px ${exo.color};"></span>
@@ -818,8 +818,8 @@ export class SystemInspectorModal {
       <div style="background:rgba(12,18,34,0.96);border:1px solid ${
         exo.color
       }77;box-shadow:0 0 50px ${
-      exo.color
-    }44, 0 20px 60px rgba(0,0,0,0.8);border-radius:24px;max-width:620px;width:100%;max-height:90vh;overflow-y:auto;padding:28px;color:#eef2ff;position:relative;">
+        exo.color
+      }44, 0 20px 60px rgba(0,0,0,0.8);border-radius:24px;max-width:620px;width:100%;max-height:90vh;overflow-y:auto;padding:28px;color:#eef2ff;position:relative;">
         
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
           <div>
@@ -849,8 +849,8 @@ export class SystemInspectorModal {
               'sys_mass'
             )}</div>
             <div style="font-size:1.05rem;font-weight:800;color:${exo.color};margin-top:2px;">${
-      exo.mass
-    }</div>
+              exo.mass
+            }</div>
           </div>
           <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 16px;">
             <div style="font-size:0.72rem;color:rgba(238,242,255,0.6);text-transform:uppercase;font-weight:600;">${t(
@@ -873,8 +873,8 @@ export class SystemInspectorModal {
         <!-- Description Card -->
         <div style="background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px;margin-bottom:24px;line-height:1.6;font-size:0.9rem;color:rgba(238,242,255,0.88);">
           <h3 style="margin:0 0 8px 0;font-size:1rem;color:${exo.color};font-weight:800;">${t(
-      'sys_features'
-    )}</h3>
+            'sys_features'
+          )}</h3>
           <p style="margin:0;">${L(exo.desc)}</p>
         </div>
 

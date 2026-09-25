@@ -253,8 +253,8 @@ export class ComparisonMode {
             v2
           )} ${m.unit}</td>
           <td style="padding:12px;text-align:right;font-size:12px;color:${diffColor};">${
-        diffValue !== null ? (diffValue > 0 ? '+' : '') + diff + '%' : 'N/D'
-      }</td>
+            diffValue !== null ? (diffValue > 0 ? '+' : '') + diff + '%' : 'N/D'
+          }</td>
         </tr>
       `;
     });

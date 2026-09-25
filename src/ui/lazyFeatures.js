@@ -118,8 +118,8 @@ export function createLazyFeatures(ctx) {
           targetStar.key === 'Sun'
             ? 900
             : targetStar.radius
-            ? Math.max(targetStar.radius * 25, 180)
-            : 220;
+              ? Math.max(targetStar.radius * 25, 180)
+              : 220;
         ctx.CAM.tTheta = 0.95;
         ctx.CAM.tPhi = 1.1;
         ctx.CAM.followBody = null;

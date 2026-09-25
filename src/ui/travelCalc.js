@@ -14,7 +14,7 @@ import { getLang, t } from '../i18n/index.js';
 import { getBodyLabel } from '../data/celestialData.js';
 
 const L = (localized) =>
-  typeof localized === 'string' ? localized : localized?.[getLang()] ?? localized?.it;
+  typeof localized === 'string' ? localized : (localized?.[getLang()] ?? localized?.it);
 const localeOf = () => (getLang() === 'it' ? 'it-IT' : 'en-US');
 
 // Costanti astronomiche e fisiche SI
@@ -563,17 +563,17 @@ export class TravelCalc {
 
       <div style="padding:10px;background:rgba(91,196,207,0.08);border-radius:8px;font-size:12px;color:rgba(228,234,248,0.85);line-height:1.45;">
         <strong style="color:#5bc4cf;">ℹ️ ${t('st_mission_detail')}:</strong> ${escapeHtml(
-      L(craft.desc)
-    )}<br>
+          L(craft.desc)
+        )}<br>
         <span style="font-size:11px;color:rgba(228,234,248,0.6);">${t(
           'st_arrival_on'
         )} ${escapeHtml(
-      getBodyLabel(targetBody, getLang()) || targetBody.key
-    )}: <strong style="color:#e4eaf8;">${arrivalDate.toLocaleDateString(locale, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })}</strong></span>
+          getBodyLabel(targetBody, getLang()) || targetBody.key
+        )}: <strong style="color:#e4eaf8;">${arrivalDate.toLocaleDateString(locale, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })}</strong></span>
       </div>
     `;
   }

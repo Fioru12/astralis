@@ -418,7 +418,8 @@ export function generateProceduralMilkyWay() {
       // Star color variation (temperature)
       const rIdx = Math.random();
       let color = `rgba(255, 255, 255, ${opacity})`;
-      if (rIdx < 0.12) color = `rgba(160, 200, 255, ${opacity})`; // blue
+      if (rIdx < 0.12)
+        color = `rgba(160, 200, 255, ${opacity})`; // blue
       else if (rIdx < 0.2) color = `rgba(255, 200, 150, ${opacity})`; // red/orange
 
       ctx.fillStyle = color;

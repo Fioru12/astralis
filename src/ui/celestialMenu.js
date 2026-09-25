@@ -88,8 +88,8 @@ export function buildStarList(starList, allBodies, filter, zoomToStar) {
     item.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <span style="font-weight: 500;">${escapeHtml(String(star.icon))} ${escapeHtml(
-      getBodyLabel(star, getLang())
-    )}</span>
+          getBodyLabel(star, getLang())
+        )}</span>
         <span style="color: rgba(255,255,255,0.5); font-size: 11px;">${
           star.distLY ? escapeHtml(star.distLY + ' ly') : ''
         }</span>

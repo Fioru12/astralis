@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { getLang, t } from '../i18n/index.js';
 
 const L = (localized) =>
-  typeof localized === 'string' ? localized : localized?.[getLang()] ?? localized?.it;
+  typeof localized === 'string' ? localized : (localized?.[getLang()] ?? localized?.it);
 
 export class GalaxyModal {
   constructor(options = {}) {
@@ -207,12 +207,12 @@ export class GalaxyModal {
               ? '#f472b6'
               : '#ffffff'
             : isHot
-            ? rng() < 0.5
-              ? '#00f2fe'
-              : '#38bdf8'
-            : rng() < 0.7
-            ? '#ffffff'
-            : '#a5f3fc';
+              ? rng() < 0.5
+                ? '#00f2fe'
+                : '#38bdf8'
+              : rng() < 0.7
+                ? '#ffffff'
+                : '#a5f3fc';
 
           sat.starField.push({
             dx,
@@ -249,10 +249,10 @@ export class GalaxyModal {
             rng() < 0.4
               ? '#a855f7'
               : rng() < 0.7
-              ? '#c084fc'
-              : rng() < 0.85
-              ? '#00f2fe'
-              : '#ffffff';
+                ? '#c084fc'
+                : rng() < 0.85
+                  ? '#00f2fe'
+                  : '#ffffff';
           sat.starField.push({
             dx,
             dy,
@@ -304,10 +304,10 @@ export class GalaxyModal {
             rng() < 0.5
               ? '#f59e0b'
               : rng() < 0.8
-              ? '#fbbf24'
-              : rng() < 0.92
-              ? '#f97316'
-              : '#ffffff';
+                ? '#fbbf24'
+                : rng() < 0.92
+                  ? '#f97316'
+                  : '#ffffff';
           sat.starField.push({
             dx,
             dy,
@@ -344,10 +344,10 @@ export class GalaxyModal {
             rng() < 0.45
               ? '#10b981'
               : rng() < 0.75
-              ? '#34d399'
-              : rng() < 0.9
-              ? '#6ee7b7'
-              : '#ffffff';
+                ? '#34d399'
+                : rng() < 0.9
+                  ? '#6ee7b7'
+                  : '#ffffff';
           sat.starField.push({
             dx,
             dy,
@@ -478,8 +478,8 @@ export class GalaxyModal {
           <strong>${t(
             'gal_hud_center'
           )}</strong> <button id="hudSgrBtn" style="background:none;border:none;color:#f59e0b;font-weight:800;cursor:pointer;text-decoration:underline;padding:0;font-size:0.82rem;">${t(
-      'gal_hud_bh'
-    )}</button>
+            'gal_hud_bh'
+          )}</button>
         </span>
         <span style="height:14px;width:1px;background:rgba(255,255,255,0.2);"></span>
         <span style="font-size:0.82rem;color:rgba(238,242,255,0.85);display:flex;align-items:center;gap:8px;">
@@ -644,8 +644,8 @@ export class GalaxyModal {
       <div style="background:rgba(12,18,34,0.96);border:1px solid ${
         sat.color
       }77;box-shadow:0 0 50px ${
-      sat.color
-    }44, 0 20px 60px rgba(0,0,0,0.8);border-radius:24px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:28px;color:#eef2ff;position:relative;">
+        sat.color
+      }44, 0 20px 60px rgba(0,0,0,0.8);border-radius:24px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:28px;color:#eef2ff;position:relative;">
         
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
           <div>
@@ -672,8 +672,8 @@ export class GalaxyModal {
         <div style="background:radial-gradient(circle at center, ${
           sat.color
         }25 0%, rgba(2,4,10,0.95) 80%);border-radius:16px;border:1px solid ${
-      sat.color
-    }45;padding:12px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;">
+          sat.color
+        }45;padding:12px;text-align:center;margin-bottom:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;">
           <canvas id="satModalCanvas" width="480" height="130" style="width:100%;max-width:480px;height:130px;border-radius:10px;"></canvas>
           <div style="font-size:0.75rem;color:rgba(238,242,255,0.75);margin-top:6px;font-weight:600;">
             ${t('gal_sat_preview')}
@@ -687,8 +687,8 @@ export class GalaxyModal {
               'gal_sat_dist'
             )}</div>
             <div style="font-size:1.05rem;font-weight:800;color:${sat.color};margin-top:2px;">${L(
-      sat.dist
-    )}</div>
+              sat.dist
+            )}</div>
           </div>
           <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px 16px;">
             <div style="font-size:0.75rem;color:rgba(238,242,255,0.6);text-transform:uppercase;font-weight:600;">${t(
@@ -711,8 +711,8 @@ export class GalaxyModal {
         <!-- Description Card -->
         <div style="background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px;margin-bottom:24px;line-height:1.6;font-size:0.9rem;color:rgba(238,242,255,0.88);">
           <h3 style="margin:0 0 8px 0;font-size:1rem;color:${sat.color};font-weight:800;">${t(
-      'gal_sat_features'
-    )}</h3>
+            'gal_sat_features'
+          )}</h3>
           <p style="margin:0;">${L(sat.details)}</p>
         </div>
 
@@ -720,8 +720,8 @@ export class GalaxyModal {
           <button id="okSatBtn" style="padding:10px 24px;background:linear-gradient(135deg,${
             sat.color
           },#3b82f6);border:none;border-radius:12px;color:#fff;font-weight:800;font-size:0.9rem;cursor:pointer;box-shadow:0 0 20px ${
-      sat.color
-    }44;transition:all 0.2s;">
+            sat.color
+          }44;transition:all 0.2s;">
             ${t('gal_sat_close')}
           </button>
         </div>
@@ -1048,8 +1048,8 @@ export class GalaxyModal {
         Math.random() < 0.7
           ? [1, 1, 1]
           : Math.random() < 0.85
-          ? [0.65, 0.55, 0.98]
-          : [0.35, 0.76, 0.81];
+            ? [0.65, 0.55, 0.98]
+            : [0.35, 0.76, 0.81];
       colors[i * 3] = col[0];
       colors[i * 3 + 1] = col[1];
       colors[i * 3 + 2] = col[2];

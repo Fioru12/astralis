@@ -6,7 +6,7 @@ import { escapeHtml } from '../utils/sanitize.js';
 import { getLang, t } from '../i18n/index.js';
 
 const L = (localized) =>
-  typeof localized === 'string' ? localized : localized?.[getLang()] ?? localized?.it;
+  typeof localized === 'string' ? localized : (localized?.[getLang()] ?? localized?.it);
 
 export const BRAND = {
   name: 'ASTRALIS',
@@ -437,14 +437,14 @@ export class AchievementPanel {
           <div style="font-size:11px;color:rgba(228,234,248,0.6);margin-top:3px;">${escapeHtml(
             String(progress.unlocked)
           )}/${escapeHtml(String(progress.total))} ${t('ach_unlocked_suffix')} · ${escapeHtml(
-      String(progress.xp)
-    )} XP</div>
+            String(progress.xp)
+          )} XP</div>
         </div>
         <button id="achClose" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:rgba(228,234,248,0.7);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:12px;">X</button></div><div id="achList" style="flex:1;overflow-y:auto;padding:12px 18px;"></div><div style="padding:12px 18px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;font-size:10.5px;color:rgba(228,234,248,0.4);">${t(
           'ach_close_hint'
         )} · ${t('ach_total_word')}: ${escapeHtml(
-      String(ACHIEVEMENTS.length)
-    )} achievement</div></div>`;
+          String(ACHIEVEMENTS.length)
+        )} achievement</div></div>`;
     const items = list
       .map((a) => {
         const ok = unlocked.includes(a.id);

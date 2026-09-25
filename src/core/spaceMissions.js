@@ -7,7 +7,7 @@ import { escapeHtml } from '../utils/sanitize.js';
 import { getLang, t } from '../i18n/index.js';
 
 const L = (localized) =>
-  typeof localized === 'string' ? localized : localized?.[getLang()] ?? localized?.it;
+  typeof localized === 'string' ? localized : (localized?.[getLang()] ?? localized?.it);
 
 /**
  * Database delle missioni spaziali con dati orbitali aggiornati
@@ -358,8 +358,8 @@ export function createMissionsPanel() {
       </div>
       <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:6px;">
         ${escapeHtml(mission.agency)} • ${escapeHtml(t('sm_launch'))}: ${escapeHtml(
-      String(mission.launchYear)
-    )}
+          String(mission.launchYear)
+        )}
       </div>
       <div style="font-size:0.9rem;margin-bottom:8px;">${escapeHtml(L(mission.description))}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:0.8rem;color:rgba(255,255,255,0.5);">

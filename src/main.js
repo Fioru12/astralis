@@ -587,8 +587,8 @@ function applyViewMode(mode) {
     cinematic
       ? t('view_hint_cinema')
       : scientific
-      ? t('view_hint_science')
-      : t('view_hint_explore'),
+        ? t('view_hint_science')
+        : t('view_hint_explore'),
     hintTimerRef
   );
 }
@@ -1781,7 +1781,7 @@ function startApp() {
           medium: t('quality_medium'),
           high: t('quality_high'),
           ultra: t('quality_ultra'),
-        }[q] || q);
+        })[q] || q;
       if (value === 'auto') {
         adaptiveQuality.setAutoScale(true);
         const effectiveQuality = adaptiveQuality.getQualityLevel();

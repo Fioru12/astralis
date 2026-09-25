@@ -311,8 +311,8 @@ export class SystemsExplorer {
             <div class="system-card-title-wrap">
               <h3 class="system-card-name">${escapeHtml(title)}</h3>
               <span class="system-card-spec">${escapeHtml(sys.starType)} • ${escapeHtml(
-          distStr
-        )}</span>
+                distStr
+              )}</span>
             </div>
           </div>
 

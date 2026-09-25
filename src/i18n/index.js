@@ -50,8 +50,8 @@ export function tPlural(key, count, params) {
     typeof Intl !== 'undefined' && Intl.PluralRules
       ? new Intl.PluralRules(currentLang).select(count)
       : count === 1
-      ? 'one'
-      : 'other';
+        ? 'one'
+        : 'other';
   let str = plurals[rule] || plurals.other || plurals.one || key;
   if (params) {
     Object.keys(params).forEach((k) => {
