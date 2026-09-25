@@ -31,6 +31,8 @@ function makeCtx(overrides = {}) {
 }
 
 describe('buildPlanetsAndMoons', () => {
+  // Costruzione completa dai dati reali (fbm procedurale in JS): lenta
+  // sotto coverage su runner condivisi, fuori dal budget default di 5s.
   it('costruisce pianeti, lune e fasce registrando tutte le strutture', () => {
     setLang('it');
     const { ctx } = makeCtx();
@@ -52,7 +54,7 @@ describe('buildPlanetsAndMoons', () => {
     const pos = earth.getPos(0);
     expect(pos).toBeInstanceOf(THREE.Vector3);
     expect(pos.length()).toBeGreaterThan(0);
-  });
+  }, 60000);
 
   it('localizza le etichette 3D nella lingua corrente', () => {
     setLang('en');
@@ -63,5 +65,5 @@ describe('buildPlanetsAndMoons', () => {
     const moon = ctx.allBodies.find((b) => b.key === 'Moon');
     expect(typeof moon.getPos().x).toBe('number');
     setLang('it');
-  });
+  }, 60000);
 });
