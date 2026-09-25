@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Astralis">
+  <defs>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff3a0"/><stop offset="1" stop-color="#ff8c00"/></radialGradient>
+    <radialGradient id="space" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#17233d"/><stop offset="1" stop-color="#050711"/></radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="72" fill="url(#space)"/>
+  <g fill="#fff" opacity=".72"><circle cx="78" cy="92" r="3"/><circle cx="151" cy="65" r="2"/><circle cx="427" cy="103" r="3"/><circle cx="455" cy="390" r="2"/><circle cx="86" cy="415" r="2"/></g>
+  <ellipse cx="256" cy="256" rx="190" ry="72" fill="none" stroke="#5bc4cf" stroke-width="7" opacity=".68" transform="rotate(-18 256 256)"/>
+  <circle cx="256" cy="256" r="70" fill="url(#sun)"/>
+  <circle cx="121" cy="316" r="21" fill="#4f91e8"/>
+  <path d="M108 309c13-7 22-4 28 4-7 2-11 7-13 14-8-1-13-7-15-18Z" fill="#69ad72" opacity=".9"/>
+  <circle cx="410" cy="176" r="31" fill="#d5b27c"/>
+  <ellipse cx="410" cy="176" rx="48" ry="10" fill="none" stroke="#e5d5ad" stroke-width="6" transform="rotate(-18 410 176)"/>
+</svg>

@@ -11,6 +11,7 @@
 ## 🎯 Core Documentation
 
 ### For Developers
+
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Workflow, common tasks, best practices
   - Start dev server
   - Code quality checks
@@ -18,7 +19,9 @@
   - Debugging tips
 
 ### For Performance
+
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical structure & optimizations
+
   - Project structure
   - Performance metrics
   - LOD system details
@@ -33,6 +36,7 @@
   - Regression testing
 
 ### For Optimization
+
 - **[TEXTURE_OPTIMIZATION.md](./TEXTURE_OPTIMIZATION.md)** - Texture strategies
   - WebP/AVIF conversion
   - Format selection
@@ -41,6 +45,7 @@
   - Troubleshooting
 
 ### For Deployment
+
 - **[GITHUB_PAGES_DEPLOYMENT.md](./GITHUB_PAGES_DEPLOYMENT.md)** - CI/CD setup
   - GitHub Pages setup
   - Workflow configuration
@@ -116,26 +121,31 @@ npm run serve-dist       # Preview build
 ## 📚 Documentation by Topic
 
 ### Performance
+
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Performance metrics & LOD system
 - [PERFORMANCE_BENCHMARKS.md](./PERFORMANCE_BENCHMARKS.md) - Benchmarking guide
 - [TEXTURE_OPTIMIZATION.md](./TEXTURE_OPTIMIZATION.md) - Texture optimization
 
 ### Development
+
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Workflow & commands
 - [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) - Quick commands
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing
 
 ### Deployment
+
 - [GITHUB_PAGES_DEPLOYMENT.md](./GITHUB_PAGES_DEPLOYMENT.md) - CI/CD & Pages
 - [CI_WORKFLOW.yml](./CI_WORKFLOW.yml) - GitHub Actions config
 
 ### Project Overview
+
 - [README.md](./README.md) - Project description
 - [COMPLETION_REPORT.md](./COMPLETION_REPORT.md) - Session summary
 - [IMPROVEMENTS_SUMMARY.md](./IMPROVEMENTS_SUMMARY.md) - Detailed changes
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Technical structure
 
 ### Features
+
 - [ROADMAP.js](./ROADMAP.js) - Planned features
 - [STATUS.js](./STATUS.js) - Project status
 
@@ -144,16 +154,19 @@ npm run serve-dist       # Preview build
 ## 🎯 Learning Path
 
 ### Beginner
+
 1. **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Learn the essential commands
 2. **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Understand the workflow
 3. **[README.md](./README.md)** - Understand the project
 
 ### Intermediate
+
 1. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Learn the structure
 2. **[PERFORMANCE_BENCHMARKS.md](./PERFORMANCE_BENCHMARKS.md)** - Learn profiling
 3. **[TEXTURE_OPTIMIZATION.md](./TEXTURE_OPTIMIZATION.md)** - Learn optimization
 
 ### Advanced
+
 1. **[IMPROVEMENTS_SUMMARY.md](./IMPROVEMENTS_SUMMARY.md)** - Technical details
 2. **[GITHUB_PAGES_DEPLOYMENT.md](./GITHUB_PAGES_DEPLOYMENT.md)** - Deployment details
 3. **[ROADMAP.js](./ROADMAP.js)** - Future enhancements
@@ -162,20 +175,20 @@ npm run serve-dist       # Preview build
 
 ## 📖 File Descriptions
 
-| File | Purpose | Read Time |
-|------|---------|-----------|
-| **README.md** | Project overview | 5 min |
-| **QUICK_REFERENCE.md** | Commands & shortcuts | 3 min |
-| **DEVELOPMENT.md** | Dev workflow | 10 min |
-| **ARCHITECTURE.md** | Technical deep dive | 20 min |
-| **PERFORMANCE_BENCHMARKS.md** | Profiling guide | 15 min |
-| **TEXTURE_OPTIMIZATION.md** | Texture guide | 15 min |
-| **GITHUB_PAGES_DEPLOYMENT.md** | Deployment | 10 min |
-| **IMPROVEMENTS_SUMMARY.md** | Session changes | 15 min |
-| **COMPLETION_REPORT.md** | Executive summary | 10 min |
-| **CONTRIBUTING.md** | How to contribute | 5 min |
-| **LICENSE** | MIT license | 2 min |
-| **ROADMAP.js** | Feature tracking | 5 min |
+| File                           | Purpose              | Read Time |
+| ------------------------------ | -------------------- | --------- |
+| **README.md**                  | Project overview     | 5 min     |
+| **QUICK_REFERENCE.md**         | Commands & shortcuts | 3 min     |
+| **DEVELOPMENT.md**             | Dev workflow         | 10 min    |
+| **ARCHITECTURE.md**            | Technical deep dive  | 20 min    |
+| **PERFORMANCE_BENCHMARKS.md**  | Profiling guide      | 15 min    |
+| **TEXTURE_OPTIMIZATION.md**    | Texture guide        | 15 min    |
+| **GITHUB_PAGES_DEPLOYMENT.md** | Deployment           | 10 min    |
+| **IMPROVEMENTS_SUMMARY.md**    | Session changes      | 15 min    |
+| **COMPLETION_REPORT.md**       | Executive summary    | 10 min    |
+| **CONTRIBUTING.md**            | How to contribute    | 5 min     |
+| **LICENSE**                    | MIT license          | 2 min     |
+| **ROADMAP.js**                 | Feature tracking     | 5 min     |
 
 ---
 

@@ -9,6 +9,7 @@ This guide helps measure and track Solar System 3D's rendering performance. Use 
 ### 1. Frame Rate (FPS)
 
 **Method 1: Chrome DevTools**
+
 ```
 1. Open DevTools (F12)
 2. Press Ctrl+Shift+P, type "fps"
@@ -18,6 +19,7 @@ This guide helps measure and track Solar System 3D's rendering performance. Use 
 ```
 
 **Method 2: Browser Console**
+
 ```javascript
 // Add to index.html <script> or console
 let frameCount = 0;
@@ -39,6 +41,7 @@ measureFPS();
 ### 2. Memory Usage
 
 **Chrome DevTools:**
+
 ```
 1. DevTools → Memory tab
 2. Click "Take heap snapshot"
@@ -50,6 +53,7 @@ measureFPS();
 ### 3. Bundle Size
 
 **Command:**
+
 ```bash
 npm run build
 du -sh dist/
@@ -57,6 +61,7 @@ du -sh dist/assets/
 ```
 
 **Expected output:**
+
 ```
 25M     dist/              (total)
 15M     dist/assets/       (textures)
@@ -66,6 +71,7 @@ du -sh dist/assets/
 ### 4. Load Time
 
 **Chrome DevTools → Network tab:**
+
 ```
 1. DevTools → Network
 2. Throttle: "Fast 3G" or "Slow 3G"
@@ -74,6 +80,7 @@ du -sh dist/assets/
 ```
 
 **Expected times (Fast 3G):**
+
 - HTML: <500ms
 - JavaScript: <2000ms
 - Textures: <3000ms
@@ -84,6 +91,7 @@ du -sh dist/assets/
 ### Polygon Count
 
 **Before optimization:**
+
 ```
 Main Belt (1000 asteroids × 512 polys each): 512k
 Kuiper Belt (3000 asteroids × 512 polys each): 1.5M
@@ -92,6 +100,7 @@ Total: 2.5M+ polygons
 ```
 
 **After LOD optimization (far view):**
+
 ```
 Main Belt (low detail): 128k
 Kuiper Belt (low detail): 384k
@@ -100,6 +109,7 @@ Total: ~700k polygons (72% reduction!)
 ```
 
 **Verify in Chrome DevTools:**
+
 ```
 1. DevTools → More tools → WebGL Inspector
 2. Look for "Polygon count" stat
@@ -109,6 +119,7 @@ Total: ~700k polygons (72% reduction!)
 ### Texture Memory
 
 **Command to analyze:**
+
 ```bash
 # Check actual file sizes
 ls -lh assets/textures/
@@ -119,6 +130,7 @@ du -sh assets/textures/ assets/textures/optimized/
 ```
 
 **Expected compression:**
+
 ```
 Original JPG (8K): 5.2 MB
 WebP (2K): 1.1 MB      (79% reduction)
@@ -128,6 +140,7 @@ AVIF (2K): 0.8 MB      (85% reduction)
 ### JavaScript Performance
 
 **Measure frame time:**
+
 ```javascript
 let startTime = performance.now();
 // ... render call ...
@@ -137,6 +150,7 @@ console.log('Frame time:', (endTime - startTime).toFixed(2), 'ms');
 ```
 
 **Profile in DevTools:**
+
 ```
 1. DevTools → Performance
 2. Record for 10 seconds
@@ -152,6 +166,7 @@ console.log('Frame time:', (endTime - startTime).toFixed(2), 'ms');
 ### Setup Vitest Benchmarks
 
 **Create `src/utils/perf.bench.js`:**
+
 ```javascript
 import { bench, describe } from 'vitest';
 import * as kepler from './kepler.js';
@@ -166,6 +181,7 @@ describe('Performance', () => {
 ```
 
 **Run:**
+
 ```bash
 npm run test -- --run --reporter=verbose  # includes perf
 ```
@@ -173,6 +189,7 @@ npm run test -- --run --reporter=verbose  # includes perf
 ### GitHub Actions Tracking
 
 Add performance comment to CI (future enhancement):
+
 ```yaml
 - name: Store benchmark result
   run: npm run test:bench > benchmark-results.json
@@ -235,44 +252,48 @@ Use GitHub Actions to store metrics:
 
 Define acceptable limits:
 
-| Metric | Limit | Current |
-|--------|-------|---------|
-| **Bundle size** | <15MB | 10MB ✅ |
+| Metric             | Limit   | Current   |
+| ------------------ | ------- | --------- |
+| **Bundle size**    | <15MB   | 10MB ✅   |
 | **Load time (3G)** | <5000ms | 3500ms ✅ |
-| **FPS** | >45 | 50 ✅ |
-| **Memory** | <150MB | 80MB ✅ |
-| **Polygon count** | <1M | 700k ✅ |
+| **FPS**            | >45     | 50 ✅     |
+| **Memory**         | <150MB  | 80MB ✅   |
+| **Polygon count**  | <1M     | 700k ✅   |
 
 ## Tools & Resources
 
 ### Browser DevTools
+
 - **Chrome DevTools** (built-in)
 - **Firefox DevTools** (built-in)
 - **Safari Web Inspector** (built-in)
 
 ### Command Line
+
 - `npm run build` — Build size measurement
 - `npm run test` — Test suite performance
 - `du -sh` — File size analysis
 
 ### Online Tools
+
 - [WebP Compression Calculator](https://developers.google.com/speed/webp/download)
 - [Lighthouse](https://web.dev/lighthouse/) (DevTools built-in)
 - [Bundlephobia](https://bundlephobia.com/) (NPM package sizes)
 
 ### THREE.js Specific
+
 - [THREE.js Inspector](https://chrome.google.com/webstore/detail/threejs-inspector/egebmibhpjgkhpdeoliifofjgicdeihc) (Chrome extension)
 - [SpectorJS](https://spector.babylonjs.com/) (WebGL debugger)
 
 ## Common Bottlenecks & Solutions
 
-| Issue | Symptom | Solution | Tool |
-|-------|---------|----------|------|
-| **Large textures** | Load time >10s | Use WebP/AVIF | `npm run convert-textures` |
-| **High poly count** | FPS drops <30 | Enable LOD | DevTools WebGL Inspector |
-| **Memory leak** | RAM grows 10MB/min | Dispose textures | DevTools Memory |
-| **Slow JS** | Frame time >32ms | Profile code | DevTools Performance |
-| **Large bundle** | >20MB download | Code splitting | `du -sh dist/` |
+| Issue               | Symptom            | Solution         | Tool                       |
+| ------------------- | ------------------ | ---------------- | -------------------------- |
+| **Large textures**  | Load time >10s     | Use WebP/AVIF    | `npm run convert-textures` |
+| **High poly count** | FPS drops <30      | Enable LOD       | DevTools WebGL Inspector   |
+| **Memory leak**     | RAM grows 10MB/min | Dispose textures | DevTools Memory            |
+| **Slow JS**         | Frame time >32ms   | Profile code     | DevTools Performance       |
+| **Large bundle**    | >20MB download     | Code splitting   | `du -sh dist/`             |
 
 ## Reporting Results
 

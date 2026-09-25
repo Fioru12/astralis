@@ -19,6 +19,7 @@ npm run format       # Auto-format code
 
 # Testing
 npm run test         # Run test suite
+npm run test:e2e     # Run browser end-to-end tests
 
 # Texture optimization
 npm run convert-textures
@@ -36,9 +37,12 @@ npm run dev
 ```
 
 This starts a local dev server on `http://localhost:5173` with:
+
 - Hot module reloading (HMR) - changes appear instantly
 - Source maps for debugging
 - Fast rebuild times
+
+The port `4173` is reserved for temporary end-to-end test runs. If a browser tab shows a cascade of `503` errors on `@vite/client`, `main.js`, CSS or the manifest, the dev server is not running on that port. Start `npm run dev` and open `http://127.0.0.1:5173`, or explicitly start Vite with `npm run dev -- --port 4173`. The production Service Worker is disabled during development so it cannot mask a stopped/restarting Vite server with offline `503` fallbacks.
 
 ### 2. Making Changes
 
@@ -80,7 +84,12 @@ npm run test -- --watch
 
 # Generate coverage report
 npm run test -- --coverage
+
+# Run the essential browser flows
+npm run test:e2e
 ```
+
+At the first local run, install the Chromium runtime once with `npx playwright install chromium`.
 
 ### 4. Building for Production
 
@@ -89,6 +98,7 @@ npm run build
 ```
 
 This creates an optimized bundle in `dist/` with:
+
 - Code minification
 - Bundle splitting (three, gui, utils chunks)
 - No source maps (smaller size)
@@ -107,7 +117,7 @@ Visit `http://localhost:5000` to test the production build.
 
 ```
 src/
-├── main.js              (2100+ lines: render loop, scene setup)
+├── main.js              (~1360 lines: composition and render loop)
 ├── style.css            (Styling)
 ├── bodies/
 │   ├── creator.js       (Planet/moon creation)
@@ -122,7 +132,9 @@ src/
 ## Key Files to Edit
 
 ### Add new planet/moon
+
 Edit: `src/bodies/data.js`
+
 ```javascript
 export const PLANETS = [
   {
@@ -136,12 +148,15 @@ export const PLANETS = [
 ```
 
 ### Change rendering/animation
+
 Edit: `src/main.js` (main render loop in `animate()` function)
 
 ### Modify UI styling
+
 Edit: `src/style.css`
 
 ### Add orbital data
+
 Edit: `src/bodies/data.js`
 
 ## Common Tasks
@@ -200,7 +215,7 @@ See [GITHUB_PAGES_DEPLOYMENT.md](./GITHUB_PAGES_DEPLOYMENT.md) for details.
 ```javascript
 // In browser console (F12):
 // Check for WebGL errors
-gl.getError()
+gl.getError();
 
 // Monitor frame time
 console.time('frame');
@@ -223,22 +238,26 @@ npm run test -- --reporter=verbose
 ## Best Practices
 
 1. **Always run tests before pushing**
+
    ```bash
    npm run lint && npm run test
    ```
 
 2. **Keep commits small and focused**
+
    ```bash
    git commit -m "feature: add comet tail shader"
    git commit -m "fix: correct Kepler equation convergence"
    ```
 
 3. **Use meaningful branch names**
+
    ```bash
    git checkout -b feature/mobile-optimization
    ```
 
 4. **Document complex code**
+
    ```javascript
    // Kepler's equation solver using Newton-Raphson method
    // Converges to <1e-9 in typically 3-5 iterations

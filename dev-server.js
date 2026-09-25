@@ -12,12 +12,11 @@ const TIMEOUT_MS = 30000;
 
 let lastPing = Date.now();
 let hasConnected = false;
-let vite = null;
 let timer = null;
 
 // Launch Vite
 console.log('🚀 ASTRALIS dev server starting...');
-vite = spawn('npx', ['vite', '--port', VITE_PORT.toString()], {
+spawn('npx', ['vite', '--port', VITE_PORT.toString()], {
   stdio: 'inherit',
   shell: true,
 });

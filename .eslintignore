@@ -1,6 +1,0 @@
-node_modules
-dist
-backup_legacy
-assets/textures
-*.min.js
-.husky

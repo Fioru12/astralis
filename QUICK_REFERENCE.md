@@ -26,55 +26,61 @@ npm run serve-dist       # Preview production build locally
 
 ## 📂 Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/main.js` | Core render loop & scene setup (2100+ lines) |
-| `src/bodies/creator.js` | Planet/moon creation |
-| `src/bodies/data.js` | Orbital and physical data |
-| `src/utils/kepler.js` | Orbital mechanics calculations |
-| `src/utils/textureLoader.js` | Async texture loading |
-| `package.json` | Dependencies & scripts |
-| `vite.config.js` | Build configuration |
+| File                         | Purpose                                      |
+| ---------------------------- | -------------------------------------------- |
+| `src/main.js`                | Core render loop & scene setup (2100+ lines) |
+| `src/bodies/creator.js`      | Planet/moon creation                         |
+| `src/bodies/data.js`         | Orbital and physical data                    |
+| `src/utils/kepler.js`        | Orbital mechanics calculations               |
+| `src/utils/textureLoader.js` | Async texture loading                        |
+| `package.json`               | Dependencies & scripts                       |
+| `vite.config.js`             | Build configuration                          |
 
 ## 📖 Documentation
 
-| Guide | For |
-|-------|-----|
-| **DEVELOPMENT.md** | Quick start & dev workflow |
-| **ARCHITECTURE.md** | Technical deep dive |
-| **PERFORMANCE_BENCHMARKS.md** | Measuring & optimizing |
-| **TEXTURE_OPTIMIZATION.md** | Texture strategies |
-| **GITHUB_PAGES_DEPLOYMENT.md** | CI/CD & deployment |
-| **IMPROVEMENTS_SUMMARY.md** | Overview of all improvements |
+| Guide                          | For                          |
+| ------------------------------ | ---------------------------- |
+| **DEVELOPMENT.md**             | Quick start & dev workflow   |
+| **ARCHITECTURE.md**            | Technical deep dive          |
+| **PERFORMANCE_BENCHMARKS.md**  | Measuring & optimizing       |
+| **TEXTURE_OPTIMIZATION.md**    | Texture strategies           |
+| **GITHUB_PAGES_DEPLOYMENT.md** | CI/CD & deployment           |
+| **IMPROVEMENTS_SUMMARY.md**    | Overview of all improvements |
 
 ## 🔧 Common Tasks
 
 ### Start coding
+
 ```bash
 npm install
 npm run dev
 ```
 
 ### Before committing
+
 ```bash
 npm run lint && npm run test
 git add . && git commit -m "Your message"
 ```
-*(Husky will auto-format & lint)*
+
+_(Husky will auto-format & lint)_
 
 ### Optimize textures
+
 ```bash
 npm run convert-textures
 # Choose format: WebP (40% smaller) or AVIF (60% smaller)
 ```
 
 ### Deploy to GitHub Pages
+
 ```bash
 git push main  # Automatically triggers CI/CD
 # Check: Settings → Pages or Actions tab
 ```
 
 ### Check performance
+
 ```bash
 npm run build
 du -sh dist/           # Check build size
@@ -83,27 +89,27 @@ npm run serve-dist     # Test production locally
 
 ## 📊 Performance Targets
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Load time | <5s | ✅ 3-5s |
-| Bundle size | <15MB | ✅ 10MB |
-| FPS | >45 | ✅ 50 |
-| Memory | <150MB | ✅ 80MB |
-| Polygons | <1M | ✅ 700k |
+| Metric      | Target | Current |
+| ----------- | ------ | ------- |
+| Load time   | <5s    | ✅ 3-5s |
+| Bundle size | <15MB  | ✅ 10MB |
+| FPS         | >45    | ✅ 50   |
+| Memory      | <150MB | ✅ 80MB |
+| Polygons    | <1M    | ✅ 700k |
 
 ## 🎮 Keyboard Controls
 
-| Key | Action |
-|-----|--------|
-| **Mouse drag** | Rotate camera |
-| **Mouse scroll** | Zoom in/out |
-| **Shift + drag** | Pan camera |
-| **F** | Free flight mode |
-| **1** | Orbit mode |
-| **2** | Follow body |
-| **3** | Free look |
-| **TAB** | Toggle UI |
-| **ESC** | Cancel mode |
+| Key              | Action           |
+| ---------------- | ---------------- |
+| **Mouse drag**   | Rotate camera    |
+| **Mouse scroll** | Zoom in/out      |
+| **Shift + drag** | Pan camera       |
+| **F**            | Free flight mode |
+| **1**            | Orbit mode       |
+| **2**            | Follow body      |
+| **3**            | Free look        |
+| **TAB**          | Toggle UI        |
+| **ESC**          | Cancel mode      |
 
 ## 🛠️ Setup Checklist
 
@@ -118,21 +124,25 @@ npm run serve-dist     # Test production locally
 ## 💡 Pro Tips
 
 1. **Auto-format before commit:**
+
    ```bash
    npm run format
    ```
 
 2. **Fix linting errors automatically:**
+
    ```bash
    npm run lint -- --fix
    ```
 
 3. **Watch tests while developing:**
+
    ```bash
    npm run test -- --watch
    ```
 
 4. **Profile performance in Chrome:**
+
    - DevTools (F12) → Performance tab
    - Record 10 seconds of interaction
    - Check FPS and memory usage
@@ -153,26 +163,30 @@ npm run serve-dist     # Test production locally
 ## ❓ Troubleshooting
 
 **Port already in use?**
+
 ```bash
 npm run dev -- --port 5174
 ```
 
 **Build failing?**
+
 ```bash
 npm run lint -- --fix
 npm run build
 ```
 
 **Textures not loading?**
+
 - Check Network tab in DevTools
 - Verify `assets/textures/` exists
 - Try `npm run convert-textures`
 
 **Tests failing?**
+
 ```bash
 npm run test -- --run --reporter=verbose
 ```
 
 ---
 
-**Need help?** Check the full guides in the root folder (*.md files) or run `npm run roadmap` for more info.
+**Need help?** Check the full guides in the root folder (\*.md files) or run `npm run roadmap` for more info.
