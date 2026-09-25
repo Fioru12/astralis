@@ -15,7 +15,7 @@ const toneMapShader = {
   uniforms: {
     tDiffuse: { value: null },
     exposure: { value: 1.0 },
-    saturation: { value: 1.3 },
+    saturation: { value: 1.12 },
   },
   vertexShader: `
     varying vec2 vUv;
@@ -30,16 +30,6 @@ const toneMapShader = {
     uniform float saturation;
     varying vec2 vUv;
 
-    vec3 tonemap(vec3 x) {
-      // ACES Filmic tone mapping (simplified)
-      float a = 2.51;
-      float b = 0.03;
-      float c = 2.43;
-      float d = 0.59;
-      float e = 0.14;
-      return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
-    }
-
     vec3 saturation_adjust(vec3 rgb, float sat) {
       vec3 gray = vec3(dot(rgb, vec3(0.299, 0.587, 0.114)));
       return mix(gray, rgb, sat);
@@ -51,20 +41,18 @@ const toneMapShader = {
       // Apply exposure
       texel *= exposure;
 
-      // Tone mapping
-      texel = tonemap(texel);
-
-      // Saturation boost
+      // ACES tone mapping is already performed by the renderer. Reapplying it
+      // here crushes blacks and desaturates the planet textures.
       texel = saturation_adjust(texel, saturation);
 
       // Subtle vignette
       vec2 uv = vUv - 0.5;
-      float vignette = 1.0 - dot(uv, uv) * 0.5;
-      texel *= mix(0.85, 1.0, vignette);
+      float vignette = 1.0 - dot(uv, uv) * 0.25;
+      texel *= mix(0.93, 1.0, vignette);
 
       gl_FragColor = vec4(texel, 1.0);
     }
-  `
+  `,
 };
 
 export function setupPostProcessing(renderer, scene, camera) {
@@ -77,9 +65,9 @@ export function setupPostProcessing(renderer, scene, camera) {
   // Enhanced bloom effect for Sun and glowing objects
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    1.2,   // strength (refined for elegant glow, not overwhelming)
-    0.4,   // radius (medium bloom spread)
-    0.85   // threshold (only brightest objects bloom)
+    1.2, // strength (refined for elegant glow, not overwhelming)
+    0.4, // radius (medium bloom spread)
+    0.85 // threshold (only brightest objects bloom)
   );
   bloomPass.renderToScreen = false;
   composer.addPass(bloomPass);
@@ -90,10 +78,10 @@ export function setupPostProcessing(renderer, scene, camera) {
     scene,
     camera
   );
-  outlinePass.edgeStrength = 1.8;  // Subtle, elegant outline
-  outlinePass.edgeGlow = 0.2;      // Minimal glow for cleanliness
+  outlinePass.edgeStrength = 1.8; // Subtle, elegant outline
+  outlinePass.edgeGlow = 0.2; // Minimal glow for cleanliness
   outlinePass.edgeThickness = 0.8; // Thinner, more refined
-  outlinePass.visibleEdgeColor.set(0x5bc4cf);  // Softer cyan (matches theme)
+  outlinePass.visibleEdgeColor.set(0x5bc4cf); // Softer cyan (matches theme)
   outlinePass.hiddenEdgeColor.set(0x000000);
   outlinePass.usePatternTexture = false;
   outlinePass.renderToScreen = false;

@@ -18,7 +18,9 @@ export function detectLang() {
   return locales[browser] ? browser : 'it';
 }
 
-export function getLang() { return currentLang; }
+export function getLang() {
+  return currentLang;
+}
 
 export function setLang(lang) {
   if (!locales[lang]) return;
@@ -44,9 +46,12 @@ export function tPlural(key, count, params) {
   const dict = locales[currentLang] || locales.it;
   const plurals = dict[key + '_plural'];
   if (!plurals) return t(key, { ...params, count });
-  const rule = (typeof Intl !== 'undefined' && Intl.PluralRules)
-    ? new Intl.PluralRules(currentLang).select(count)
-    : (count === 1 ? 'one' : 'other');
+  const rule =
+    typeof Intl !== 'undefined' && Intl.PluralRules
+      ? new Intl.PluralRules(currentLang).select(count)
+      : count === 1
+      ? 'one'
+      : 'other';
   let str = plurals[rule] || plurals.other || plurals.one || key;
   if (params) {
     Object.keys(params).forEach((k) => {

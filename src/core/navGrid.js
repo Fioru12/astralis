@@ -17,8 +17,8 @@ export function createNavGrid() {
   const group = new THREE.Group();
   group.name = 'navGrid';
 
-  const SIZE = 6400;      // ~40 AU di raggio (fino a Plutone)
-  const DIVISIONS = 32;   // celle da 200 unità (~2.5 AU)
+  const SIZE = 6400; // ~40 AU di raggio (fino a Plutone)
+  const DIVISIONS = 32; // celle da 200 unità (~2.5 AU)
 
   // Piano centrale sull'eclittica (y = 0)
   const main = new THREE.GridHelper(SIZE, DIVISIONS, NAV_DIM, NAV_DIM);

@@ -50,7 +50,7 @@ const godRaysShader = {
       vec3 texel = texture2D(tDiffuse, vUv).rgb;
       gl_FragColor = vec4(texel + ray * 0.3, 1.0);
     }
-  `
+  `,
 };
 
 export function createGodRaysPass() {
@@ -74,10 +74,7 @@ export function updateGodRaysPosition(godRaysPass, sunPos, camera, renderer) {
   const x = (vector.x * 0.5 + 0.5) * canvas.clientWidth;
   const y = (vector.y * -0.5 + 0.5) * canvas.clientHeight;
 
-  const lightPos = new THREE.Vector2(
-    x / canvas.clientWidth,
-    y / canvas.clientHeight
-  );
+  const lightPos = new THREE.Vector2(x / canvas.clientWidth, y / canvas.clientHeight);
 
   godRaysPass.uniforms.lightPos.value = lightPos;
 }

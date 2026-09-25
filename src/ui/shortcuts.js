@@ -8,34 +8,35 @@ const SHORTCUTS = [
     section: 'shortcuts_general',
     items: [
       { key: 'Space / K', desc: 'shortcut_pause' },
-      { key: 'R',         desc: 'shortcut_reset_cam' },
-      { key: 'N',         desc: 'shortcut_now' },
-      { key: 'H',         desc: 'shortcut_help' },
-      { key: 'P',         desc: 'shortcut_settings' },
-      { key: 'Ctrl+K',    desc: 'shortcut_command' },
-      { key: 'V',         desc: 'shortcut_presets' },
-      { key: 'TAB',       desc: 'shortcut_inv' },
-      { key: 'T',         desc: 'shortcut_theme' },
-      { key: 'L',         desc: 'shortcut_lang' },
-      { key: 'ESC',       desc: 'shortcut_esc' },
+      { key: 'R', desc: 'shortcut_reset_cam' },
+      { key: 'N', desc: 'shortcut_now' },
+      { key: 'H', desc: 'shortcut_help' },
+      { key: 'P', desc: 'shortcut_settings' },
+      { key: 'Ctrl+K', desc: 'shortcut_command' },
+      { key: 'V', desc: 'shortcut_presets' },
+      { key: 'TAB', desc: 'shortcut_inv' },
+      { key: 'T', desc: 'shortcut_theme' },
+      { key: 'L', desc: 'shortcut_lang' },
+      { key: 'M', desc: 'shortcut_minimap' },
+      { key: 'ESC', desc: 'shortcut_esc' },
     ],
   },
   {
     section: 'shortcuts_camera',
     items: [
-      { key: 'Mouse Drag',     desc: 'shortcut_rotate' },
-      { key: 'Scroll',         desc: 'shortcut_zoom' },
-      { key: 'Shift + Drag',   desc: 'shortcut_pan' },
-      { key: 'Double Click',   desc: 'shortcut_double_click' },
-      { key: 'WASD / Arrows',  desc: 'shortcut_wasd' },
+      { key: 'Mouse Drag', desc: 'shortcut_rotate' },
+      { key: 'Scroll', desc: 'shortcut_zoom' },
+      { key: 'Shift + Drag', desc: 'shortcut_pan' },
+      { key: 'Double Click', desc: 'shortcut_double_click' },
+      { key: 'WASD / Arrows', desc: 'shortcut_wasd' },
     ],
   },
   {
     section: 'shortcuts_time',
     items: [
-      { key: '[',          desc: 'shortcut_year_back' },
-      { key: ']',          desc: 'shortcut_year_fwd' },
-      { key: 'Shift+[/]',  desc: 'shortcut_decade' },
+      { key: '[', desc: 'shortcut_year_back' },
+      { key: ']', desc: 'shortcut_year_fwd' },
+      { key: 'Shift+[/]', desc: 'shortcut_decade' },
     ],
   },
 ];
@@ -78,7 +79,8 @@ export class ShortcutsPanel {
     this.panel.id = 'shortcutsPanel';
     Object.assign(this.panel.style, {
       position: 'fixed',
-      top: '50%', left: '50%',
+      top: '50%',
+      left: '50%',
       transform: 'translate(-50%, -50%) scale(0.95)',
       width: 'min(520px, 92vw)',
       maxHeight: '85vh',
@@ -95,16 +97,19 @@ export class ShortcutsPanel {
       transition: 'opacity 0.25s ease, transform 0.25s ease',
     });
 
-    const sections = SHORTCUTS.map(group => {
-      const items = group.items.map(item =>
-        `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;
+    const sections = SHORTCUTS.map((group) => {
+      const items = group.items
+        .map(
+          (item) =>
+            `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;
           border-bottom:1px solid rgba(255,255,255,0.04);gap:12px;">
           <span style="color:rgba(228,234,248,0.7);font-size:12.5px;">${t(item.desc)}</span>
           <kbd style="background:rgba(91,196,207,0.12);border:1px solid rgba(91,196,207,0.3);
             color:#5bc4cf;padding:3px 10px;border-radius:6px;font-size:11px;font-family:monospace;
             white-space:nowrap;">${item.key}</kbd>
         </div>`
-      ).join('');
+        )
+        .join('');
 
       return `
         <div style="margin-bottom:18px;">
@@ -118,7 +123,9 @@ export class ShortcutsPanel {
     this.panel.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;
         padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.08);">
-        <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#5bc4cf;">${t('shortcuts_title')}</h2>
+        <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#5bc4cf;">${t(
+          'shortcuts_title'
+        )}</h2>
         <button id="scClose" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);
           color:rgba(228,234,248,0.7);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;
           display:flex;align-items:center;justify-content:center;">✕</button>

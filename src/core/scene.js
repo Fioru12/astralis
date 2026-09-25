@@ -13,7 +13,10 @@ export function createScene(textureLoader) {
   const scene = new THREE.Scene();
 
   // Carica texture sfondo (Via Lattea) con fallback procedurale mozzafiato
-  const mwTex = textureLoader.load('./assets/textures/8k_stars_milky_way.jpg', generateProceduralMilkyWay);
+  const mwTex = textureLoader.load(
+    './assets/textures/optimized/8k_stars_milky_way.webp',
+    generateProceduralMilkyWay
+  );
   mwTex.mapping = THREE.EquirectangularReflectionMapping;
   mwTex.minFilter = THREE.LinearMipmapLinearFilter;
   mwTex.magFilter = THREE.LinearFilter;
@@ -28,9 +31,9 @@ export function createScene(textureLoader) {
  * Crea e configura il renderer
  */
 export function createRenderer() {
-  const renderer = new THREE.WebGLRenderer({ 
-    antialias: true, 
-    logarithmicDepthBuffer: true 
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    logarithmicDepthBuffer: true,
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -47,9 +50,9 @@ export function createRenderer() {
  */
 export function createCamera() {
   const camera = new THREE.PerspectiveCamera(
-    55, 
-    window.innerWidth / window.innerHeight, 
-    0.1, 
+    55,
+    window.innerWidth / window.innerHeight,
+    0.1,
     500000
   );
   return camera;

@@ -101,22 +101,22 @@ const sunFragmentShader = `
  */
 export function createAdvancedSun(radius, textureUrl, manager) {
   const geometry = new THREE.SphereGeometry(radius, 64, 64);
-  
+
   const loader = new THREE.TextureLoader(manager);
   const sunTexture = loader.load(textureUrl);
-  
+
   const material = new THREE.ShaderMaterial({
     uniforms: {
       sunTexture: { value: sunTexture },
       time: { value: 0 },
-      intensity: { value: 1.6 },
+      intensity: { value: 1.1 },
     },
     vertexShader: sunVertexShader,
     fragmentShader: sunFragmentShader,
     fog: false,
-    side: THREE.BackSide,
+    side: THREE.FrontSide,
   });
-  
+
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = 'advancedSun';
   mesh.userData.material = material;
@@ -132,13 +132,15 @@ export function createAdvancedSun(radius, textureUrl, manager) {
  */
 export function createSunCorona(innerRadius, outerRadius) {
   const geometry = new THREE.RingGeometry(innerRadius, outerRadius, 128, 4);
-  
+
   const material = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
       intensity: { value: 1.0 },
       colorInner: { value: new THREE.Color(0xffee66) },
       colorOuter: { value: new THREE.Color(0xff7722) },
+      innerRadius: { value: innerRadius },
+      outerRadius: { value: outerRadius },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -154,6 +156,8 @@ export function createSunCorona(innerRadius, outerRadius) {
       uniform float intensity;
       uniform vec3 colorInner;
       uniform vec3 colorOuter;
+      uniform float innerRadius;
+      uniform float outerRadius;
       varying vec2 vUv;
       varying vec3 vPosition;
       
@@ -174,7 +178,7 @@ export function createSunCorona(innerRadius, outerRadius) {
       
       void main() {
         float dist = length(vPosition.xy);
-        float normalizedDist = (dist - 18.0) / (50.0 - 18.0);
+        float normalizedDist = (dist - innerRadius) / max(outerRadius - innerRadius, 0.001);
         normalizedDist = clamp(normalizedDist, 0.0, 1.0);
         
         // Corona con noise
@@ -187,7 +191,7 @@ export function createSunCorona(innerRadius, outerRadius) {
         vec3 color = mix(colorInner, colorOuter, normalizedDist);
         color += vec3(0.2, 0.1, 0.0) * coronaNoise;
         
-        gl_FragColor = vec4(color, alpha * 0.6);
+        gl_FragColor = vec4(color, alpha * 0.42);
       }
     `,
     transparent: true,
@@ -195,7 +199,7 @@ export function createSunCorona(innerRadius, outerRadius) {
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   });
-  
+
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = 'sunCorona';
   mesh.userData.material = material;

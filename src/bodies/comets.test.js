@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { cometVisualA, cometPosFromAngle, cometAngSpeed } from './comets.js';
-import { AU } from '../utils/constants.js';
 
 const mockComet = { a: 17.834, e: 0.96714, I: 162.26, w: 111.33, O: 58.42, color: 0x00ffff };
 

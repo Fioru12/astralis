@@ -100,7 +100,7 @@ const ATMOSPHERE_EFFECTS = {
  */
 function createCloudLayer(radius, config, scale, opacityMul) {
   const geometry = new THREE.SphereGeometry(radius * (scale || 1.02), 48, 24);
-  
+
   const material = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
@@ -188,8 +188,16 @@ function createCloudLayer(radius, config, scale, opacityMul) {
  * @returns {THREE.Mesh}
  */
 function createAuroraEffect(radius, config) {
-  const geometry = new THREE.SphereGeometry(radius * 1.08, 48, 24, 0, Math.PI * 2, 0, Math.PI * 0.3);
-  
+  const geometry = new THREE.SphereGeometry(
+    radius * 1.08,
+    48,
+    24,
+    0,
+    Math.PI * 2,
+    0,
+    Math.PI * 0.3
+  );
+
   const material = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
@@ -320,7 +328,7 @@ export function addAtmosphereEffects(body, planetKey) {
     body.atmosphereGlow = glow;
   }
 
-    // Aggiungi nuvole (doppio strato per pianeti principali)
+  // Aggiungi nuvole (doppio strato per pianeti principali)
   if (config.clouds) {
     const clouds = createCloudLayer(radius, config, 1.02, 1.0);
     body.pivot.add(clouds);
@@ -346,16 +354,15 @@ export function addAtmosphereEffects(body, planetKey) {
  * @param {Object} body - Corpo celeste
  * @param {number} dt - Delta time
  */
-export function updateAtmosphereEffects(body, camera) {
+export function updateAtmosphereEffects(body) {
   const time = performance.now() / 1000;
 
-  [body.clouds, body.upperClouds].forEach(c => {
+  [body.clouds, body.upperClouds].forEach((c) => {
     if (c && c.userData.material) c.userData.material.uniforms.time.value = time;
   });
   if (body.aurora && body.aurora.userData.material) {
     body.aurora.userData.material.uniforms.time.value = time;
   }
-
 }
 
 /**

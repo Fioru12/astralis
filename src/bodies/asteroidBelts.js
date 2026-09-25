@@ -32,7 +32,7 @@ export function generateAsteroidBelt(innerRadius, outerRadius, count, color) {
     dummy.position.set(
       Math.cos(angle) * radius,
       Math.sin(angle) * radius * Math.sin(inclination),
-      Math.sin(angle) * radius * Math.cos(inclination),
+      Math.sin(angle) * radius * Math.cos(inclination)
     );
     dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
     dummy.scale.set(scale, scale, scale);
@@ -48,7 +48,7 @@ export function updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused) {
   if (paused) return;
   const asteroidSpeed = mult * 0.1;
   const dummy = new THREE.Object3D();
-  [mainBelt, kuiperBelt].forEach(belt => {
+  [mainBelt, kuiperBelt].forEach((belt) => {
     if (!belt || !belt.userData?.orbitalData) return;
     const data = belt.userData.orbitalData;
     const count = data.angles.length;
@@ -57,7 +57,7 @@ export function updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused) {
       dummy.position.set(
         Math.cos(data.angles[i]) * data.radii[i],
         Math.sin(data.angles[i]) * data.radii[i] * Math.sin(data.inclinations[i]),
-        Math.sin(data.angles[i]) * data.radii[i] * Math.cos(data.inclinations[i]),
+        Math.sin(data.angles[i]) * data.radii[i] * Math.cos(data.inclinations[i])
       );
       dummy.rotation.set(data.angles[i] * 0.5, data.angles[i] * 0.3, 0);
       dummy.scale.set(data.scales[i], data.scales[i], data.scales[i]);
@@ -69,7 +69,7 @@ export function updateAsteroidBelts(mainBelt, kuiperBelt, mult, paused) {
 }
 
 export function createDustBelts(scene) {
-  (function() {
+  (function () {
     const N = 6000;
     const pos = new Float32Array(N * 3);
     const col = new Float32Array(N * 3);
@@ -80,27 +80,37 @@ export function createDustBelts(scene) {
     for (let i = 0; i < N; i++) {
       const r = (2.1 + Math.random() * 1.2) * AU;
       const a = Math.random() * Math.PI * 2;
-      ang[i] = a; rad[i] = r;
+      ang[i] = a;
+      rad[i] = r;
       spd[i] = (6e-5 + Math.random() * 1e-4) * (Math.random() < 0.5 ? 1 : -1);
       yy[i] = (Math.random() - 0.5) * 14;
       pos[i * 3] = Math.cos(a) * r;
       pos[i * 3 + 1] = yy[i];
       pos[i * 3 + 2] = Math.sin(a) * r;
       const w = Math.random() > 0.5;
-      col[i * 3] = w ? 0.9 : (0.6 + Math.random() * 0.2);
-      col[i * 3 + 1] = w ? 0.7 : (0.65 + Math.random() * 0.2);
-      col[i * 3 + 2] = w ? 0.3 : (0.8 + Math.random() * 0.2);
+      col[i * 3] = w ? 0.9 : 0.6 + Math.random() * 0.2;
+      col[i * 3 + 1] = w ? 0.7 : 0.65 + Math.random() * 0.2;
+      col[i * 3 + 2] = w ? 0.3 : 0.8 + Math.random() * 0.2;
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
-      size: 2.2, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.85,
-    })));
+    const dust = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        size: 2.2,
+        sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.85,
+      })
+    );
+    dust.name = 'mainDustBelt';
+    scene.add(dust);
     scene.userData.belt = { geo, ang, rad, spd, yy, N, pos };
   })();
 
-  (function() {
+  (function () {
     const N = 3500;
     const pos = new Float32Array(N * 3);
     const col = new Float32Array(N * 3);
@@ -111,7 +121,8 @@ export function createDustBelts(scene) {
     for (let i = 0; i < N; i++) {
       const r = (30 + Math.random() * 20) * AU;
       const a = Math.random() * Math.PI * 2;
-      ang[i] = a; rad[i] = r;
+      ang[i] = a;
+      rad[i] = r;
       spd[i] = (5e-6 + Math.random() * 1e-5) * (Math.random() < 0.5 ? 1 : -1);
       yy[i] = (Math.random() - 0.5) * AU * 3;
       pos[i * 3] = Math.cos(a) * r;
@@ -124,9 +135,18 @@ export function createDustBelts(scene) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    scene.add(new THREE.Points(geo, new THREE.PointsMaterial({
-      size: 1.8, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.55,
-    })));
+    const dust = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        size: 1.8,
+        sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.55,
+      })
+    );
+    dust.name = 'kuiperDustBelt';
+    scene.add(dust);
     scene.userData.kuiper = { geo, ang, rad, spd, yy, N, pos };
   })();
 }
@@ -154,8 +174,12 @@ export function createOortCloud(scene) {
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
   const mat = new THREE.PointsMaterial({
-    size: 3, sizeAttenuation: true, vertexColors: true,
-    transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending,
+    size: 3,
+    sizeAttenuation: true,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.4,
+    blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
   const cloud = new THREE.Points(geo, mat);
@@ -189,7 +213,9 @@ export function updateDustBelts(scene, dt, mult) {
   if (oort) {
     for (let i = 0; i < oort.N; i++) {
       const idx = i * 3;
-      const x = oort.pos[idx], y = oort.pos[idx + 1], z = oort.pos[idx + 2];
+      const x = oort.pos[idx],
+        y = oort.pos[idx + 1],
+        z = oort.pos[idx + 2];
       const r = Math.sqrt(x * x + y * y + z * z);
       const theta = Math.atan2(z, x) + oort.speed * dt * mult;
       const phi = Math.acos(y / r);
@@ -201,14 +227,30 @@ export function updateDustBelts(scene, dt, mult) {
   }
 }
 
-export function buildAsteroidBody(def, aGroup, meshList, hitboxList, ui, allBodies, selectBody, getTimeOffset) {
+export function buildAsteroidBody(
+  def,
+  aGroup,
+  meshList,
+  hitboxList,
+  ui,
+  allBodies,
+  selectBody,
+  getTimeOffset
+) {
   const pivot = new THREE.Group();
   const mat = new THREE.MeshStandardMaterial({
-    roughness: 0.9, metalness: 0.1,
+    roughness: 0.9,
+    metalness: 0.1,
   });
   const procTex = getProceduralPlanetTexture({ key: def.key, type: 'asteroid', color: def.color });
-  if (procTex) { mat.map = procTex; mat.needsUpdate = true; }
-  else { mat.color = new THREE.Color(def.color); mat.emissive = new THREE.Color(def.color); mat.emissiveIntensity = 0.15; }
+  if (procTex) {
+    mat.map = procTex;
+    mat.needsUpdate = true;
+  } else {
+    mat.color = new THREE.Color(def.color);
+    mat.emissive = new THREE.Color(def.color);
+    mat.emissiveIntensity = 0.15;
+  }
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(def.radius, 16, 16), mat);
   mesh.castShadow = true;
   mesh.userData.bodyKey = def.key;
@@ -216,7 +258,10 @@ export function buildAsteroidBody(def, aGroup, meshList, hitboxList, ui, allBodi
   pivot.add(mesh);
   meshList.push(mesh);
 
-  const hitbox = new THREE.Mesh(new THREE.SphereGeometry(def.radius * 3, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+  const hitbox = new THREE.Mesh(
+    new THREE.SphereGeometry(def.radius * 3, 8, 8),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
   hitbox.userData.bodyKey = def.key;
   pivot.add(hitbox);
   hitboxList.push(hitbox);
@@ -235,28 +280,58 @@ export function buildAsteroidBody(def, aGroup, meshList, hitboxList, ui, allBodi
     labelEl.style.cursor = 'pointer';
     const capturedDef = def;
     labelEl.addEventListener('click', () => {
-      const b = allBodies.find(x => x.key === capturedDef.key);
+      const b = allBodies.find((x) => x.key === capturedDef.key);
       if (b) selectBody(b);
     });
     ui.labelsLayer.appendChild(labelEl);
   }
 
   const body = {
-    ...def, pivot, mesh, glow, labelEl, visualR: def.radius, type: 'asteroid',
-    getPos: T => {
+    ...def,
+    pivot,
+    mesh,
+    glow,
+    labelEl,
+    visualR: def.radius,
+    type: 'asteroid',
+    getPos: (T) => {
       const el = ORBITAL_ELEMENTS[def.key];
-      if (!el) return new THREE.Vector3();
-      const a = el.a0 + el.a1 * T, e = el.e0 + el.e1 * T;
-      const I = (el.I0 + el.I1 * T) * DEG, lp = el.p0 + el.p1 * T, ln = el.n0 + el.n1 * T;
-      const w = (lp - ln) * DEG, O = ln * DEG;
-      const ci = Math.cos(I), si = Math.sin(I), cO = Math.cos(O), sO = Math.sin(O), cw = Math.cos(w), sw = Math.sin(w);
+      if (!el) {
+        // Never stack an incomplete catalogue entry at the origin/Sun.
+        // A deterministic fallback keeps it explorable until full elements are added.
+        const radius = Math.max((parseFloat(def.distAU) || 1) * AU, 80);
+        const phase = [...def.key].reduce((sum, char) => sum + char.charCodeAt(0), 0) * 0.17;
+        return new THREE.Vector3(
+          Math.cos(phase) * radius,
+          Math.sin(phase * 0.5) * radius * 0.08,
+          Math.sin(phase) * radius
+        );
+      }
+      const a = el.a0 + el.a1 * T,
+        e = el.e0 + el.e1 * T;
+      const I = (el.I0 + el.I1 * T) * DEG,
+        lp = el.p0 + el.p1 * T,
+        ln = el.n0 + el.n1 * T;
+      const w = (lp - ln) * DEG,
+        O = ln * DEG;
+      const ci = Math.cos(I),
+        si = Math.sin(I),
+        cO = Math.cos(O),
+        sO = Math.sin(O),
+        cw = Math.cos(w),
+        sw = Math.sin(w);
       const offset = typeof getTimeOffset === 'function' ? getTimeOffset() : 0;
-      const E = (Date.now() + offset) / (def.period * 1000 * 365.25 * 24 * 3600 * 1000) * Math.PI * 2;
-      const xP = a * (Math.cos(E) - e), yP = a * (Math.sqrt(1 - e * e) * Math.sin(E));
+      // `period` is presentation text (for example "3.6 anni"). Parse its
+      // numeric value defensively so invalid data can never poison positions.
+      const periodYears = Number(def.orbitalPeriodYears ?? parseFloat(def.period));
+      if (!Number.isFinite(periodYears) || periodYears <= 0) return new THREE.Vector3();
+      const E = ((Date.now() + offset) / (periodYears * 365.25 * 24 * 3600 * 1000)) * Math.PI * 2;
+      const xP = a * (Math.cos(E) - e),
+        yP = a * (Math.sqrt(1 - e * e) * Math.sin(E));
       return new THREE.Vector3(
         ((cw * cO - sw * sO * ci) * xP + (-sw * cO - cw * sO * ci) * yP) * AU,
-        ((sw * si) * xP + (cw * si) * yP) * AU,
-        ((cw * sO + sw * cO * ci) * xP + (-sw * sO + cw * cO * ci) * yP) * AU,
+        (sw * si * xP + cw * si * yP) * AU,
+        ((cw * sO + sw * cO * ci) * xP + (-sw * sO + cw * cO * ci) * yP) * AU
       );
     },
   };

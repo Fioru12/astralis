@@ -69,10 +69,26 @@ function createStarLayer(parallaxFactor, starCount, size, layerName, bandBias = 
     // Temperatura colore realistica: molte bianco-azzurre, alcune calde, poche rosse
     const t = Math.random();
     let cr, cg, cb;
-    if (t < 0.55) { cr = 0.78; cg = 0.86; cb = 1.0; }        // bianco-azzurro (maggioranza)
-    else if (t < 0.82) { cr = 1.0; cg = 1.0; cb = 0.96; }    // bianco
-    else if (t < 0.95) { cr = 1.0; cg = 0.88; cb = 0.66; }   // giallo-arancio
-    else { cr = 1.0; cg = 0.70; cb = 0.55; }                 // rossastra (rara)
+    if (t < 0.55) {
+      cr = 0.78;
+      cg = 0.86;
+      cb = 1.0;
+    } // bianco-azzurro (maggioranza)
+    else if (t < 0.82) {
+      cr = 1.0;
+      cg = 1.0;
+      cb = 0.96;
+    } // bianco
+    else if (t < 0.95) {
+      cr = 1.0;
+      cg = 0.88;
+      cb = 0.66;
+    } // giallo-arancio
+    else {
+      cr = 1.0;
+      cg = 0.7;
+      cb = 0.55;
+    } // rossastra (rara)
 
     // Luminosità a legge di potenza: tantissime deboli, pochissime brillanti.
     // Applicata al colore perché PointsMaterial ignora l'attributo size.
@@ -145,7 +161,7 @@ function createMilkyWay() {
 }
 
 export function updateStarfieldParallax(starfieldGroup, camera) {
-  starfieldGroup.children.forEach(child => {
+  starfieldGroup.children.forEach((child) => {
     if (child.userData.parallaxFactor) {
       // Apply subtle parallax based on camera movement
       const factor = child.userData.parallaxFactor;

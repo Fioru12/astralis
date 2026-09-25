@@ -27,7 +27,7 @@ export class ToastManager {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.textContent = message;
-    
+
     this.container.appendChild(toast);
 
     // Auto-remove after duration

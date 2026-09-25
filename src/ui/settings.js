@@ -4,6 +4,10 @@
  */
 
 import { getLang, setLang, applyI18nToDOM } from '../i18n/index.js';
+import { themeManager } from '../core/theme.js';
+import { a11y } from '../core/a11y.js';
+import { trapFocus } from '../utils/focusTrap.js';
+import { soundManager } from '../core/soundManager.js';
 
 class SettingsPanel {
   constructor() {
@@ -11,6 +15,7 @@ class SettingsPanel {
     this.isOpen = false;
     this.overlay = null;
     this.onChangeCallbacks = [];
+    this.lastFocused = null;
   }
 
   init() {
@@ -30,36 +35,41 @@ class SettingsPanel {
     this.panel = document.createElement('div');
     this.panel.className = 'settings-panel';
     this.panel.id = 'settingsPanel';
+    this.panel.setAttribute('role', 'dialog');
+    this.panel.setAttribute('aria-modal', 'true');
+    this.panel.setAttribute('aria-labelledby', 'settingsTitle');
+    this.panel.setAttribute('aria-hidden', 'true');
+    this.panel.inert = true;
     this.panel.innerHTML = `
       <div class="settings-header">
-        <h3>⚙️ Impostazioni</h3>
-        <button class="settings-close" id="settingsClose" aria-label="Chiudi impostazioni">✕</button>
+        <h3 id="settingsTitle" data-i18n="settings_title">⚙️ Impostazioni</h3>
+        <button class="settings-close" id="settingsClose" aria-label="Chiudi impostazioni" data-i18n-aria="settings_close">✕</button>
       </div>
       <div class="settings-content">
         <!-- Theme -->
         <div class="settings-section">
-          <h4>🎨 Aspetto</h4>
+          <h4 data-i18n="settings_appearance">🎨 Aspetto</h4>
           <div class="settings-row">
-            <label for="themeSelect">Tema</label>
+            <label for="themeSelect" data-i18n="settings_theme">Tema</label>
             <select id="themeSelect" class="settings-select">
-              <option value="dark">🌙 Scuro</option>
-              <option value="light">☀️ Chiaro</option>
+              <option value="dark" data-i18n="theme_dark">🌙 Scuro</option>
+              <option value="light" data-i18n="theme_light">☀️ Chiaro</option>
             </select>
           </div>
           <div class="settings-row">
-            <label for="hudSelect">Stile HUD</label>
+            <label for="hudSelect" data-i18n="settings_hud">Stile HUD</label>
             <select id="hudSelect" class="settings-select">
-              <option value="standard">✨ Standard</option>
-              <option value="nav">🛰️ Navigation Computer</option>
+              <option value="standard" data-i18n="hud_standard">✨ Standard</option>
+              <option value="nav" data-i18n="hud_navigation">🛰️ Navigation Computer</option>
             </select>
           </div>
         </div>
 
         <!-- Lingua -->
         <div class="settings-section">
-          <h4>🌐 Lingua</h4>
+          <h4 data-i18n="settings_language_section">🌐 Lingua</h4>
           <div class="settings-row">
-            <label for="langSelect">Lingua interfaccia</label>
+            <label for="langSelect" data-i18n="settings_language">Lingua interfaccia</label>
             <select id="langSelect" class="settings-select">
               <option value="it">🇮🇹 Italiano</option>
               <option value="en">🇬🇧 English</option>
@@ -69,43 +79,57 @@ class SettingsPanel {
 
         <!-- Accessibilità -->
         <div class="settings-section">
-          <h4>♿ Accessibilità</h4>
+          <h4 data-i18n="settings_accessibility">♿ Accessibilità</h4>
           <div class="settings-row">
-            <label for="reduceMotion">Riduci animazioni</label>
+            <label for="reduceMotion" data-i18n="a11y_reduce_motion">Riduci animazioni</label>
             <input type="checkbox" id="reduceMotion" class="settings-toggle" />
           </div>
           <div class="settings-row">
-            <label for="highContrast">Alto contrasto</label>
+            <label for="highContrast" data-i18n="a11y_high_contrast">Alto contrasto</label>
             <input type="checkbox" id="highContrast" class="settings-toggle" />
           </div>
           <div class="settings-row">
-            <label for="largeText">Testo grande</label>
+            <label for="largeText" data-i18n="a11y_large_text">Testo grande</label>
             <input type="checkbox" id="largeText" class="settings-toggle" />
           </div>
         </div>
 
         <!-- Performance -->
         <div class="settings-section">
-          <h4>⚡ Performance</h4>
+          <h4 data-i18n="settings_performance">⚡ Performance</h4>
           <div class="settings-row">
-            <label for="qualitySelect">Qualità grafica</label>
+            <label for="qualitySelect" data-i18n="settings_quality">Qualità grafica</label>
             <select id="qualitySelect" class="settings-select">
-              <option value="low">Bassa (più FPS)</option>
-              <option value="medium">Media</option>
-              <option value="high" selected>Alta</option>
+              <option value="auto" selected data-i18n="quality_auto">Automatica (consigliata)</option>
+              <option value="low" data-i18n="quality_low">Bassa (più FPS)</option>
+              <option value="medium" data-i18n="quality_medium">Media</option>
+              <option value="high" data-i18n="quality_high">Alta</option>
             </select>
           </div>
           <div class="settings-row">
-            <label for="showFPS">Mostra FPS</label>
+            <label for="showFPS" data-i18n="settings_show_fps">Mostra FPS</label>
             <input type="checkbox" id="showFPS" class="settings-toggle" />
+          </div>
+        </div>
+
+        <!-- Audio -->
+        <div class="settings-section">
+          <h4 data-i18n="settings_audio">🔊 Audio</h4>
+          <div class="settings-row">
+            <label for="soundEnabled">Effetti & Risonanze</label>
+            <input type="checkbox" id="soundEnabled" class="settings-toggle" />
+          </div>
+          <div class="settings-row">
+            <label for="volumeSlider">Volume</label>
+            <input type="range" id="volumeSlider" class="settings-slider" min="0" max="1" step="0.05" value="0.7" />
           </div>
         </div>
 
         <!-- Info -->
         <div class="settings-section settings-info">
-          <h4>ℹ️ Informazioni</h4>
+          <h4 data-i18n="settings_info">ℹ️ Informazioni</h4>
           <p class="settings-version">ASTRALIS v2.0</p>
-          <p class="settings-hint">Le impostazioni vengono salvate automaticamente nel browser.</p>
+          <p class="settings-hint" data-i18n="settings_saved_hint">Le impostazioni vengono salvate automaticamente nel browser.</p>
         </div>
       </div>
     `;
@@ -122,7 +146,9 @@ class SettingsPanel {
 
     // Escape key
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isOpen) this.close();
+      if (!this.isOpen) return;
+      if (e.key === 'Escape') this.close();
+      else trapFocus(this.panel, e);
     });
 
     // Theme select
@@ -172,16 +198,36 @@ class SettingsPanel {
     showFPS?.addEventListener('change', (e) => {
       this._setShowFPS(e.target.checked);
     });
+
+    // Sound toggle
+    const soundEnabled = this.panel.querySelector('#soundEnabled');
+    soundEnabled?.addEventListener('change', (e) => {
+      this._setSoundEnabled(e.target.checked);
+    });
+
+    // Volume slider
+    const volumeSlider = this.panel.querySelector('#volumeSlider');
+    volumeSlider?.addEventListener('input', (e) => {
+      this._setVolume(parseFloat(e.target.value));
+    });
   }
 
   _loadPreferences() {
     const prefs = this._getPreferences();
-    
+    applyI18nToDOM(this.panel);
+
     // Theme
     const themeSelect = this.panel.querySelector('#themeSelect');
-    if (themeSelect && prefs.theme) {
-      themeSelect.value = prefs.theme;
-    }
+    const theme = prefs.theme || themeManager.get();
+    if (themeSelect) themeSelect.value = theme;
+    themeManager.set(theme);
+
+    // Sound and volume
+    const soundEnabled = this.panel.querySelector('#soundEnabled');
+    if (soundEnabled) soundEnabled.checked = soundManager.isEnabled();
+
+    const volumeSlider = this.panel.querySelector('#volumeSlider');
+    if (volumeSlider) volumeSlider.value = String(soundManager.getVolume());
 
     // HUD style (apply to DOM, not just the control)
     const hudSelect = this.panel.querySelector('#hudSelect');
@@ -198,19 +244,23 @@ class SettingsPanel {
     // Reduce motion
     const reduceMotion = this.panel.querySelector('#reduceMotion');
     if (reduceMotion) {
-      reduceMotion.checked = prefs.reduceMotion || false;
+      reduceMotion.checked = prefs.reduceMotion ?? a11y.get('reduceMotion');
+      a11y.set('reduceMotion', reduceMotion.checked);
     }
 
     // High contrast
     const highContrast = this.panel.querySelector('#highContrast');
     if (highContrast) {
-      highContrast.checked = prefs.highContrast || false;
+      highContrast.checked = prefs.highContrast ?? a11y.get('highContrast');
+      a11y.set('highContrast', highContrast.checked);
     }
 
     // Large text
     const largeText = this.panel.querySelector('#largeText');
     if (largeText) {
       largeText.checked = prefs.largeText || false;
+      if (largeText.checked) document.documentElement.setAttribute('data-large-text', '1');
+      else document.documentElement.removeAttribute('data-large-text');
     }
 
     // Quality
@@ -238,17 +288,13 @@ class SettingsPanel {
     try {
       const current = this._getPreferences();
       localStorage.setItem('astralis-settings', JSON.stringify({ ...current, ...prefs }));
-    } catch (e) {
-      console.warn('Impossibile salvare preferenze:', e);
+    } catch {
+      /* Preferenze non disponibili: l'app resta utilizzabile. */
     }
   }
 
   _setTheme(theme) {
-    if (theme === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    themeManager.set(theme);
     this._savePreferences({ theme });
     this._notifyChange('theme', theme);
   }
@@ -275,21 +321,13 @@ class SettingsPanel {
   }
 
   _setReduceMotion(enabled) {
-    if (enabled) {
-      document.documentElement.setAttribute('data-reduce-motion', '1');
-    } else {
-      document.documentElement.removeAttribute('data-reduce-motion');
-    }
+    a11y.set('reduceMotion', enabled);
     this._savePreferences({ reduceMotion: enabled });
     this._notifyChange('reduceMotion', enabled);
   }
 
   _setHighContrast(enabled) {
-    if (enabled) {
-      document.documentElement.setAttribute('data-high-contrast', '1');
-    } else {
-      document.documentElement.removeAttribute('data-high-contrast');
-    }
+    a11y.set('highContrast', enabled);
     this._savePreferences({ highContrast: enabled });
     this._notifyChange('highContrast', enabled);
   }
@@ -310,7 +348,7 @@ class SettingsPanel {
   }
 
   _setShowFPS(enabled) {
-    const hud = document.querySelector('.hud');
+    const hud = document.querySelector('#hud');
     if (hud) {
       hud.style.display = enabled ? 'flex' : 'none';
     }
@@ -318,8 +356,20 @@ class SettingsPanel {
     this._notifyChange('showFPS', enabled);
   }
 
+  _setSoundEnabled(enabled) {
+    if (soundManager.isEnabled() !== enabled) {
+      soundManager.toggle();
+    }
+    this._notifyChange('sound', enabled);
+  }
+
+  _setVolume(vol) {
+    soundManager.setVolume(vol);
+    this._notifyChange('volume', vol);
+  }
+
   _notifyChange(key, value) {
-    this.onChangeCallbacks.forEach(cb => cb(key, value));
+    this.onChangeCallbacks.forEach((cb) => cb(key, value));
   }
 
   onChange(callback) {
@@ -335,22 +385,43 @@ class SettingsPanel {
   }
 
   open() {
+    this.lastFocused = document.activeElement;
     this.isOpen = true;
+    this.panel.inert = false;
+    this.panel.setAttribute('aria-hidden', 'false');
     this.panel.classList.add('open');
     this.overlay.classList.add('visible');
     document.body.style.overflow = 'hidden';
+    this.panel.querySelector('select, input, button')?.focus();
   }
 
   close() {
     this.isOpen = false;
     this.panel.classList.remove('open');
+    this.panel.setAttribute('aria-hidden', 'true');
+    this.panel.inert = true;
     this.overlay.classList.remove('visible');
     document.body.style.overflow = '';
+    this.lastFocused?.focus?.();
+    this.lastFocused = null;
   }
 
   getQuality() {
     const prefs = this._getPreferences();
-    return prefs.quality || 'high';
+    return prefs.quality || 'auto';
+  }
+
+  getEffectiveQuality() {
+    const quality = this.getQuality();
+    if (quality !== 'auto') return quality;
+
+    // Apply a conservative default only until the user chooses a preset.
+    // This protects entry-level mobile hardware without penalising desktops.
+    const memory = navigator.deviceMemory || 8;
+    const cores = navigator.hardwareConcurrency || 8;
+    if (memory <= 4 || cores <= 4) return 'low';
+    if (memory <= 6 || cores <= 6 || matchMedia('(pointer: coarse)').matches) return 'medium';
+    return 'high';
   }
 
   shouldShowFPS() {

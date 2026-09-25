@@ -39,8 +39,12 @@ describe('Scene integration', () => {
     let onProgress = 0;
     let onComplete = false;
 
-    manager.onProgress = () => { onProgress++; };
-    manager.onLoad = () => { onComplete = true; };
+    manager.onProgress = () => {
+      onProgress++;
+    };
+    manager.onLoad = () => {
+      onComplete = true;
+    };
 
     manager.onProgress();
     expect(onProgress).toBe(1);

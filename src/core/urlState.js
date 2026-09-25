@@ -10,10 +10,17 @@ export class URLState {
     this.params = new URLSearchParams(window.location.search);
   }
 
-  get(key) { return this.params.get(key); }
-  has(key) { return this.params.has(key); }
+  get(key) {
+    return this.params.get(key);
+  }
+  has(key) {
+    return this.params.has(key);
+  }
 
-  getBodyKey() { const k = this.params.get('body'); return isValidBodyKey(k) ? k : null; }
+  getBodyKey() {
+    const k = this.params.get('body');
+    return isValidBodyKey(k) ? k : null;
+  }
 
   set(key, value) {
     if (value === null || value === undefined) this.params.delete(key);
@@ -29,11 +36,16 @@ export class URLState {
     this._write();
   }
 
-  remove(key) { this.params.delete(key); this._write(); }
+  remove(key) {
+    this.params.delete(key);
+    this._write();
+  }
 
   toJSON() {
     const obj = {};
-    PARAMS.forEach(p => { if (this.params.has(p)) obj[p] = this.params.get(p); });
+    PARAMS.forEach((p) => {
+      if (this.params.has(p)) obj[p] = this.params.get(p);
+    });
     return obj;
   }
 
@@ -53,10 +65,15 @@ export class URLState {
   _fallbackCopy(text) {
     const ta = document.createElement('textarea');
     ta.value = text;
-    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); } catch (e) { void e; }
+    try {
+      document.execCommand('copy');
+    } catch (e) {
+      void e;
+    }
     document.body.removeChild(ta);
   }
 

@@ -6,8 +6,21 @@ const NEO = 'https://api.nasa.gov/neo/rest/v1/feed/today?api_key=DEMO_KEY';
 const KEY = 'solar-system.nasa-cache';
 const TTL = 12 * 60 * 60 * 1000;
 
-function readCache() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { void e; return {}; } }
-function writeCache(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { void e; } }
+function readCache() {
+  try {
+    return JSON.parse(localStorage.getItem(KEY) || '{}');
+  } catch (e) {
+    void e;
+    return {};
+  }
+}
+function writeCache(d) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(d));
+  } catch (e) {
+    void e;
+  }
+}
 
 async function fetchWithCache(k, url) {
   const c = readCache();
@@ -25,9 +38,8 @@ async function fetchWithCache(k, url) {
     c[k] = { ts: Date.now(), data };
     writeCache(c);
     return data;
-  } catch (e) {
+  } catch {
     clearTimeout(timeout);
-    console.warn('NASA fetch failed:', e.message);
     return c[k]?.data || null;
   }
 }
@@ -41,17 +53,23 @@ export const NASA = {
     if (!today) return [];
     const list = data.near_earth_objects[today];
     if (!Array.isArray(list)) return [];
-    return list.slice(0, 5).map(n => {
+    return list.slice(0, 5).map((n) => {
       const diam = n.estimated_diameter?.kilometers?.estimated_diameter_max;
       const velData = n.close_approach_data?.[0]?.relative_velocity?.kilometers_per_hour;
       const missData = n.close_approach_data?.[0]?.miss_distance?.lunar;
       return {
         name: String(n.name || 'Unknown'),
         diameter: typeof diam === 'number' ? diam.toFixed(2) + ' km' : 'N/A',
-        velocity: typeof velData === 'string' || typeof velData === 'number' ? Math.round(parseFloat(velData)) + ' km/h' : 'N/A',
-        miss: typeof missData === 'string' || typeof missData === 'number' ? parseFloat(missData).toFixed(1) + ' LD' : 'N/A',
+        velocity:
+          typeof velData === 'string' || typeof velData === 'number'
+            ? Math.round(parseFloat(velData)) + ' km/h'
+            : 'N/A',
+        miss:
+          typeof missData === 'string' || typeof missData === 'number'
+            ? parseFloat(missData).toFixed(1) + ' LD'
+            : 'N/A',
         hazardous: !!n.is_potentially_hazardous_asteroid,
       };
     });
-  }
+  },
 };

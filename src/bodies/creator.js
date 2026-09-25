@@ -13,32 +13,38 @@ import { textureLoader as defaultTextureLoader } from '../utils/textureLoader.js
  */
 export function createSun(textureLoader, scene) {
   const texL = textureLoader || defaultTextureLoader;
-  const sunTex = texL.load('./assets/textures/2k_sun.jpg');
+  const sunTex = texL.load('./assets/textures/optimized/2k_sun.webp');
   const sun = new THREE.Mesh(
     new THREE.SphereGeometry(SUN_R, 64, 64),
-    new THREE.MeshStandardMaterial({ 
-      map: sunTex, 
-      emissiveMap: sunTex, 
-      emissive: new THREE.Color(0xffaa00), 
-      emissiveIntensity: 2.5, 
-      roughness: 1, 
-      metalness: 0 
+    new THREE.MeshStandardMaterial({
+      map: sunTex,
+      emissiveMap: sunTex,
+      emissive: new THREE.Color(0xffaa00),
+      emissiveIntensity: 2.5,
+      roughness: 1,
+      metalness: 0,
     })
   );
   scene.add(sun);
 
   // Glow del Sole
-  [[8, 128, 'rgba(255,200,50,0.9)', 'rgba(255,120,0,0.4)', SUN_R * 6],
-   [2, 128, 'rgba(255,240,100,0.5)', 'rgba(255,160,0,0.1)', SUN_R * 14],
-   [0, 128, 'rgba(255,180,30,0.18)', 'rgba(255,80,0,0)', SUN_R * 30]].forEach(([iR, , cIn, cOut, sc]) => {
-    const sp = makeCanvasSprite((ctx, s) => {
-      const g = ctx.createRadialGradient(s / 2, s / 2, iR, s / 2, s / 2, 128);
-      g.addColorStop(0, cIn);
-      g.addColorStop(0.45, cOut);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, s, s);
-    }, 256, sc);
+  [
+    [8, 128, 'rgba(255,200,50,0.9)', 'rgba(255,120,0,0.4)', SUN_R * 6],
+    [2, 128, 'rgba(255,240,100,0.5)', 'rgba(255,160,0,0.1)', SUN_R * 14],
+    [0, 128, 'rgba(255,180,30,0.18)', 'rgba(255,80,0,0)', SUN_R * 30],
+  ].forEach(([iR, , cIn, cOut, sc]) => {
+    const sp = makeCanvasSprite(
+      (ctx, s) => {
+        const g = ctx.createRadialGradient(s / 2, s / 2, iR, s / 2, s / 2, 128);
+        g.addColorStop(0, cIn);
+        g.addColorStop(0.45, cOut);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, s, s);
+      },
+      256,
+      sc
+    );
     scene.add(sp);
     sp._isSunGlow = true;
   });
@@ -56,11 +62,11 @@ export function createPlanet(data, textureLoader, scene) {
     map: data.tex ? texL.load(data.tex) : null,
     color: data.color,
     roughness: 0.8,
-    metalness: 0.1
+    metalness: 0.1,
   });
 
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.rotation.z = (data.tilt || 0) * Math.PI / 180;
+  mesh.rotation.z = ((data.tilt || 0) * Math.PI) / 180;
   mesh.userData.bodyKey = data.key;
 
   // Pivot per orbita
@@ -85,10 +91,10 @@ export function createOrbit(key, color, scene, radius) {
     points.push(new THREE.Vector3(Math.cos(theta) * radius, 0, Math.sin(theta) * radius));
   }
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({ 
-    color, 
-    transparent: true, 
-    opacity: 0.3 
+  const material = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.3,
   });
   const orbit = new THREE.Line(geometry, material);
   orbit.userData.orbitKey = key;
@@ -106,7 +112,7 @@ export function createMoon(data, parentMesh, textureLoader) {
     map: data.tex ? texL.load(data.tex) : null,
     color: data.color,
     roughness: 0.9,
-    metalness: 0
+    metalness: 0,
   });
 
   const mesh = new THREE.Mesh(geometry, material);
@@ -130,7 +136,7 @@ export function createAsteroid(data, textureLoader, scene) {
     map: data.tex ? texL.load(data.tex) : null,
     color: data.color,
     roughness: 0.9,
-    metalness: 0
+    metalness: 0,
   });
 
   const mesh = new THREE.Mesh(geometry, material);

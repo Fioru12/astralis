@@ -40,8 +40,9 @@ export class ParticleEffects {
       });
     }
 
-    this.enabled = true;
-    this.animate();
+    this.enabled = document.documentElement.getAttribute('data-reduce-motion') !== '1';
+    if (this.enabled) this.animate();
+    else this.canvas.style.display = 'none';
 
     // Stelle cadenti casuali
     setInterval(() => {
@@ -78,7 +79,7 @@ export class ParticleEffects {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // Aggiorna e disegna polvere cosmica
-    this.particles.forEach(p => {
+    this.particles.forEach((p) => {
       p.x += p.speedX;
       p.y += p.speedY;
 
@@ -95,7 +96,7 @@ export class ParticleEffects {
     });
 
     // Aggiorna e disegna stelle cadenti
-    this.shootingStars = this.shootingStars.filter(star => {
+    this.shootingStars = this.shootingStars.filter((star) => {
       star.x += star.vx;
       star.y += star.vy;
       star.life -= 0.02;
@@ -132,6 +133,7 @@ export class ParticleEffects {
   }
 
   show() {
+    if (!this.canvas) return;
     this.enabled = true;
     if (this.canvas) this.canvas.style.display = 'block';
     this.animate();

@@ -13,6 +13,7 @@ export class CustomCursor {
   }
 
   init() {
+    if (window.matchMedia?.('(pointer: coarse)').matches) return;
     // Crea cursore principale
     this.cursor = document.createElement('div');
     this.cursor.id = 'customCursor';
@@ -21,7 +22,8 @@ export class CustomCursor {
       width: '20px',
       height: '20px',
       borderRadius: '50%',
-      background: 'radial-gradient(circle, rgba(91,196,207,0.9) 0%, rgba(91,196,207,0.3) 50%, transparent 70%)',
+      background:
+        'radial-gradient(circle, rgba(91,196,207,0.9) 0%, rgba(91,196,207,0.3) 50%, transparent 70%)',
       pointerEvents: 'none',
       zIndex: '99999',
       transform: 'translate(-50%, -50%)',
@@ -62,7 +64,8 @@ export class CustomCursor {
       if (e.target.matches('button, a, input, .clickable, [role="button"]')) {
         this.cursor.style.width = '30px';
         this.cursor.style.height = '30px';
-        this.cursor.style.background = 'radial-gradient(circle, rgba(167,139,250,0.9) 0%, rgba(167,139,250,0.3) 50%, transparent 70%)';
+        this.cursor.style.background =
+          'radial-gradient(circle, rgba(167,139,250,0.9) 0%, rgba(167,139,250,0.3) 50%, transparent 70%)';
       }
     });
 
@@ -70,13 +73,14 @@ export class CustomCursor {
       if (e.target.matches('button, a, input, .clickable, [role="button"]')) {
         this.cursor.style.width = '20px';
         this.cursor.style.height = '20px';
-        this.cursor.style.background = 'radial-gradient(circle, rgba(91,196,207,0.9) 0%, rgba(91,196,207,0.3) 50%, transparent 70%)';
+        this.cursor.style.background =
+          'radial-gradient(circle, rgba(91,196,207,0.9) 0%, rgba(91,196,207,0.3) 50%, transparent 70%)';
       }
     });
 
+    this.enabled = true;
     // Animazione trail
     this.animate();
-    this.enabled = true;
   }
 
   animate() {
@@ -95,8 +99,8 @@ export class CustomCursor {
       p.el.style.left = p.x + 'px';
       p.el.style.top = p.y + 'px';
       p.el.style.opacity = (1 - i / this.maxTrail) * 0.6;
-      p.el.style.width = (6 - i * 0.5) + 'px';
-      p.el.style.height = (6 - i * 0.5) + 'px';
+      p.el.style.width = 6 - i * 0.5 + 'px';
+      p.el.style.height = 6 - i * 0.5 + 'px';
     });
 
     requestAnimationFrame(() => this.animate());
@@ -104,13 +108,14 @@ export class CustomCursor {
 
   hide() {
     if (this.cursor) this.cursor.style.display = 'none';
-    this.trail.forEach(p => p.el.style.display = 'none');
+    this.trail.forEach((p) => (p.el.style.display = 'none'));
     this.enabled = false;
   }
 
   show() {
+    if (!this.cursor) return;
     if (this.cursor) this.cursor.style.display = 'block';
-    this.trail.forEach(p => p.el.style.display = 'block');
+    this.trail.forEach((p) => (p.el.style.display = 'block'));
     this.enabled = true;
   }
 

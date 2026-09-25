@@ -26,7 +26,9 @@ export class ThemeManager {
     this.apply();
   }
 
-  get() { return this.current; }
+  get() {
+    return this.current;
+  }
 }
 
 export const themeManager = new ThemeManager();
