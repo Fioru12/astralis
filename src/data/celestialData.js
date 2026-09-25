@@ -1121,8 +1121,8 @@ export const COMETS = [
     periodEn: '3.30 years',
     perielio: '0.45 AU',
     scoperta: '1786',
-    desc: 'Periodo orbitale più breve conosciuto. Perielio aumentato per evitare il sole.',
-    descEn: 'Shortest known orbital period; its perihelion keeps it clear of the Sun.',
+    desc: 'Il periodo orbitale più breve tra le comete luminose (3,3 anni).',
+    descEn: 'Shortest orbital period among bright comets (3.3 years).',
   },
   {
     key: 'Borrelly',

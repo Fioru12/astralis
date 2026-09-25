@@ -23,6 +23,20 @@ describe('PWA assets', () => {
     });
   });
 
+  it('precaches only assets that exist (broken URLs fail SW install)', () => {
+    const sw = readFileSync(resolve('public/sw.js'), 'utf8');
+    const assets = [...sw.matchAll(/'(\.\/[^']+)'/g)].map((m) => m[1]);
+    expect(assets.length).toBeGreaterThan(0);
+    assets.forEach((src) => {
+      const rel = src.replace(/^\.\//, '');
+      const candidates = [resolve(rel), resolve('public', rel)];
+      expect(
+        candidates.some((p) => existsSync(p)),
+        `${src} is missing: SW install would fail`
+      ).toBe(true);
+    });
+  });
+
   it('ships the loading-screen logo through the public directory', () => {
     const html = readFileSync(resolve('index.html'), 'utf8');
     const logo = html.match(/<img\b[^>]*\bsrc=["']\.\/([^"']+)["']/)?.[1];
