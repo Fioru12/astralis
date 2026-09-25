@@ -83,7 +83,7 @@ npm run build
 npm run test:e2e
 ```
 
-La CI esegue gli stessi controlli su push e pull request (38 file / 187 test Vitest
+La CI esegue gli stessi controlli su push e pull request (53 file / 225 test Vitest
 verificati a settembre 2026, con soglie minime di coverage in `vite.config.js`);
 dopo `verify` verde il job `deploy` pubblica `dist/` su GitHub Pages.
 La suite Playwright (18 test in `tests/e2e/`) copre

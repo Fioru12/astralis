@@ -468,6 +468,8 @@ export class AchievementPanel {
       .join('');
     this.el.querySelector('#achList').innerHTML = items;
     this.el.querySelector('#achClose').onclick = () => this.hide();
+    document.body.appendChild(this.el);
+    this.isOpen = true;
   }
   hide() {
     if (!this.el) return;
