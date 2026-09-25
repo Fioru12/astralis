@@ -13,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Node 24: jsdom 30 + vitest 4 crashano su Node 20
+      # (webidl.util.markAsUncloneable), in locale verde su Node 24.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm audit --audit-level=high
