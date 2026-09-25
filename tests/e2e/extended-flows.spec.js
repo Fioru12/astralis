@@ -109,6 +109,21 @@ test('avvia un volo spaziale e lo interrompe dal cockpit', async ({ page }) => {
   await expect(cockpit).toBeHidden();
 });
 
+test('apre preset viste, shortcut e cambia tema da tastiera', async ({ page }) => {
+  await page.keyboard.press('v');
+  await expect(page.locator('#viewPresetsPanel')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  await page.keyboard.press('h');
+  await expect(page.locator('#shortcutsPanel')).toBeVisible();
+  await page.keyboard.press('Escape');
+
+  const html = page.locator('html');
+  const before = await html.getAttribute('data-theme');
+  await page.keyboard.press('t');
+  await expect(html).not.toHaveAttribute('data-theme', before || 'dark');
+});
+
 test('mostra il pulsante VR solo con sessione immersive-vr supportata', async ({ page }) => {
   // navigator.xr esiste anche senza visore: conta solo isSessionSupported.
   const supported = await page.evaluate(async () => {

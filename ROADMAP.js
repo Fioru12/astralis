@@ -24,9 +24,10 @@ const FEATURES = {
   },
   'ci-cd': {
     status: '✅ DONE',
-    description: 'GitHub Actions workflow (copy to .github/workflows/)',
-    impact: 'Automated lint, test, build, deploy',
-    file: 'CI_WORKFLOW.yml',
+    description:
+      'GitHub Actions: verify (audit, format, lint, coverage, build, bundle, e2e) + deploy Pages',
+    impact: 'Automated lint, test, build, deploy; live site auto-updated on push',
+    file: '.github/workflows/ci.yml',
   },
   'mobile-optimization': {
     status: '⏳ TODO',
@@ -60,23 +61,19 @@ const FEATURES = {
     ],
   },
   'service-worker': {
-    status: '⏳ TODO',
-    description: 'Offline support & fast repeat visits',
-    impact: 'Instant load on repeat, works offline',
-    implementation: [
-      'Register service worker in index.html',
-      'Cache static assets & textures',
-      'Serve from cache on network failure',
-    ],
+    status: '✅ DONE',
+    description: 'Offline support: build-injected precache (chunks + WebP) + SPA navigate fallback',
+    impact: 'Full offline boot verified by offline e2e on production build',
+    file: 'public/sw.js',
   },
   'basis-compression': {
     status: '⏳ TODO',
     description: 'GPU texture compression (KTX2 format)',
-    impact: '40× smaller textures, faster GPU load',
+    impact: 'Lower GPU memory, faster uploads on weak devices (measure first)',
     implementation: [
-      'Install @basis/decoder package',
-      'Convert textures to .basis format',
-      'Load with THREE.BasisTextureLoader',
+      'Install basisu encoder binary (not available via npm)',
+      'Transcode WebP textures to KTX2/ETC1S with device benchmarks',
+      'Register three KTX2Loader in textureLoader.js (WebP rewrite fallback ready)',
     ],
   },
   'planet-data-streaming': {
