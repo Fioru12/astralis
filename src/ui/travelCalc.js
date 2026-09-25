@@ -288,6 +288,11 @@ export class TravelCalc {
     this.isOpen ? this.close() : this.open(targetBody);
   }
 
+  /** Alias usato dal pulsante rapido 🚀: apre il modale senza cambiare rotta. */
+  openModal() {
+    this.open();
+  }
+
   _buildModal() {
     this.panel = document.createElement('div');
     this.panel.id = 'spaceTravelModal';

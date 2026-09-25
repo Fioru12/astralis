@@ -113,6 +113,7 @@ export const it = {
   bmk_default: 'Posizione',
   bmk_empty: 'Nessun bookmark salvato',
   bmk_placeholder: 'Nome bookmark...',
+  bmk_saved: 'Bookmark salvato',
   tabs_panels: 'Pannelli di controllo',
   cmp_footnote:
     'La variazione percentuale usa il secondo corpo come riferimento; non indica un valore migliore o peggiore.',

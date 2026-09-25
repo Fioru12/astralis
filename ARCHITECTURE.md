@@ -15,7 +15,8 @@ Documento aggiornato ad agosto 2026. Descrive il codice realmente presente nel r
 ```text
 index.html                  shell dell'interfaccia
 style.css                  tema, pannelli e responsive
-src/main.js                composizione della scena e render loop (~2150 righe)
+src/main.js                composizione della scena e render loop (~1835 righe)
+src/bodies/planetBuilder.js pianeti, lune, asteroidi e fasce (estratto da main.js)
 src/ui/lazyFeatures.js     pannelli secondari caricati pigramente (estratto da main.js)
 src/ui/commandActions.js   azioni della command palette (estratto da main.js)
 src/core/timeControls.js   salti temporali jumpToNow/jumpYears (estratto da main.js)
@@ -82,21 +83,24 @@ npm run build
 npm run test:e2e
 ```
 
-La CI esegue gli stessi controlli su push e pull request (37 file / 185 test Vitest
-verificati a settembre 2026, con soglie minime di coverage in `vite.config.js`).
-La suite Playwright (14 test in `tests/e2e/`) copre
+La CI esegue gli stessi controlli su push e pull request (38 file / 187 test Vitest
+verificati a settembre 2026, con soglie minime di coverage in `vite.config.js`);
+dopo `verify` verde il job `deploy` pubblica `dist/` su GitHub Pages.
+La suite Playwright (18 test in `tests/e2e/`) copre
 avvio WebGL, ricerca e selezione da tastiera (anche in inglese), impostazioni,
 layout mobile, modale galattico, vista galaxy da URL, confronto, osservatorio,
 quiz, time travel, missioni astronautiche, missioni spaziali reali, palette
-comandi, esploratore di sistemi, assenza del pulsante VR senza sessione
-`immersive-vr`.
+comandi, esploratore di sistemi, sandbox e bookmark da tastiera, bolla locale,
+credits, volo completo con cockpit e abort, assenza del pulsante VR senza
+sessione `immersive-vr`.
 
 ## Debito tecnico residuo
 
-- `src/main.js` (~2150 righe) resta il punto di composizione: toggle lazy
+- `src/main.js` (~1835 righe, da 2373) resta il punto di composizione: toggle lazy
   (`ui/lazyFeatures.js`), azioni palette (`ui/commandActions.js`), salti temporali
-  (`core/timeControls.js`) e navigazione camera (`core/navigation.js`) sono estratti
-  e testati; render loop e costruzione della scena restano centralizzati.
+  (`core/timeControls.js`), navigazione camera (`core/navigation.js`) e costruzione
+  di pianeti/lune/asteroidi (`bodies/planetBuilder.js`, con test headless sui dati
+  reali) sono estratti e testati; render loop e orchestrazione restano centralizzati.
 - Interfaccia completamente bilingue IT/EN: 106+ corpi di `celestialData.js`
   (`labelEn`, `descEn`, `periodEn`, `scopertaEn`), quiz, missioni gamificate e
   spaziali, veicoli travelCalc, ispettore sistemi, modale galattico, factsheet,

@@ -3,12 +3,14 @@
 ## Opzione 1: Netlify (Consigliata - 30 secondi)
 
 ### Metodo A: Drag & Drop
+
 1. Esegui `build.bat` o `npm run build`
 2. Apri https://app.netlify.com/drop
 3. Trascina la cartella `dist/` sulla pagina
 4. Fatto! Il sito e online
 
 ### Metodo B: Netlify CLI
+
 ```bash
 npm install -g netlify-cli
 netlify login
@@ -20,12 +22,14 @@ netlify deploy --prod --dir=dist
 ## Opzione 2: GitHub Pages (CI/CD automatico)
 
 ### 1. Crea repository su GitHub
+
 - Vai su https://github.com/new
 - Nome: `astralis` (o quello che preferisci)
 - Visibilita: Public
 - NON inizializzare con README
 
 ### 2. Collega il progetto locale
+
 ```bash
 cd c:\Progetti\Solar-System
 git remote add origin https://github.com/TUO-USERNAME/astralis.git
@@ -34,20 +38,26 @@ git push -u origin main
 ```
 
 ### 3. Attiva GitHub Pages
+
 - Vai su https://github.com/TUO-USERNAME/astralis/settings/pages
 - Source: GitHub Actions
 - Salva
 
-### 4. Crea il workflow file
+### 4. Verifica il workflow (già incluso nel repo)
+
+`.github/workflows/ci.yml` esegue su ogni push/PR: audit, format, lint,
+test con coverage, build, controllo budget bundle ed e2e. Dopo `verify`
+verde, il job `deploy` pubblica `dist/` su Pages (solo push su `main`
+o `master`):
+
 ```bash
-mkdir .github\workflows
-copy CI_WORKFLOW.yml .github\workflows\ci.yml
 git add .github
-git commit -m "Add GitHub Actions workflow"
+git commit -m "Enable GitHub Pages deploy"
 git push
 ```
 
 ### 5. Attendi 2-3 minuti
+
 - Vai su https://github.com/TUO-USERNAME/astralis/actions
 - Vedrai il workflow in esecuzione
 - Quando e verde, il sito e online!
@@ -91,11 +101,13 @@ Tutte le piattaforme supportano domini custom gratuiti:
 ### Esempio: `astralis-explorer.com` (10-15 euro/anno)
 
 1. **Compra il dominio** su:
+
    - Namecheap (consigliato, ~10 euro/anno)
    - Google Domains
    - Cloudflare Registrar
 
 2. **Configura DNS**:
+
    - Per Netlify: aggiungi CNAME `www` -> `tuosito.netlify.app`
    - Per Vercel: aggiungi CNAME `www` -> `cname.vercel-dns.com`
    - Per GitHub Pages: aggiungi CNAME `www` -> `TUO-USERNAME.github.io`
@@ -157,16 +169,19 @@ npm run lint
 ## Troubleshooting
 
 ### Sito mostra pagina bianca
+
 - Apri DevTools -> Console
 - Verifica errori 404 sui file
 - Controlla che `base` in `vite.config.js` sia `./` (gia configurato)
 
 ### Service Worker non funziona
+
 - Apri DevTools -> Application -> Service Workers
 - Verifica che `sw.js` sia servito
 - Ricarica con Ctrl+Shift+R (hard refresh)
 
 ### Texture non caricano
+
 - Verifica che `assets/textures/` sia in `dist/`
 - Controlla la cache del browser
 - Apri DevTools -> Network e cerca 404

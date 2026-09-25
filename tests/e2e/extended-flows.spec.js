@@ -64,6 +64,51 @@ test('apre e chiude l’esploratore di sistemi stellari', async ({ page }) => {
   await expect(modal).toBeHidden();
 });
 
+test('apre sandbox e bookmark da tastiera', async ({ page }) => {
+  await page.keyboard.press('g');
+  const sandbox = page.locator('#sandboxPanel');
+  await expect(sandbox).toBeVisible();
+  await sandbox.locator('#sbClose').click();
+  await expect(sandbox).toBeHidden();
+
+  await page.keyboard.press('b');
+  const bookmarks = page.locator('#bookmarksPanel');
+  await expect(bookmarks).toBeVisible();
+  await bookmarks.locator('#bmkClose').click();
+  await expect(bookmarks).toBeHidden();
+});
+
+test('attiva e disattiva la bolla locale', async ({ page }) => {
+  await page.getByRole('tab', { name: /Esplora/ }).click();
+  const bubbleBtn = page.locator('#localBubbleBtn');
+  await bubbleBtn.click();
+  await expect(bubbleBtn).toHaveText('Torna al Sistema Solare');
+  await bubbleBtn.click();
+  await expect(bubbleBtn).toHaveText('Local Bubble');
+});
+
+test('apre i credits e li chiude', async ({ page }) => {
+  await page.getByRole('tab', { name: /Esplora/ }).click();
+  await page.locator('#creditsBtn').click();
+
+  const panel = page.locator('#creditsPanel');
+  await expect(panel).toBeVisible();
+  await panel.locator('#creditsClose').click();
+  await expect(panel).toBeHidden();
+});
+
+test('avvia un volo spaziale e lo interrompe dal cockpit', async ({ page }) => {
+  await page.locator('#spaceTravelQuickBtn').click();
+  const modal = page.locator('#spaceTravelModal');
+  await expect(modal).toBeVisible();
+
+  await modal.locator('#stLaunchBtn').click();
+  const cockpit = page.locator('#flightCockpitOverlay');
+  await expect(cockpit).toBeVisible({ timeout: 15000 });
+  await cockpit.locator('#cockpitAbortBtn').click();
+  await expect(cockpit).toBeHidden();
+});
+
 test('mostra il pulsante VR solo con sessione immersive-vr supportata', async ({ page }) => {
   // navigator.xr esiste anche senza visore: conta solo isSessionSupported.
   const supported = await page.evaluate(async () => {

@@ -109,6 +109,7 @@ export const en = {
   bmk_default: 'Location',
   bmk_empty: 'No saved bookmarks',
   bmk_placeholder: 'Bookmark name...',
+  bmk_saved: 'Bookmark saved',
   tabs_panels: 'Control panels',
   cmp_footnote:
     'Percentage change uses the second body as reference; it does not imply a better or worse value.',
