@@ -7,7 +7,7 @@
   [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
   [![NASA JPL](https://img.shields.io/badge/Orbits-NASA%20JPL-0B3D91?style=for-the-badge&logo=nasa&logoColor=white)](https://ssd.jpl.nasa.gov/)
   [![CI/CD](https://img.shields.io/badge/CI-Passing-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/Fioru12/astralis/actions)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
+  [![License: MIT](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge)](LICENSE)
 
   <p align="center">
     <b>Un visualizzatore 3D interattivo e immersivo dello spazio astronomico basato su effemeridi reali.</b>
