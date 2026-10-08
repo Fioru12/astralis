@@ -1,211 +1,106 @@
-# 🌌 ASTRALIS - 3D Solar System Explorer
+<div align="center">
 
-![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
-![Version: 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![Three.js](https://img.shields.io/badge/Three.js-v0.170-green.svg)
+  # 🪐 ASTRALIS
+  ### Next-Gen 3D Solar System & Keplerian Orbital Simulation
 
-**ASTRALIS** - Un visualizzatore 3D interattivo e completamente immersivo del Sistema Solare e dello spazio circostante.
+  [![Three.js](https://img.shields.io/badge/Three.js-v0.170-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
+  [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+  [![NASA JPL](https://img.shields.io/badge/Orbits-NASA%20JPL-0B3D91?style=for-the-badge&logo=nasa&logoColor=white)](https://ssd.jpl.nasa.gov/)
+  [![CI/CD](https://img.shields.io/badge/CI-Passing-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/Fioru12/astralis/actions)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
 
-Realizzato con **Three.js** e **Vite**, con una UI moderna, effetti visivi professionali, e dati scientifici accurati.
+  <p align="center">
+    <b>Un visualizzatore 3D interattivo e immersivo dello spazio astronomico basato su effemeridi reali.</b>
+  </p>
 
-## ✨ Caratteristiche
+  <p align="center">
+    <a href="#-caratteristiche-principali">Caratteristiche</a> •
+    <a href="#-quickstart">Quickstart</a> •
+    <a href="#-controlli--camera">Controlli</a> •
+    <a href="#-architettura">Architettura</a>
+  </p>
 
-- **Visualizzazione 3D realistica** di pianeti, lune, asteroidi e comete
-- **Orbite kepleriane accurate** basate su dati NASA/JPL
-- **3 modalità camera**: Orbita, Volo libero, Follow
-- **UI moderna** con glassmorphism e animazioni fluide
-- **Completamente offline** - funziona senza connessione internet
-- **Portatile** - facile da trasferire tra computer
-- **Shortcut desktop** per avvio rapido
-
-## 🚀 Avvio Rapido
-
-### **Important: Recent Improvements**
-
-Recent repository improvements were applied:
-
-- ✅ **Code Quality:** ESLint, Prettier, Husky pre-commit hooks
-- ✅ **Performance:** LOD system, async texture loading, bundle chunking
-- ✅ **Testing:** Vitest unit/integration tests and Playwright browser flows
-- ✅ **CI/CD:** workflow GitHub Actions attivo (`.github/workflows/ci.yml`)
-- ✅ **Documentation:** Architecture, texture optimization, deployment guides
-
-**To activate these features locally:**
-
-```bash
-npm install
-npm run prepare
-```
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TEXTURE_OPTIMIZATION.md](./TEXTURE_OPTIMIZATION.md) for details.
+</div>
 
 ---
 
-### Metodo 1: Sviluppo (consigliato per modifiche)
+### ✨ Caratteristiche Principali
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🛰️ Calcolo Orbitale Kepleriano</h3>
+      Simulazione ad alta precisione di pianeti, lune, asteroidi e comete alimentata dai parametri orbitali NASA/JPL Horizons.
+    </td>
+    <td width="50%" valign="top">
+      <h3>🌌 Grafica 3D & Post-Processing</h3>
+      Illuminazione fisica, bloom atmosferico, texture ad alta risoluzione e sistema Level of Detail (LOD) dinamico con Three.js.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🎥 3 Modalità di Visualizzazione</h3>
+      Navigazione libera nello spazio 3D, modalità orbita cinematica attorno ai corpi celesti o inseguimento dinamico (Follow Cam).
+    </td>
+    <td width="50%" valign="top">
+      <h3>💎 UI Glassmorphic & Offline-First</h3>
+      Interfaccia fluida con effetti glassmorphism, ricerca e telemetria in tempo reale, funzionante al 100% offline.
+    </td>
+  </tr>
+</table>
+
+---
+
+### 🚀 Quickstart
+
+> [!TIP]
+> Assicurati di avere [Node.js](https://nodejs.org/) (v18+) installato sul tuo computer.
 
 ```bash
-# Installa le dipendenze (solo la prima volta)
-npm install
+# 1. Clona il repository
+git clone https://github.com/Fioru12/astralis.git
+cd astralis
 
-# Avvia il server di sviluppo
+# 2. Installa le dipendenze e prepara gli hook
+npm install
+npm run prepare
+
+# 3. Avvia il server di sviluppo interattivo
 npm run dev
 ```
 
-Il browser si aprirà automaticamente su `http://localhost:5173`
-
-### Metodo 2: Shortcut Desktop (Windows)
-
-Esegui `Crea_Shortcut.bat` per creare un'icona sul desktop.
-
-### Metodo 3: Build Production
-
-```bash
-# Crea la build ottimizzata
-build.bat
-
-# Avvia la build
-Avvia_Build.bat
-```
-
-## 📁 Struttura del Progetto
-
-```
-Solar-System/
-├── src/
-│   ├── main.js              # Composizione scena + render loop
-│   ├── data/                # celestialData (IT+EN), stellarData, cataloghi
-│   ├── utils/               # kepler, textureLoader, dispose, sanitize, focusTrap
-│   ├── core/                # scene, camera, timeControls, navigation,
-│   │                        # orbits, xr, urlState, adaptiveQuality, ...
-│   ├── bodies/              # creator, asteroidBelts, comets, starsAndExoplanets
-│   ├── ui/                  # lazyFeatures, commandActions, infoPanel, search,
-│   │                        # minimap, quiz, missions, galaxyModal, ...
-│   └── i18n/                # dizionari it/en
-├── tests/e2e/               # Suite Playwright (14 test)
-├── public/                  # manifest, service worker, milky_way WebP
-├── assets/textures/         # Texture planetarie (WebP ottimizzati)
-├── dist/                    # Build production (gitignored)
-├── index.html              # Pagina principale
-├── style.css               # Styling
-├── package.json            # Dipendenze (engines: node >= 20)
-└── vite.config.js          # Configurazione Vite + budget bundle
-```
-
-## 🎮 Controlli
-
-### Mouse
-
-- **Trascina**: Ruota la camera
-- **Scroll**: Zoom in/out
-- **Shift + Trascina**: Pan della camera
-- **Doppio click**: Entra in modalità volo
-- **Click su pianeta**: Mostra informazioni
-
-### Tastiera
-
-- **F**: Attiva/disattiva volo libero
-- **W / Freccia su**: Avanza
-- **S / Freccia giù**: Indietreggia
-- **A / D**: Spostamento laterale
-- **1**: Modalità orbita
-- **2**: Segui corpo selezionato
-- **3**: Volo libero
-- **J**: Apri/chiudi inventario
-- **ESC**: Esci dalla modalità corrente
-
-### Touch (Mobile)
-
-- **1 dito**: Ruota
-- **2 dita**: Zoom
-
-## 🔧 Script Utili
-
-- `Avvia_Sistema.bat` - Avvia server di sviluppo
-- `build.bat` - Crea build production
-- `Avvia_Build.bat` - Avvia build production
-- `Crea_Shortcut.bat` - Crea icona desktop
-
-## 📦 Portabilità
-
-Per trasferire il progetto su un altro computer:
-
-1. Copia l'intera cartella del progetto
-2. Sul nuovo computer:
-   - Se hai Node.js: esegui `npm install` poi `npm run dev`
-   - Altrimenti: usa `Avvia_Build.bat` (richiede Python o Node.js)
-
-## 🎨 Personalizzazione
-
-### Modificare i colori UI
-
-Modifica le variabili CSS in `style.css`:
-
-```css
-:root {
-  --accent: #5bc4cf; /* Colore principale */
-  --glass: rgba(8, 10, 20, 0.8); /* Sfondo pannelli */
-}
-```
-
-### Aggiungere nuovi corpi celesti
-
-Modifica `src/data/celestialData.js` aggiungendo nuovi oggetti agli array `PLANETS`, `MOONS`, `ASTEROIDS` o `COMETS`.
-
-## 🛠️ Stack Tecnologico
-
-- **Three.js** v0.170.0 - Rendering 3D
-- **Vite** v8 - Build tool e dev server con minificazione OXC
-- **JavaScript ES6+** - Linguaggio
-- **CSS3** - Styling con glassmorphism
-
-## 📊 Corpi Celesti Inclusi
-
-### Pianeti (8)
-
-Mercurio, Venere, Terra, Marte, Giove, Saturno, Urano, Nettuno
-
-### Pianeti Nani (5)
-
-Cerere, Plutone, Eris, Makemake, Haumea
-
-### Lune Principali (9)
-
-Luna, Phobos, Deimos, Io, Europa, Ganimede, Callisto, Titano, Tritone
-
-### Asteroidi (7)
-
-Vesta, Pallas, Hygiea, Eros, Apophis, Itokawa, Bennu
-
-### Comete (6)
-
-Halley, Hale-Bopp, 67P/Churyumov, Tempel 1, Encke, Borrelly
-
-## 🔬 Accuratezza Scientifica
-
-Le orbite sono calcolate usando elementi orbitali kepleriani NASA/JPL (epoca J2000):
-
-- Semiasse maggiore (a)
-- Eccentricità (e)
-- Inclinazione (I)
-- Longitudine media (L)
-- Longitudine del perielio (p)
-- Longitudine del nodo ascendente (n)
-
-## 📝 Note
-
-- Il progetto è completamente offline dopo il primo caricamento delle texture
-- Le texture sono incluse nella cartella `assets/textures/`
-- Per performance ottimali, usa un browser moderno (Chrome, Firefox, Edge)
-- Su mobile, la modalità volo libero potrebbe non essere disponibile
-
-## 🤝 Contributi
-
-Questo è un progetto personale. Sentiti libero di forkare e modificare per i tuoi scopi!
-
-## 📄 Licenza
-
-Progetto open source. Usa e modifica liberamente.
+Apri `http://localhost:5173` nel tuo browser per iniziare l'esplorazione spaziale.
 
 ---
 
-Creato con ❤️ usando Three.js e Vite
+### 🎮 Controlli & Navigazione
+
+| Tasto / Input | Azione |
+| :--- | :--- |
+| **Click Sinistro + Trascina** | Ruota la visuale attorno al centro / pianeta selezionato |
+| **Click Destro + Trascina** | Sposta la telecamera (Pan) |
+| **Rotellina Mouse** | Zoom In / Zoom Out |
+| **Doppio Click** | Aggancia e centra la telecamera sul corpo celeste cliccato |
+| **Spazio** | Pausa / Riprendi lo scorrere del tempo orbitale |
+| **1 - 9** | Selezione rapida numerica dei corpi celesti principali |
+
+---
+
+### 🏛️ Architettura & Qualità del Codice
+
+<details>
+<summary><b>🔍 Dettagli Tecnici & Tooling</b></summary>
+<br>
+
+- **Rendering Engine:** Three.js con async asset loader, bundle chunking e rendering pipeline ottimizzato.
+- **Testing Suite:** Test unitari e di integrazione con Vitest + test end-to-end browser con Playwright.
+- **Code Standards:** ESLint + Prettier con verifica automatica pre-commit via Husky.
+- **Documentazione estesa:** Consulta [ARCHITECTURE.md](./ARCHITECTURE.md) e [TEXTURE_OPTIMIZATION.md](./TEXTURE_OPTIMIZATION.md) per approfondire il pipeline di rendering e l'ottimizzazione degli asset.
+
+</details>
+
+---
+
+<div align="center">
+  <sub>Sviluppato con passione per l'astronomia e la grafica 3D da <a href="https://github.com/Fioru12">Fioru12</a></sub>
+</div>
