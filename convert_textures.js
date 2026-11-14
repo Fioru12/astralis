@@ -6,7 +6,7 @@ const sourceDir = path.resolve('assets/textures');
 const outputDir = path.join(sourceDir, 'optimized');
 const supported = /\.(png|jpe?g|tga)$/i;
 // JPG pubblici serviti dalla root di dist (es. milky_way_topdown.jpg, 823 KB):
-// generano il .webp affiancato usato con fallback (vedi TEXTURE_OPTIMIZATION.md).
+// generano il .webp affiancato usato con fallback (vedi docs/TEXTURE_OPTIMIZATION.md).
 const publicDir = path.resolve('public');
 const publicSources = ['milky_way_topdown.jpg'];
 

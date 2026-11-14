@@ -1,9 +1,10 @@
 {
   "name": "astralis",
   "version": "2.0.0",
+  "license": "GPL-3.0-only",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "vite",
@@ -18,11 +19,10 @@
     "check:bundle": "node scripts/check-bundle-size.js",
     "test:e2e": "playwright test",
     "test:e2e:offline": "playwright test --config=playwright.offline.config.js",
-    "prepare": "husky install",
-    "serve-dist": "npx http-server dist -p 5000",
+    "prepare": "husky",
+    "serve-dist": "vite preview --port 5000",
     "convert-textures": "node convert_textures.js",
-    "roadmap": "node ROADMAP.js",
-    "status": "node STATUS.js"
+    "roadmap": "node scripts/ROADMAP.js"
   },
   "dependencies": {
     "lil-gui": "^0.21.0",
@@ -35,7 +35,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.3.0",
-    "husky": "^8.0.0",
+    "husky": "^9.1.7",
     "jsdom": "^30.1.1",
     "lint-staged": "^16.2.7",
     "prettier": "^3.9.9",
@@ -46,8 +46,7 @@
   "lint-staged": {
     "*.js": [
       "eslint --fix",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   }
 }

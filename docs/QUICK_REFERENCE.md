@@ -38,14 +38,13 @@ npm run serve-dist       # Preview production build locally
 
 ## 📖 Documentation
 
-| Guide                          | For                          |
-| ------------------------------ | ---------------------------- |
-| **DEVELOPMENT.md**             | Quick start & dev workflow   |
-| **ARCHITECTURE.md**            | Technical deep dive          |
-| **PERFORMANCE_BENCHMARKS.md**  | Measuring & optimizing       |
-| **TEXTURE_OPTIMIZATION.md**    | Texture strategies           |
-| **GITHUB_PAGES_DEPLOYMENT.md** | CI/CD & deployment           |
-| **IMPROVEMENTS_SUMMARY.md**    | Overview of all improvements |
+| Guide                          | For                        |
+| ------------------------------ | -------------------------- |
+| **DEVELOPMENT.md**             | Quick start & dev workflow |
+| **ARCHITECTURE.md**            | Technical deep dive        |
+| **PERFORMANCE_BENCHMARKS.md**  | Measuring & optimizing     |
+| **TEXTURE_OPTIMIZATION.md**    | Texture strategies         |
+| **GITHUB_PAGES_DEPLOYMENT.md** | CI/CD & deployment         |
 
 ## 🔧 Common Tasks
 

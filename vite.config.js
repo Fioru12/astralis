@@ -20,6 +20,32 @@ export default defineConfig({
   base: './',
   plugins: [
     {
+      // CSP solo in produzione: in dev Vite usa websocket HMR e script dinamici.
+      // style-src 'unsafe-inline' serve per gli stili inline dei pannelli;
+      // img-src https: per le immagini APOD (host variabile).
+      name: 'inject-csp',
+      apply: 'build',
+      transformIndexHtml(html) {
+        const csp = [
+          "default-src 'self'",
+          "script-src 'self'",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: blob: https:",
+          "font-src 'self' data:",
+          "connect-src 'self' https://api.nasa.gov",
+          "worker-src 'self'",
+          "manifest-src 'self'",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'none'",
+        ].join('; ');
+        return html.replace(
+          '<meta charset="UTF-8" />',
+          `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${csp}" />`
+        );
+      },
+    },
+    {
       name: 'copy-runtime-textures',
       closeBundle() {
         cpSync(resolve('assets/textures/optimized'), resolve('dist/assets/textures/optimized'), {

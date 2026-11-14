@@ -697,6 +697,9 @@ function toggleLocalBubble() {
     if (localBubbleGroup) localBubbleGroup.visible = true;
     if (hyperlaneGroup) hyperlaneGroup.visible = false;
     if (sectorGroup) sectorGroup.visible = false;
+    // Le etichette vengono rimosse all'uscita: ricrearle a ogni ingresso,
+    // altrimenti dalla seconda apertura non compaiono più.
+    createLocalBubbleDistanceLabels(allBodies, ui);
     // Show stars with enhanced glow for graph visualization
     allBodies
       .filter((b) => b.type === 'star')
@@ -717,7 +720,7 @@ function toggleLocalBubble() {
     CAM.tPivot.set(0, 0, 0);
     CAM.followBody = null;
     setCamLabel(ui, 'orbit');
-    if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Local Bubble';
+    if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = t('btn_local_bubble');
     // Hide Local Bubble connections
     if (localBubbleGroup) localBubbleGroup.visible = false;
     if (hyperlaneGroup) hyperlaneGroup.visible = true;
@@ -937,6 +940,18 @@ window.addEventListener('keydown', (e) => {
     ui.toggle?.click();
   }
   if (e.key === 'Escape') {
+    // Pannelli senza gestione propria di Esc: chiude il più in alto visibile.
+    const panelClose = [
+      ...document.querySelectorAll(
+        '#systemsExplorerModal #systemsCloseBtn, #gamificationPanel #closeGamification, #missionsPanel #closeMissions'
+      ),
+    ]
+      .filter((btn) => btn.getClientRects().length > 0)
+      .pop();
+    if (panelClose) {
+      panelClose.click();
+      return;
+    }
     const obs = getObservatoryIfCreated();
     if (obs?.active) {
       obs.exit();
@@ -1199,7 +1214,6 @@ createOortCloud(scene);
 // Create Local Bubble graph connections and axes
 createLocalBubbleConnections(allBodies, localBubbleGroup);
 createLocalBubbleAxes(localBubbleGroup);
-createLocalBubbleDistanceLabels(allBodies, ui);
 localBubbleGroup.visible = false; // Hidden by default
 
 // Create territorial sectors after stars are positioned
@@ -1387,6 +1401,8 @@ function updateSceneDetailVisibility() {
   }
 }
 
+const _labelProjVec = new THREE.Vector3();
+
 function animate() {
   try {
     const now = performance.now(),
@@ -1423,7 +1439,14 @@ function animate() {
       if (b.atmosphereMesh?.quaternion) b.atmosphereMesh.quaternion.copy(camera.quaternion);
       const isH = ui.hoveredBody?.key === b.key || selectedBody?.key === b.key;
       if (b.glow?.material) {
-        b.glow.material.opacity = isH ? 0.9 : 0.42;
+        // Il bagliore serve a vedere i corpi da lontano: da vicino coprirebbe
+        // superficie e anelli, quindi sfuma sotto ~40 raggi di distanza.
+        let near = 1;
+        if (b.type !== 'star' && b.radius > 0) {
+          const distR = camera.position.distanceTo(b.pivot.position) / b.radius;
+          near = Math.min(1, Math.max(0, (distR - 8) / 32));
+        }
+        b.glow.material.opacity = (isH ? 0.9 : 0.42) * near;
         const sc = b.radius * (isH ? 7 : 5.5);
         b.glow.scale.set(sc, sc, 1);
       }
@@ -1459,13 +1482,13 @@ function animate() {
     });
 
     // ═══ Update Local Bubble distance labels position ═══
+    // (vettore riusato: niente allocazioni per stella a ogni frame)
     if (localBubbleMode) {
       allBodies
         .filter((b) => b.type === 'star' && b.distanceLabel)
         .forEach((star) => {
           const label = star.distanceLabel;
-          const pos = star.pivot.position.clone();
-          pos.project(camera);
+          const pos = _labelProjVec.copy(star.pivot.position).project(camera);
 
           const x = (pos.x * 0.5 + 0.5) * window.innerWidth;
           const y = (pos.y * -0.5 + 0.5) * window.innerHeight;
@@ -1577,7 +1600,7 @@ function startApp() {
   CAM.tPhi = 1.05;
   CAM.tPivot.set(0, 0, 0);
   if (ui.galaxyMapBtn) ui.galaxyMapBtn.textContent = t('galaxy_map');
-  if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = 'Local Bubble';
+  if (ui.localBubbleBtn) ui.localBubbleBtn.textContent = t('btn_local_bubble');
   if (ui.galaxyGuide) ui.galaxyGuide.classList.remove('open');
   if (ui.celestialMenu) ui.celestialMenu.classList.remove('open');
   if (ui.minimapContainer) ui.minimapContainer.style.display = 'block';

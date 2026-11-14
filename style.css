@@ -3432,3 +3432,37 @@ button:not(:disabled):hover {
     height: 150px;
   }
 }
+
+/* ════════════════════════════════════════════
+   MOBILE OVERRIDES (in fondo per vincere la cascata:
+   le regole globali di .search-container e #minimapCanvas
+   sono dichiarate dopo i primi blocchi @media)
+   ════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .search-container {
+    top: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+  #minimapContainer {
+    width: auto !important;
+    height: auto !important;
+    /* sopra la barra di ricerca (circa 44px + margini) */
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 56px) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+  }
+  .minimap-canvas-wrap,
+  #minimapCanvas {
+    width: 128px;
+    height: 128px;
+  }
+}
+
+/* Righe dei segnalibri (hover in CSS: niente gestori inline, compatibile con la CSP) */
+.bookmark-row:hover {
+  background: rgba(91, 196, 207, 0.08);
+}

@@ -241,7 +241,8 @@ function buildPlanet(ctx, def) {
     ring.castShadow = false;
     ring.receiveShadow = true;
     ring.rotation.x = Math.PI / 2;
-    pivot.add(ring);
+    // Nel gruppo inclinato: gli anelli giacciono sul piano equatoriale (26.7°).
+    tiltGroup.add(ring);
   }
   if (def.key === 'Uranus') {
     const ur = new THREE.Mesh(
@@ -254,7 +255,8 @@ function buildPlanet(ctx, def) {
       })
     );
     ur.rotation.x = Math.PI / 2;
-    pivot.add(ur);
+    // Urano ha l'asse inclinato di ~98°: anelli quasi verticali.
+    tiltGroup.add(ur);
   }
 
   const labelEl = makeLabel(ctx, def, def.type === 'dwarf' ? 0.7 : undefined);

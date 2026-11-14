@@ -386,11 +386,24 @@ export class GalaxyModal {
     this._buildModal();
     this._initThreeScene();
     this._startAnimation();
+    this._onKeyDownBound = (e) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      // Chiude prima l'eventuale scheda di dettaglio aperta, poi la vista galattica.
+      if (this.sagittariusModalEl) this._closeSagittariusModal();
+      else if (this.satelliteModalEl) this._closeSatelliteModal();
+      else this.close();
+    };
+    document.addEventListener('keydown', this._onKeyDownBound, true);
   }
 
   close() {
     if (!this.isOpen) return;
     this.isOpen = false;
+    if (this._onKeyDownBound) {
+      document.removeEventListener('keydown', this._onKeyDownBound, true);
+      this._onKeyDownBound = null;
+    }
 
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
@@ -472,8 +485,8 @@ export class GalaxyModal {
       </div>
 
       <!-- Bottom Floating Action Bar -->
-      <div style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:20px;background:rgba(8,12,24,0.88);backdrop-filter:blur(24px);padding:10px 24px;border-radius:999px;border:1px solid rgba(91,196,207,0.35);box-shadow:0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(91,196,207,0.2);z-index:10;pointer-events:auto;">
-        <span style="font-size:0.82rem;color:rgba(238,242,255,0.85);display:flex;align-items:center;gap:8px;">
+      <div style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px 20px;width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;background:rgba(8,12,24,0.88);backdrop-filter:blur(24px);padding:10px 24px;border-radius:24px;border:1px solid rgba(91,196,207,0.35);box-shadow:0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(91,196,207,0.2);z-index:10;pointer-events:auto;">
+        <span style="font-size:0.82rem;white-space:nowrap;color:rgba(238,242,255,0.85);display:flex;align-items:center;gap:8px;">
           <span style="width:10px;height:10px;background:#f59e0b;border-radius:50%;box-shadow:0 0 10px #f59e0b;display:inline-block;"></span>
           <strong>${t(
             'gal_hud_center'
@@ -482,15 +495,15 @@ export class GalaxyModal {
           )}</button>
         </span>
         <span style="height:14px;width:1px;background:rgba(255,255,255,0.2);"></span>
-        <span style="font-size:0.82rem;color:rgba(238,242,255,0.85);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:0.82rem;white-space:nowrap;color:rgba(238,242,255,0.85);display:flex;align-items:center;gap:8px;">
           <span style="width:10px;height:10px;background:#ff2244;border-radius:50%;box-shadow:0 0 10px #ff2244;display:inline-block;"></span>
           <strong>${t('gal_hud_pos')}</strong> ${t('gal_hud_earth')}
         </span>
         <span style="height:14px;width:1px;background:rgba(255,255,255,0.2);"></span>
-        <span style="font-size:0.82rem;color:#00f2fe;display:flex;align-items:center;gap:6px;font-weight:700;">
+        <span style="font-size:0.82rem;white-space:nowrap;color:#00f2fe;display:flex;align-items:center;gap:6px;font-weight:700;">
           ${t('gal_hud_sats')}
         </span>
-        <button id="enterSolarSystemBtn" style="padding:8px 18px;background:linear-gradient(135deg,#5bc4cf,#3b82f6);border:none;border-radius:999px;color:#fff;font-weight:800;font-size:0.85rem;cursor:pointer;box-shadow:0 0 24px rgba(91,196,207,0.5);transition:all 0.25s;">
+        <button id="enterSolarSystemBtn" style="padding:8px 18px;background:linear-gradient(135deg,#5bc4cf,#3b82f6);border:none;border-radius:999px;color:#fff;font-weight:800;font-size:0.85rem;white-space:nowrap;cursor:pointer;box-shadow:0 0 24px rgba(91,196,207,0.5);transition:all 0.25s;">
           ${t('gal_enter')}
         </button>
       </div>

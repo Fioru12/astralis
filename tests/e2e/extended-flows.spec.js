@@ -16,7 +16,7 @@ test('apre e chiude le missioni astronautiche (gamification)', async ({ page }) 
 
   const panel = page.locator('#gamificationPanel');
   await expect(panel).toBeVisible();
-  await expect(panel).toContainText('Missioni Astronautiche');
+  await expect(panel).toContainText('Obiettivi di esplorazione');
   await expect(panel.locator('#missionCards > div')).toHaveCount(6);
 
   await panel.locator('#closeGamification').click();
@@ -29,7 +29,7 @@ test('apre e chiude le missioni spaziali reali', async ({ page }) => {
 
   const panel = page.locator('#missionsPanel');
   await expect(panel).toBeVisible();
-  await expect(panel).toContainText('Missioni Spaziali');
+  await expect(panel).toContainText('Missioni spaziali reali');
   await expect(panel.locator('#missionsList > div').first()).toBeVisible();
 
   await panel.locator('#closeMissions').click();
@@ -84,7 +84,7 @@ test('attiva e disattiva la bolla locale', async ({ page }) => {
   await bubbleBtn.click();
   await expect(bubbleBtn).toHaveText('Torna al Sistema Solare');
   await bubbleBtn.click();
-  await expect(bubbleBtn).toHaveText('Local Bubble');
+  await expect(bubbleBtn).toHaveText('🫧 Bolla Locale');
 });
 
 test('apre i credits e li chiude', async ({ page }) => {

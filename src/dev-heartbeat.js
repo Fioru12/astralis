@@ -1,9 +1,9 @@
 /**
  * Dev heartbeat - keeps Vite server alive while browser is open
- * Only active if dev-server.js is running on port 5174
+ * Only active when launched via dev-server.js (sets VITE_DEV_HEARTBEAT=1)
  */
 
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV && import.meta.env.VITE_DEV_HEARTBEAT === '1') {
   let portAvailable = false;
 
   // Quick check on first load

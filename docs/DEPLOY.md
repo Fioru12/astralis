@@ -116,23 +116,6 @@ Tutte le piattaforme supportano domini custom gratuiti:
 
 ---
 
-## Script Automatico
-
-Ho creato `deploy.ps1` per automatizzare il processo:
-
-```powershell
-# Netlify drag & drop
-.\deploy.ps1 -Platform netlify
-
-# Vercel CLI
-.\deploy.ps1 -Platform vercel
-
-# GitHub Pages setup
-.\deploy.ps1 -Platform github
-```
-
----
-
 ## Test Pre-Deploy
 
 Prima di deployare, verifica:

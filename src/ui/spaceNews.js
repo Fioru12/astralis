@@ -92,14 +92,14 @@ export class SpaceNews {
       }
       if (neos.length) {
         html += `<div>
-          <div style="font-size:10.5px;color:rgba(228,234,248,0.5);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Near Earth Objects oggi</div>
+          <div style="font-size:10.5px;color:rgba(228,234,248,0.5);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">${t('sn_neo_today')}</div>
           ${neos
             .map((n) => {
               const safeName = escapeHtml(limitLength(n.name, 100));
               return `<div style="padding:9px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;margin-bottom:6px;font-size:11.5px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
               <span style="font-weight:700;color:#e4eaf8;">${safeName}</span>
-              ${n.hazardous ? '<span style="color:#ff6b6b;font-size:10px;">HAZARDOUS</span>' : ''}
+              ${n.hazardous ? `<span style="color:#ff6b6b;font-size:10px;">${t('sn_hazardous')}</span>` : ''}
             </div>
             <div style="display:flex;gap:10px;opacity:0.7;font-size:10.5px;">
               <span>${escapeHtml(n.diameter)}</span><span>${escapeHtml(

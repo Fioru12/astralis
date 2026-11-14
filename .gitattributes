@@ -1,0 +1,10 @@
+# Fine riga LF nel repository e nella copia di lavoro (Prettier usa LF):
+# evita avvisi di formattazione su Windows con core.autocrlf=true.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary
+*.bat text eol=crlf
+*.ps1 text eol=crlf

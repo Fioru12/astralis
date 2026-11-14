@@ -67,3 +67,29 @@ describe('buildPlanetsAndMoons', () => {
     setLang('it');
   }, 60000);
 });
+
+describe('anelli planetari', () => {
+  it("giacciono sul piano equatoriale (seguono l'inclinazione dell'asse)", () => {
+    const { ctx } = makeCtx();
+    buildPlanetsAndMoons(ctx);
+    for (const key of ['Saturn', 'Uranus']) {
+      const body = ctx.allBodies.find((b) => b.key === key);
+      body.pivot.updateMatrixWorld(true);
+      const ring = [];
+      body.pivot.traverse((o) => {
+        if (o.isMesh && o.geometry?.type === 'RingGeometry') ring.push(o);
+      });
+      expect(ring.length).toBeGreaterThan(0);
+      // Normale dell'anello (asse z locale della RingGeometry) in coordinate mondo
+      const ringNormal = new THREE.Vector3(0, 0, 1)
+        .transformDirection(ring[0].matrixWorld)
+        .normalize();
+      // Asse di rotazione del pianeta: y ruotato dell'inclinazione assiale
+      const spinAxis = new THREE.Vector3(0, 1, 0).applyAxisAngle(
+        new THREE.Vector3(0, 0, 1),
+        (body.tilt * Math.PI) / 180
+      );
+      expect(Math.abs(ringNormal.dot(spinAxis))).toBeCloseTo(1, 5);
+    }
+  });
+});

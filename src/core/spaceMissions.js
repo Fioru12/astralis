@@ -152,7 +152,7 @@ export const SPACE_MISSIONS = [
     target: { it: 'Saturno', en: 'Saturn' },
     highlights: [
       { it: 'Lancio di Huygens su Titano (2005)', en: 'Huygens landing on Titan (2005)' },
-      { it: 'Scoperta di geyser su Enceladus', en: 'Discovery of geysers on Enceladus' },
+      { it: 'Scoperta di geyser su Encelado', en: 'Discovery of geysers on Enceladus' },
       { it: 'Missione di 20 anni (1997-2017)', en: '20-year mission (1997–2017)' },
     ],
     orbitalElements: { a: 9.5, e: 0.0, I: 0.0, w: 0.0, O: 0.0 },

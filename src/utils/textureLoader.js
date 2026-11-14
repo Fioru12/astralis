@@ -3,7 +3,7 @@ import * as THREE from 'three';
 // Formati GPU-compressi (KTX2/Basis). Il transcoder non è ancora incluso nel
 // bundle: le richieste .ktx2/.basis vengono riscritte sul WebP equivalente e,
 // in mancanza, gestite dal fallback procedurale. Quando la pipeline KTX2
-// verrà aggiunta (vedi TEXTURE_OPTIMIZATION.md), basterà registrare qui il
+// verrà aggiunta (vedi docs/TEXTURE_OPTIMIZATION.md), basterà registrare qui il
 // KTX2Loader senza cambiare i chiamanti.
 const GPU_COMPRESSED_RE = /\.(ktx2|basis)$/i;
 

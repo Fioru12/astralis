@@ -126,8 +126,7 @@ export class CameraBookmarks {
     list.innerHTML = this.bookmarks
       .map(
         (bm, i) => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;"
-           onmouseover="this.style.background='rgba(91,196,207,0.08)'" onmouseout="this.style.background='transparent'">
+      <div class="bookmark-row" style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;">
         <span style="font-size:13px;flex:1;" data-index="${i}">${this._escape(bm.name)}</span>
         <button data-del="${i}" style="background:none;border:none;color:rgba(255,100,100,0.5);cursor:pointer;font-size:14px;padding:2px 6px;">🗑</button>
       </div>

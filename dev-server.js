@@ -19,6 +19,7 @@ console.log('🚀 ASTRALIS dev server starting...');
 spawn('npx', ['vite', '--port', VITE_PORT.toString()], {
   stdio: 'inherit',
   shell: true,
+  env: { ...process.env, VITE_DEV_HEARTBEAT: '1' },
 });
 
 // Heartbeat monitor

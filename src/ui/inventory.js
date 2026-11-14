@@ -1,13 +1,13 @@
 import { escapeHtml } from '../utils/sanitize.js';
-import { getLang } from '../i18n/index.js';
+import { getLang, t } from '../i18n/index.js';
 import { getBodyLabel } from '../data/celestialData.js';
 
 const invSections = [
-  { title: 'Pianeti', filter: (b) => b.type === 'planet' },
-  { title: 'Lune', filter: (b) => b.type === 'moon' },
-  { title: 'Pianeti nani', filter: (b) => b.type === 'dwarf' },
-  { title: 'Comete', filter: (b) => b.type === 'comet' },
-  { title: 'Asteroidi', filter: (b) => b.type === 'asteroid' },
+  { titleKey: 'inv_planets', filter: (b) => b.type === 'planet' },
+  { titleKey: 'inv_moons', filter: (b) => b.type === 'moon' },
+  { titleKey: 'inv_dwarfs', filter: (b) => b.type === 'dwarf' },
+  { titleKey: 'inv_comets', filter: (b) => b.type === 'comet' },
+  { titleKey: 'inv_asteroids', filter: (b) => b.type === 'asteroid' },
 ];
 
 export function buildInventory(invList, allBodies, selectBody) {
@@ -18,14 +18,14 @@ export function buildInventory(invList, allBodies, selectBody) {
     if (!bodies.length) return;
     const header = document.createElement('div');
     header.className = 'inv-section-header';
-    header.textContent = sec.title;
+    header.textContent = t(sec.titleKey);
     invList.appendChild(header);
     bodies.forEach((body) => {
       const item = document.createElement('button');
       item.type = 'button';
       item.className = 'inv-item';
       item.dataset.key = body.key;
-      item.setAttribute('aria-label', `Esplora ${getBodyLabel(body, getLang())}`);
+      item.setAttribute('aria-label', getBodyLabel(body, getLang()));
       item.innerHTML = `<span class="inv-icon">${escapeHtml(
         body.icon
       )}</span><span class="inv-name">${escapeHtml(

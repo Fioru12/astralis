@@ -685,6 +685,9 @@ export function createLocalBubbleDistanceLabels(allBodies, ui) {
     labelEl.style.boxShadow = '0 2px 8px rgba(0,0,0,0.6)';
     labelEl.style.backdropFilter = 'blur(6px)';
     labelEl.style.opacity = '0';
+    // Nascosta finché il loop di render non le assegna una posizione:
+    // altrimenti resta ammucchiata in (0,0) sopra il pannello.
+    labelEl.style.display = 'none';
     labelEl.style.transition = 'opacity 0.3s';
     labelEl.textContent = `${distLY} ly`;
     labelEl.dataset.starKey = star.key;

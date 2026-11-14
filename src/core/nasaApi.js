@@ -1,8 +1,11 @@
 /**
  * NASA APIs integration con protezione errori
  */
-const APOD = 'https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY';
-const NEO = 'https://api.nasa.gov/neo/rest/v1/feed/today?api_key=DEMO_KEY';
+// Chiave personale (gratuita su api.nasa.gov) tramite VITE_NASA_API_KEY in .env;
+// DEMO_KEY è limitata a ~30 richieste/ora per IP.
+const API_KEY = encodeURIComponent(import.meta.env?.VITE_NASA_API_KEY || 'DEMO_KEY');
+const APOD = `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}`;
+const NEO = `https://api.nasa.gov/neo/rest/v1/feed/today?api_key=${API_KEY}`;
 const KEY = 'solar-system.nasa-cache';
 const TTL = 12 * 60 * 60 * 1000;
 

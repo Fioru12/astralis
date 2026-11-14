@@ -32,7 +32,7 @@ export default [
     },
   },
   {
-    files: ['ROADMAP.js', 'STATUS.js', 'convert_textures.js', 'dev-server.js', 'scripts/**/*.js'],
+    files: ['convert_textures.js', 'dev-server.js', 'scripts/**/*.js'],
     rules: {
       'no-console': 'off',
     },

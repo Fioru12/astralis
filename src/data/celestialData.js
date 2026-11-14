@@ -653,7 +653,8 @@ export const MOONS = [
   },
   {
     key: 'Phobos',
-    label: 'Phobos',
+    label: 'Fobos',
+    labelEn: 'Phobos',
     icon: '🌑',
     color: 0xaa9988,
     radius: 0.55,
@@ -732,7 +733,8 @@ export const MOONS = [
   },
   {
     key: 'Amalthea',
-    label: 'Amalthea',
+    label: 'Amaltea',
+    labelEn: 'Amalthea',
     icon: '🌑',
     color: 0xcc9966,
     radius: 0.4,
@@ -759,7 +761,8 @@ export const MOONS = [
   },
   {
     key: 'Enceladus',
-    label: 'Enceladus',
+    label: 'Encelado',
+    labelEn: 'Enceladus',
     icon: '🧊',
     color: 0xaaddff,
     radius: 0.5,
@@ -772,7 +775,8 @@ export const MOONS = [
   },
   {
     key: 'Mimas',
-    label: 'Mimas',
+    label: 'Mimante',
+    labelEn: 'Mimas',
     icon: '🌑',
     color: 0xaaaacc,
     radius: 0.4,
@@ -897,7 +901,8 @@ export const ASTEROIDS = [
   },
   {
     key: 'Pallas',
-    label: 'Pallas',
+    label: 'Pallade',
+    labelEn: 'Pallas',
     icon: '🪨',
     color: 0xff8844,
     radius: 1.2,
@@ -912,7 +917,8 @@ export const ASTEROIDS = [
   },
   {
     key: 'Hygiea',
-    label: 'Hygiea',
+    label: 'Igea',
+    labelEn: 'Hygiea',
     icon: '🪨',
     color: 0xff8844,
     radius: 1.1,
