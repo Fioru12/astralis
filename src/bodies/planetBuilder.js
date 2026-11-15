@@ -196,12 +196,15 @@ function buildPlanet(ctx, def) {
   if (def.hasAtmosphere) {
     atmosphere = makeCanvasSprite(
       (ctx2d, s) => {
-        const g = ctx2d.createRadialGradient(s / 2, s / 2, s * 0.28, s / 2, s / 2, s / 2);
+        // Sprite di diametro 2.85 r: il bordo del pianeta cade a 1/1.425 ≈ 0.70
+        // del raggio dello sprite. Velo sottile aderente al bordo (≈1.0–1.12 r)
+        // invece di un anello staccato.
+        const g = ctx2d.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
         g.addColorStop(0, 'rgba(0,0,0,0)');
-        g.addColorStop(0.65, 'rgba(50,120,255,0)');
-        g.addColorStop(0.8, 'rgba(60,140,255,0.28)');
-        g.addColorStop(0.9, 'rgba(80,160,255,0.18)');
-        g.addColorStop(1, 'rgba(0,60,200,0)');
+        g.addColorStop(0.66, 'rgba(70,150,255,0)');
+        g.addColorStop(0.705, 'rgba(90,170,255,0.32)');
+        g.addColorStop(0.75, 'rgba(70,150,255,0.12)');
+        g.addColorStop(0.8, 'rgba(40,110,230,0)');
         ctx2d.fillStyle = g;
         ctx2d.fillRect(0, 0, s, s);
       },
@@ -245,15 +248,38 @@ function buildPlanet(ctx, def) {
     tiltGroup.add(ring);
   }
   if (def.key === 'Uranus') {
-    const ur = new THREE.Mesh(
-      new THREE.RingGeometry(def.radius * 1.5, def.radius * 1.9, 64),
-      new THREE.MeshBasicMaterial({
-        color: 0x88eedd,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.25,
-      })
-    );
+    // Anelli reali di Urano: stretti e scuri (6, 5, 4, α, β, η, γ, δ, ε),
+    // tra ~1.64 e ~2.0 raggi planetari; ε è il più largo e luminoso.
+    // Raggi in unità di raggio di Urano (25 559 km), larghezze esagerate
+    // quanto basta per restare visibili.
+    const URANUS_RINGS = [
+      [1.637, 0.004],
+      [1.652, 0.004],
+      [1.666, 0.004],
+      [1.75, 0.006],
+      [1.786, 0.006],
+      [1.846, 0.004],
+      [1.864, 0.005],
+      [1.901, 0.006],
+      [2.0, 0.018],
+    ];
+    const ringMat = new THREE.MeshBasicMaterial({
+      // Gli anelli di Urano sono molto scuri (albedo ~2%): grigio tenue.
+      color: 0x8a959a,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.4,
+      depthWrite: false,
+    });
+    const ur = new THREE.Group();
+    for (const [r, w] of URANUS_RINGS) {
+      ur.add(
+        new THREE.Mesh(
+          new THREE.RingGeometry(def.radius * (r - w), def.radius * (r + w), 128),
+          ringMat
+        )
+      );
+    }
     ur.rotation.x = Math.PI / 2;
     // Urano ha l'asse inclinato di ~98°: anelli quasi verticali.
     tiltGroup.add(ur);

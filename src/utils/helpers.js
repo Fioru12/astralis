@@ -16,9 +16,11 @@ export function makeCanvasSprite(drawFn, size, scale) {
   const c = document.createElement('canvas');
   c.width = c.height = size;
   drawFn(c.getContext('2d'), size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
   const sp = new THREE.Sprite(
     new THREE.SpriteMaterial({
-      map: new THREE.CanvasTexture(c),
+      map: tex,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       transparent: true,

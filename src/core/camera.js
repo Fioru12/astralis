@@ -118,6 +118,7 @@ const _right = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
 const _offset = new THREE.Vector3();
 const _followTarget = new THREE.Vector3();
+const _targetPos = new THREE.Vector3();
 
 /**
  * Direzione di movimento da tastiera: {x: destra(+)/sinistra(-),
@@ -177,7 +178,9 @@ export function updateCamera(cam, camera, dt, keys) {
     cam.tPivot.y += move.y * moveSpeed;
 
     if (cam.zoomTarget) {
-      const pos = cam.zoomTarget.body.pivot?.position;
+      // Posizione nel mondo: alcuni pivot (esopianeti) sono relativi alla stella.
+      const pivot = cam.zoomTarget.body.pivot;
+      const pos = pivot?.getWorldPosition ? pivot.getWorldPosition(_targetPos) : pivot?.position;
       if (pos) {
         cam.tRadius = cam.zoomTarget.finalRadius;
         cam.tPivot.copy(pos);
@@ -215,7 +218,10 @@ export function updateCamera(cam, camera, dt, keys) {
     camera.rotation.x = cam.flyPitch;
     cam.isTransitioning = false;
   } else if (cam.mode === 'follow' && cam.followBody) {
-    const target = cam.followBody.pivot?.position || _followTarget.set(0, 0, 0);
+    const fp = cam.followBody.pivot;
+    const target = fp?.getWorldPosition
+      ? fp.getWorldPosition(_followTarget)
+      : fp?.position || _followTarget.set(0, 0, 0);
     const targetDist = Math.max(cam.followBody.visualR * 10, 40);
     cam.followDist += (targetDist - cam.followDist) * sp * 2;
     _offset.set(

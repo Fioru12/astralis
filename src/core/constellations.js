@@ -277,6 +277,8 @@ export class ConstellationManager {
       }
 
       const texture = new THREE.CanvasTexture(canvas);
+
+      texture.colorSpace = THREE.SRGBColorSpace;
       const mat = new THREE.SpriteMaterial({
         map: texture,
         transparent: true,

@@ -166,7 +166,7 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.4;
+renderer.toneMappingExposure = 1.0; // neutra: OutputPass ora converte correttamente in sRGB
 document.body.appendChild(renderer.domElement);
 
 renderer.domElement.addEventListener('webglcontextlost', (event) => {
@@ -578,7 +578,7 @@ function applyViewMode(mode) {
   if (ui.labelsLayer) ui.labelsLayer.style.display = cinematic ? 'none' : 'block';
   bloomPass.strength = cinematic ? 1.45 : scientific ? 0.7 : 1.2;
   outlinePass.enabled = !cinematic;
-  renderer.toneMappingExposure = cinematic ? 1.22 : 1.4;
+  renderer.toneMappingExposure = cinematic ? 0.88 : 1.0;
   [ui.viewExplore, ui.viewCinema, ui.viewScience].forEach((button) =>
     button?.classList.remove('active')
   );
@@ -848,6 +848,7 @@ if (bCtx) {
   bCtx.fill();
 }
 const beaconTexture = new THREE.CanvasTexture(beaconCanvas);
+beaconTexture.colorSpace = THREE.SRGBColorSpace;
 const beaconSpriteMat = new THREE.SpriteMaterial({
   map: beaconTexture,
   transparent: true,
@@ -1134,7 +1135,7 @@ scene.add(sunPivot);
 meshList.push(sun);
 
 // Corona solare
-const sunCorona = createSunCorona(SUN_R * 1.18, SUN_R * 3.1);
+const sunCorona = createSunCorona(SUN_R * 0.98, SUN_R * 3.1); // dal bordo: niente fascia scura tra disco e corona
 scene.add(sunCorona);
 
 [
@@ -1328,7 +1329,8 @@ function animate() {
 
     allBodies.forEach((b) => {
       if (b.type === 'comet' || !b.pivot) return;
-      const pos = b.getPos ? b.getPos(T) : null;
+      // Gli esopianeti hanno pivot relativo alla stella (posizionato da updatePos).
+      const pos = b.getPos && b.type !== 'exoplanet' ? b.getPos(T) : null;
       if (pos) b.pivot.position.copy(pos);
       if (b.mesh) b.mesh.rotation.y += 0.002 * dt * 60;
       if (b.glow?.quaternion) b.glow.quaternion.copy(camera.quaternion);

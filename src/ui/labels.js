@@ -16,6 +16,7 @@ export function refreshLabelLanguage(allBodies, lang) {
 }
 
 const proj = new THREE.Vector3();
+const worldPos = new THREE.Vector3();
 
 function isOccluded(wp, camera) {
   const C = camera.position.clone(),
@@ -41,10 +42,13 @@ export function updateLabels(allBodies, camera, ui, selectedBody) {
       b.labelEl.style.display = 'none';
       return;
     }
-    proj.copy(b.pivot.position).project(camera);
+    // Posizione nel mondo: il pivot degli esopianeti è relativo alla loro stella.
+    if (b.pivot.getWorldPosition) b.pivot.getWorldPosition(worldPos);
+    else worldPos.copy(b.pivot.position);
+    proj.copy(worldPos).project(camera);
     const inV = proj.z < 1 && proj.z > -1 && Math.abs(proj.x) < 1 && Math.abs(proj.y) < 1;
-    const occ = isOccluded(b.pivot.position.clone(), camera);
-    const distance = camera.position.distanceTo(b.pivot.position);
+    const occ = isOccluded(worldPos.clone(), camera);
+    const distance = camera.position.distanceTo(worldPos);
     const isMajor = ['planet', 'dwarf', 'star'].includes(b.type);
     const isSelected = selectedBody?.key === b.key;
     const hasDetailPriority = isMajor || isSelected || distance < Math.max(500, b.visualR * 120);

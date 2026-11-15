@@ -148,6 +148,8 @@ function createMilkyWay() {
   ctx.putImageData(imageData, 0, 0);
 
   const texture = new THREE.CanvasTexture(canvas);
+
+  texture.colorSpace = THREE.SRGBColorSpace;
   const geometry = new THREE.SphereGeometry(4800, 32, 32);
   const material = new THREE.MeshBasicMaterial({
     map: texture,

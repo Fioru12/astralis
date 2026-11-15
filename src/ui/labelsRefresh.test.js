@@ -50,3 +50,22 @@ describe('labels', () => {
     expect(['block', 'none']).toContain(bodies[0].labelEl.style.display);
   });
 });
+
+describe('etichette di corpi con pivot annidato', () => {
+  it('usano la posizione nel mondo (esopianeta relativo alla stella)', () => {
+    const system = new THREE.Group();
+    system.position.set(5000, 0, 0); // stella lontana
+    const pivot = new THREE.Group();
+    pivot.position.set(10, 0, 0); // orbita locale
+    system.add(pivot);
+    system.updateMatrixWorld(true);
+    const labelEl = document.createElement('div');
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 1e9);
+    camera.position.set(0, 0, 50); // vicino al Sole, guarda l'origine
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld(true);
+    updateLabels([{ key: 'X', type: 'exoplanet', visualR: 1, labelEl, pivot }], camera, {}, null);
+    // Il pianeta è a 5000 unità sull'asse x, fuori dall'inquadratura: niente etichetta.
+    expect(labelEl.style.display).toBe('none');
+  });
+});

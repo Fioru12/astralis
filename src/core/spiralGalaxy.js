@@ -106,6 +106,8 @@ export function create3DSpiralGalaxy() {
 
   const pTexture = new THREE.CanvasTexture(particleCanvas);
 
+  pTexture.colorSpace = THREE.SRGBColorSpace;
+
   const material = new THREE.PointsMaterial({
     size: 4500,
     sizeAttenuation: true,
@@ -133,6 +135,7 @@ export function create3DSpiralGalaxy() {
     depthWrite: false,
   });
   const applyDisc = (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace;
     discMaterial.map = tex;
     discMaterial.needsUpdate = true;
   };

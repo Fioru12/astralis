@@ -58,6 +58,9 @@ class AsyncTextureLoader {
     if (this.cache.has(path)) return this.cache.get(path);
 
     const placeholder = new THREE.Texture();
+    // Tutte le immagini caricate qui sono colori (pianeti, Via Lattea, anelli):
+    // vanno decodificate da sRGB, altrimenti con OutputPass escono slavate.
+    placeholder.colorSpace = THREE.SRGBColorSpace;
     placeholder.minFilter = THREE.LinearMipmapLinearFilter;
     placeholder.magFilter = THREE.LinearFilter;
     placeholder.anisotropy = 1;

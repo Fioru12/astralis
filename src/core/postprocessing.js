@@ -9,6 +9,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 
 // Custom shader for tone mapping and color grading
 const toneMapShader = {
@@ -41,8 +42,8 @@ const toneMapShader = {
       // Apply exposure
       texel *= exposure;
 
-      // ACES tone mapping is already performed by the renderer. Reapplying it
-      // here crushes blacks and desaturates the planet textures.
+      // Lavora in spazio lineare HDR: tone mapping ACES e conversione sRGB
+      // li applica OutputPass alla fine della catena.
       texel = saturation_adjust(texel, saturation);
 
       // Subtle vignette
@@ -89,8 +90,12 @@ export function setupPostProcessing(renderer, scene, camera) {
 
   // Tone mapping and color grading pass
   const toneMappingPass = new ShaderPass(toneMapShader);
-  toneMappingPass.renderToScreen = true;
   composer.addPass(toneMappingPass);
+
+  // Con EffectComposer il renderer NON applica toneMapping/outputColorSpace ai
+  // render target intermedi: senza questo passaggio l'immagine finale usciva
+  // lineare (colori scuri e virati, es. Urano oliva invece che azzurro).
+  composer.addPass(new OutputPass());
 
   return { composer, bloomPass, outlinePass, toneMappingPass };
 }
