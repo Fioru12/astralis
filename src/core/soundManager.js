@@ -162,7 +162,7 @@ export class SoundManager {
   updateStarSpectralAudio(starDef) {
     if (!this.ambient8D || !this.ctx) return;
     const key = starDef.key || starDef.name || '';
-    let spectral = 'G';
+    let spectral;
 
     if (key.includes('Sagittarius') || key.includes('Sgr')) spectral = 'BH';
     else if (key.includes('SiriusB')) spectral = 'WD';

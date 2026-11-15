@@ -236,7 +236,7 @@ export class Minimap {
 
     // 4. Planets & Orbit Lines
     const maxAU = this.zoomLevels[this.zoomIndex];
-    let systemBodies = [];
+    let systemBodies;
     if (isSunSystem) {
       systemBodies = allBodies.filter(
         (b) => (b.type === 'planet' || b.type === 'dwarf') && b.pivot

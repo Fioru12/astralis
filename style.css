@@ -1542,11 +1542,21 @@ a:focus-visible,
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  transition: right 0.35s var(--ease);
+  /* Da chiuso è anche invisibile: niente lampo al primo disegno e niente
+     focus da tastiera su controlli fuori schermo. La visibilità cambia
+     dopo la chiusura (ritardo 0.35s) e subito all'apertura. */
+  visibility: hidden;
+  transition:
+    right 0.35s var(--ease),
+    visibility 0s linear 0.35s;
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
 }
 .settings-panel.open {
   right: 0;
+  visibility: visible;
+  transition:
+    right 0.35s var(--ease),
+    visibility 0s;
 }
 
 .settings-header {

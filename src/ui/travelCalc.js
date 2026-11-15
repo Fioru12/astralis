@@ -494,7 +494,7 @@ export class TravelCalc {
 
     const distInfo = this._calculateDistance(originBody, targetBody);
 
-    let totalDays = 0;
+    let totalDays;
 
     if (craft.isRelativistic) {
       const trip = computeRelativisticTrip(distInfo.distLY, craft.accelG || 1.0);
