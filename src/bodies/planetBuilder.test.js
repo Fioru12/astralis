@@ -91,5 +91,5 @@ describe('anelli planetari', () => {
       );
       expect(Math.abs(ringNormal.dot(spinAxis))).toBeCloseTo(1, 5);
     }
-  });
+  }, 60000); // costruzione completa dei pianeti: lenta sotto coverage in CI
 });
