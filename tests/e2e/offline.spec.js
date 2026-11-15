@@ -15,8 +15,10 @@ test('la app si avvia offline dopo una visita online (PWA)', async ({ page, cont
     .poll(
       async () =>
         page.evaluate(async () => {
-          const cache = await caches.open('astralis-v2.0.0');
-          return (await cache.keys()).length;
+          // Il nome della cache dipende dalla build (astralis-<hash>).
+          const name = (await caches.keys()).find((k) => k.startsWith('astralis-'));
+          if (!name) return 0;
+          return (await (await caches.open(name)).keys()).length;
         }),
       { timeout: 60_000 }
     )

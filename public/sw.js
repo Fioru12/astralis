@@ -2,7 +2,9 @@
  * Astralis PWA Service Worker
  * Offline caching strategy for static assets, textures, and scripts.
  */
-const CACHE_NAME = 'astralis-v2.0.0';
+// Sostituito dalla build con un nome legato al contenuto (vite.config.js):
+// ogni deploy usa una cache nuova e activate elimina le precedenti.
+const CACHE_NAME = 'astralis-dev';
 // Asset con hash (JS/CSS) e texture iniettati dalla build (vite.config.js):
 // senza di essi i chunk richiesti prima del clients.claim() non
 // entrerebbero mai in cache e l'offline fallirebbe. In dev restano [].
@@ -24,9 +26,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
+      // cache: 'reload' salta la cache HTTP (GitHub Pages: max-age 600 s),
+      // altrimenti il precache potrebbe salvare di nuovo l'index.html vecchio.
+      .then((cache) =>
+        cache.addAll(ASSETS_TO_CACHE.map((url) => new Request(url, { cache: 'reload' })))
+      )
       .then(() => self.skipWaiting())
   );
 });
@@ -50,12 +54,26 @@ self.addEventListener('fetch', (event) => {
   // Navigazioni SPA (anche con query, es. ?lang=it): la cache matcha per URL
   // esatto, quindi le query mancherebbero il precache e il reload offline
   // fallirebbe. Servi sempre index.html precaricata.
+  // Rete prima (con timeout), così chi è online riceve subito l'ultima
+  // versione; offline o con rete lenta si ripiega sulla index.html in cache.
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      caches
-        .match('./index.html')
-        .then((cached) => cached || fetch(event.request))
-        .catch(() => caches.match('./index.html'))
+      (async () => {
+        try {
+          const network = await Promise.race([
+            fetch(event.request, { cache: 'no-cache' }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000)),
+          ]);
+          if (network.ok) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put('./index.html', network.clone());
+            return network;
+          }
+          throw new Error('HTTP ' + network.status);
+        } catch {
+          return (await caches.match('./index.html')) || new Response('offline', { status: 504 });
+        }
+      })()
     );
     return;
   }

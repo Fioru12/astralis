@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { cpSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { configDefaults } from 'vitest/config';
 
 export default defineConfig({
@@ -69,13 +70,25 @@ export default defineConfig({
           .sort();
         const swPath = join('dist', 'sw.js');
         const sw = readFileSync(swPath, 'utf8');
+        // Nome cache legato al contenuto: i chunk hanno l'hash nel nome e
+        // index.html cambia a ogni build rilevante.
+        const buildId = createHash('sha256')
+          .update(chunks.join('|'))
+          .update(readFileSync(join('dist', 'index.html')))
+          .digest('hex')
+          .slice(0, 12);
         const out = sw
+          .replace(
+            "const CACHE_NAME = 'astralis-dev';",
+            `const CACHE_NAME = 'astralis-${buildId}';`
+          )
           .replace('const BUILD_ASSETS = [];', `const BUILD_ASSETS = ${JSON.stringify(chunks)};`)
           .replace(
             'const TEXTURE_ASSETS = [];',
             `const TEXTURE_ASSETS = ${JSON.stringify(textures)};`
           );
-        if (out === sw) throw new Error('SW placeholders not found in dist/sw.js');
+        if (out === sw || out.includes("'astralis-dev'"))
+          throw new Error('SW placeholders not found in dist/sw.js');
         writeFileSync(swPath, out);
       },
     },
