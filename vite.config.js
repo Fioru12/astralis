@@ -7,13 +7,13 @@ export default defineConfig({
   test: {
     exclude: [...configDefaults.exclude, 'tests/e2e/**'],
     coverage: {
-      // Pavimento verificato il 25/09/2026 (53/47/56/55): alzarlo solo
+      // Pavimento verificato il 15/11/2026 (55.1/48.7/57.3/56.4): alzarlo solo
       // aggiungendo test, mai abbassarlo per far passare la CI.
       thresholds: {
-        statements: 52,
-        branches: 46,
-        functions: 55,
-        lines: 54,
+        statements: 54,
+        branches: 47,
+        functions: 56,
+        lines: 55,
       },
     },
   },

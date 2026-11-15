@@ -16,6 +16,14 @@ describe('inventory', () => {
     setLang('it');
   });
 
+  it('traduce le intestazioni delle sezioni in inglese', () => {
+    setLang('en');
+    const invList = document.getElementById('invList');
+    buildInventory(invList, bodies, vi.fn());
+    const headers = [...invList.querySelectorAll('.inv-section-header')].map((h) => h.textContent);
+    expect(headers).toEqual(['Planets', 'Moons', 'Comets']);
+  });
+
   it('costruisce sezioni localizzate e filtra per nome', () => {
     const invList = document.getElementById('invList');
     buildInventory(invList, bodies, vi.fn());

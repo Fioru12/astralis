@@ -3,10 +3,16 @@ import GUI from 'lil-gui';
 import './dev-heartbeat.js'; // Keep dev server alive
 
 import { AU, SUN_R } from './utils/constants.js';
-import { julianDate, makeCanvasSprite, createTooltip } from './utils/helpers.js';
+import {
+  julianDate,
+  makeCanvasSprite,
+  createTooltip,
+  glowProximityFactor,
+} from './utils/helpers.js';
 import { textureLoader as TL } from './utils/textureLoader.js';
 import { generateProceduralMilkyWay } from './utils/proceduralTextures.js';
-import { createCameraSystem } from './core/camera.js';
+import { createCameraSystem, updateCamera } from './core/camera.js';
+import { getGraphicsPreset } from './core/graphicsPresets.js';
 import { setupPostProcessing } from './core/postprocessing.js';
 import { createStarfield, updateStarfieldParallax, setMilkyWayVisible } from './core/starfield.js';
 import { create3DSpiralGalaxy } from './core/spiralGalaxy.js';
@@ -155,7 +161,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200000000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap; // PCFSoftShadowMap rimosso in three r18x
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1227,89 +1233,6 @@ getAtmosphericPlanets().forEach((planetKey) => {
 
 setupMenuUI(ui, allBodies, getSelectedBody, selectBody, zoomToStar, hyperlaneGroup);
 
-function updateCamera(dt) {
-  const distToTarget = CAM.zoomTarget ? Math.abs(CAM.radius - CAM.zoomTarget.finalRadius) : 0;
-  const useFastDamp = distToTarget > 500 || CAM.isTransitioning;
-  const damp = useFastDamp ? CAM.DAMP_FAST : CAM.DAMP;
-  const sp = 1 - Math.pow(1 - damp, dt * 60);
-
-  if (CAM.mode === 'orbit') {
-    const moveSpeed = CAM.radius * 0.005 * dt * 60;
-    if (keys['w'] || keys['W'] || keys['ArrowUp']) {
-      const fwd = new THREE.Vector3(-Math.sin(CAM.theta), 0, -Math.cos(CAM.theta));
-      CAM.tPivot.addScaledVector(fwd, moveSpeed);
-    }
-    if (keys['s'] || keys['S'] || keys['ArrowDown']) {
-      const fwd = new THREE.Vector3(-Math.sin(CAM.theta), 0, -Math.cos(CAM.theta));
-      CAM.tPivot.addScaledVector(fwd, -moveSpeed);
-    }
-    if (keys['a'] || keys['A'] || keys['ArrowLeft']) {
-      const right = new THREE.Vector3(-Math.cos(CAM.theta), 0, Math.sin(CAM.theta));
-      CAM.tPivot.addScaledVector(right, -moveSpeed);
-    }
-    if (keys['d'] || keys['D'] || keys['ArrowRight']) {
-      const right = new THREE.Vector3(-Math.cos(CAM.theta), 0, Math.sin(CAM.theta));
-      CAM.tPivot.addScaledVector(right, moveSpeed);
-    }
-    if (keys['q'] || keys['Q']) CAM.tPivot.y += moveSpeed;
-    if (keys['e'] || keys['E']) CAM.tPivot.y -= moveSpeed;
-
-    if (CAM.zoomTarget) {
-      const pos = CAM.zoomTarget.body.pivot?.position;
-      if (pos) {
-        CAM.tRadius = CAM.zoomTarget.finalRadius;
-        CAM.tPivot.copy(pos);
-        if (Math.abs(CAM.radius - CAM.tRadius) < 0.5) {
-          CAM.zoomTarget = null;
-          CAM.isTransitioning = false;
-        }
-      }
-    }
-    CAM.radius += (CAM.tRadius - CAM.radius) * sp;
-    CAM.phi += (CAM.tPhi - CAM.phi) * sp;
-    CAM.theta += (CAM.tTheta - CAM.theta) * sp;
-    CAM.pivot.lerp(CAM.tPivot, sp);
-    camera.position.set(
-      CAM.pivot.x + CAM.radius * Math.sin(CAM.phi) * Math.cos(CAM.theta),
-      CAM.pivot.y + CAM.radius * Math.cos(CAM.phi),
-      CAM.pivot.z + CAM.radius * Math.sin(CAM.phi) * Math.sin(CAM.theta)
-    );
-    camera.lookAt(CAM.pivot);
-  } else if (CAM.mode === 'fly') {
-    const speed = CAM.flySpeed * (CAM.flyBoost ? 5 : 1) * dt;
-    const fwd = new THREE.Vector3(
-      -Math.sin(CAM.flyYaw) * Math.cos(CAM.flyPitch),
-      Math.sin(CAM.flyPitch),
-      -Math.cos(CAM.flyYaw) * Math.cos(CAM.flyPitch)
-    );
-    const right = new THREE.Vector3(Math.cos(CAM.flyYaw), 0, -Math.sin(CAM.flyYaw));
-    const up = new THREE.Vector3(0, 1, 0);
-    if (keys['w'] || keys['W'] || keys['ArrowUp']) CAM.flyPos.addScaledVector(fwd, speed);
-    if (keys['s'] || keys['S'] || keys['ArrowDown']) CAM.flyPos.addScaledVector(fwd, -speed);
-    if (keys['a'] || keys['A'] || keys['ArrowLeft']) CAM.flyPos.addScaledVector(right, -speed);
-    if (keys['d'] || keys['D'] || keys['ArrowRight']) CAM.flyPos.addScaledVector(right, speed);
-    if (keys['q'] || keys['Q']) CAM.flyPos.addScaledVector(up, speed);
-    if (keys['e'] || keys['E']) CAM.flyPos.addScaledVector(up, -speed);
-    camera.position.copy(CAM.flyPos);
-    camera.rotation.order = 'YXZ';
-    camera.rotation.y = CAM.flyYaw;
-    camera.rotation.x = CAM.flyPitch;
-    CAM.isTransitioning = false;
-  } else if (CAM.mode === 'follow' && CAM.followBody) {
-    const target = CAM.followBody.pivot?.position || new THREE.Vector3();
-    const targetDist = Math.max(CAM.followBody.visualR * 10, 40);
-    CAM.followDist += (targetDist - CAM.followDist) * sp * 2;
-    const offset = new THREE.Vector3(
-      CAM.followDist * Math.sin(CAM.followPhi) * Math.cos(CAM.followTheta),
-      CAM.followDist * Math.cos(CAM.followPhi),
-      CAM.followDist * Math.sin(CAM.followPhi) * Math.sin(CAM.followTheta)
-    );
-    camera.position.lerp(target.clone().add(offset), sp * 2);
-    camera.lookAt(target);
-    if (Math.abs(CAM.followDist - targetDist) < 1) CAM.isTransitioning = false;
-  }
-}
-
 function updateMinimap() {
   minimap.render({
     allBodies,
@@ -1321,35 +1244,8 @@ function updateMinimap() {
 }
 
 function applyGraphicsQuality(quality) {
-  const presets = {
-    low: { pixelRatio: 0.85, shadows: false, bloom: 0, outline: false, dust: false, oort: false },
-    medium: {
-      pixelRatio: Math.min(devicePixelRatio, 1.25),
-      shadows: false,
-      bloom: 0.75,
-      outline: true,
-      dust: true,
-      oort: false,
-    },
-    high: {
-      pixelRatio: Math.min(devicePixelRatio, 1.75),
-      shadows: true,
-      bloom: 1.1,
-      outline: true,
-      dust: true,
-      oort: true,
-    },
-    ultra: {
-      pixelRatio: Math.min(devicePixelRatio, 2.5),
-      shadows: true,
-      bloom: 1.35,
-      outline: true,
-      dust: true,
-      oort: true,
-    },
-  };
-  const preset = presets[quality] || presets.high;
-  activeGraphicsQuality = presets[quality] ? quality : 'high';
+  const preset = getGraphicsPreset(quality, devicePixelRatio);
+  activeGraphicsQuality = preset.quality;
   renderer.setPixelRatio(preset.pixelRatio);
   composer.setPixelRatio?.(preset.pixelRatio);
   renderer.shadowMap.enabled = preset.shadows;
@@ -1411,7 +1307,7 @@ function animate() {
 
     adaptiveQuality.update(now);
 
-    updateCamera(dt);
+    updateCamera(CAM, camera, dt, keys);
 
     inspectionFill.position.copy(camera.position);
     inspectionFill.target.position.copy(selectedBody?.pivot?.position || CAM.pivot);
@@ -1441,11 +1337,10 @@ function animate() {
       if (b.glow?.material) {
         // Il bagliore serve a vedere i corpi da lontano: da vicino coprirebbe
         // superficie e anelli, quindi sfuma sotto ~40 raggi di distanza.
-        let near = 1;
-        if (b.type !== 'star' && b.radius > 0) {
-          const distR = camera.position.distanceTo(b.pivot.position) / b.radius;
-          near = Math.min(1, Math.max(0, (distR - 8) / 32));
-        }
+        const near =
+          b.type === 'star'
+            ? 1
+            : glowProximityFactor(camera.position.distanceTo(b.pivot.position), b.radius);
         b.glow.material.opacity = (isH ? 0.9 : 0.42) * near;
         const sc = b.radius * (isH ? 7 : 5.5);
         b.glow.scale.set(sc, sc, 1);

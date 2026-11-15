@@ -55,3 +55,15 @@ describe('helpers', () => {
     expect(sp.scale.x).toBe(35);
   });
 });
+
+describe('glowProximityFactor', () => {
+  it('spegne il bagliore da vicino e lo accende pieno da lontano', async () => {
+    const { glowProximityFactor } = await import('./helpers.js');
+    expect(glowProximityFactor(5, 1)).toBe(0);
+    expect(glowProximityFactor(8, 1)).toBe(0);
+    expect(glowProximityFactor(24, 1)).toBeCloseTo(0.5);
+    expect(glowProximityFactor(40, 1)).toBe(1);
+    expect(glowProximityFactor(1e6, 1)).toBe(1);
+    expect(glowProximityFactor(10, 0)).toBe(1); // raggio non valido: nessuna sfumatura
+  });
+});

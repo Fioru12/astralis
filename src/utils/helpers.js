@@ -110,3 +110,14 @@ export function currentT(date) {
 export function formatNumber(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
+
+/**
+ * Opacità relativa del bagliore di un corpo in base alla distanza della camera,
+ * espressa in raggi del corpo: 0 sotto 8 raggi, 1 oltre 40, lineare in mezzo.
+ * Il bagliore serve a vedere i corpi da lontano; da vicino coprirebbe superficie e anelli.
+ */
+export function glowProximityFactor(distance, radius) {
+  if (!(radius > 0)) return 1;
+  const distR = distance / radius;
+  return Math.min(1, Math.max(0, (distR - 8) / 32));
+}

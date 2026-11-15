@@ -112,40 +112,79 @@ export function enterFollow(cam, body, setCamLabel, showHint) {
   );
 }
 
+// Vettori di lavoro riusati: updateCamera gira a ogni fotogramma.
+const _fwd = new THREE.Vector3();
+const _right = new THREE.Vector3();
+const _up = new THREE.Vector3(0, 1, 0);
+const _offset = new THREE.Vector3();
+const _followTarget = new THREE.Vector3();
+
 /**
- * Aggiorna la camera in base alla modalità
+ * Direzione di movimento da tastiera: {x: destra(+)/sinistra(-),
+ * z: avanti(+)/indietro(-), y: su(+)/giù(-)}. Accetta WASD/QE e frecce.
+ */
+export function getMoveInput(keys) {
+  const k = (...names) => names.some((n) => keys[n]);
+  return {
+    z: (k('w', 'W', 'ArrowUp') ? 1 : 0) - (k('s', 'S', 'ArrowDown') ? 1 : 0),
+    x: (k('d', 'D', 'ArrowRight') ? 1 : 0) - (k('a', 'A', 'ArrowLeft') ? 1 : 0),
+    y: (k('q', 'Q') ? 1 : 0) - (k('e', 'E') ? 1 : 0),
+  };
+}
+
+/** Fattore di smorzamento indipendente dal frame rate (dt in secondi). */
+export function dampFactor(damp, dt) {
+  return 1 - Math.pow(1 - damp, dt * 60);
+}
+
+/** Applica e fa decadere l'inerzia lasciata dal trascinamento (controls.js). */
+function applyMomentum(cam) {
+  if (cam.momentumTheta === 0 && cam.momentumPhi === 0 && cam.momentumRadius === 0) return;
+  cam.tTheta += cam.momentumTheta;
+  cam.tPhi = Math.max(0.05, Math.min(Math.PI - 0.05, cam.tPhi + cam.momentumPhi));
+  if (cam.momentumRadius !== 0) {
+    cam.tRadius = Math.max(
+      cam.minRadius,
+      Math.min(cam.maxRadius, cam.tRadius + cam.momentumRadius)
+    );
+  }
+  cam.momentumTheta *= cam.momentumDamp;
+  cam.momentumPhi *= cam.momentumDamp;
+  cam.momentumRadius *= cam.momentumDamp;
+  if (Math.abs(cam.momentumTheta) < 0.0001) cam.momentumTheta = 0;
+  if (Math.abs(cam.momentumPhi) < 0.0001) cam.momentumPhi = 0;
+  if (Math.abs(cam.momentumRadius) < 0.1) cam.momentumRadius = 0;
+}
+
+/**
+ * Aggiorna la camera in base alla modalità (orbit / fly / follow).
  */
 export function updateCamera(cam, camera, dt, keys) {
-  const sp = 1 - Math.pow(1 - cam.DAMP, dt * 60);
+  const distToTarget = cam.zoomTarget ? Math.abs(cam.radius - cam.zoomTarget.finalRadius) : 0;
+  const useFastDamp = distToTarget > 500 || cam.isTransitioning;
+  const sp = dampFactor(useFastDamp ? cam.DAMP_FAST : cam.DAMP, dt);
+  const move = getMoveInput(keys);
 
   if (cam.mode === 'orbit') {
-    // Apply momentum from dragging
-    if (cam.momentumTheta !== 0 || cam.momentumPhi !== 0 || cam.momentumRadius !== 0) {
-      cam.tTheta += cam.momentumTheta;
-      cam.tPhi += cam.momentumPhi;
-      cam.tPhi = Math.max(0.05, Math.min(Math.PI - 0.05, cam.tPhi));
-      cam.tRadius += cam.momentumRadius;
-      cam.tRadius = Math.max(cam.minRadius, Math.min(cam.maxRadius, cam.tRadius));
-
-      // Decay momentum
-      cam.momentumTheta *= cam.momentumDamp;
-      cam.momentumPhi *= cam.momentumDamp;
-      cam.momentumRadius *= cam.momentumDamp;
-
-      // Stop momentum when negligible
-      if (Math.abs(cam.momentumTheta) < 0.0001) cam.momentumTheta = 0;
-      if (Math.abs(cam.momentumPhi) < 0.0001) cam.momentumPhi = 0;
-      if (Math.abs(cam.momentumRadius) < 0.1) cam.momentumRadius = 0;
+    applyMomentum(cam);
+    const moveSpeed = cam.radius * 0.005 * dt * 60;
+    if (move.z || move.x) {
+      _fwd.set(-Math.sin(cam.theta), 0, -Math.cos(cam.theta));
+      _right.set(-Math.cos(cam.theta), 0, Math.sin(cam.theta));
+      cam.tPivot.addScaledVector(_fwd, move.z * moveSpeed);
+      cam.tPivot.addScaledVector(_right, move.x * moveSpeed);
     }
+    cam.tPivot.y += move.y * moveSpeed;
 
     if (cam.zoomTarget) {
       const pos = cam.zoomTarget.body.pivot?.position;
       if (pos) {
         cam.tRadius = cam.zoomTarget.finalRadius;
-        cam.tPhi = Math.atan2(Math.sqrt(pos.x * pos.x + pos.z * pos.z), pos.y);
-        cam.tTheta = Math.atan2(pos.z, pos.x);
         cam.tPivot.copy(pos);
-        if (Math.abs(cam.radius - cam.tRadius) < 0.5) cam.zoomTarget = null;
+        if (Math.abs(cam.radius - cam.tRadius) < 0.5) {
+          cam.zoomTarget = null;
+          cam.isTransitioning = false;
+        }
       }
     }
     cam.radius += (cam.tRadius - cam.radius) * sp;
@@ -160,32 +199,33 @@ export function updateCamera(cam, camera, dt, keys) {
     camera.lookAt(cam.pivot);
   } else if (cam.mode === 'fly') {
     const speed = cam.flySpeed * (cam.flyBoost ? 5 : 1) * dt;
-    const fwd = new THREE.Vector3(
-      Math.sin(cam.flyYaw) * Math.cos(cam.flyPitch),
+    // La camera guarda verso -Z: con yaw=0 "avanti" riduce z.
+    _fwd.set(
+      -Math.sin(cam.flyYaw) * Math.cos(cam.flyPitch),
       Math.sin(cam.flyPitch),
-      Math.cos(cam.flyYaw) * Math.cos(cam.flyPitch)
+      -Math.cos(cam.flyYaw) * Math.cos(cam.flyPitch)
     );
-    const right = new THREE.Vector3(Math.cos(cam.flyYaw), 0, -Math.sin(cam.flyYaw));
-    const up = new THREE.Vector3(0, 1, 0);
-    if (keys['w'] || keys['W'] || keys['ArrowUp']) cam.flyPos.addScaledVector(fwd, speed);
-    if (keys['s'] || keys['S'] || keys['ArrowDown']) cam.flyPos.addScaledVector(fwd, -speed);
-    if (keys['a'] || keys['A'] || keys['ArrowLeft']) cam.flyPos.addScaledVector(right, -speed);
-    if (keys['d'] || keys['D'] || keys['ArrowRight']) cam.flyPos.addScaledVector(right, speed);
-    if (keys['q'] || keys['Q']) cam.flyPos.addScaledVector(up, speed);
-    if (keys['e'] || keys['E']) cam.flyPos.addScaledVector(up, -speed);
+    _right.set(Math.cos(cam.flyYaw), 0, -Math.sin(cam.flyYaw));
+    cam.flyPos.addScaledVector(_fwd, move.z * speed);
+    cam.flyPos.addScaledVector(_right, move.x * speed);
+    cam.flyPos.addScaledVector(_up, move.y * speed);
     camera.position.copy(cam.flyPos);
     camera.rotation.order = 'YXZ';
     camera.rotation.y = cam.flyYaw;
     camera.rotation.x = cam.flyPitch;
+    cam.isTransitioning = false;
   } else if (cam.mode === 'follow' && cam.followBody) {
-    const target = cam.followBody.pivot?.position || new THREE.Vector3();
-    cam.followDist += (Math.max(cam.followBody.visualR * 10, 40) - cam.followDist) * 0.001;
-    const offset = new THREE.Vector3(
+    const target = cam.followBody.pivot?.position || _followTarget.set(0, 0, 0);
+    const targetDist = Math.max(cam.followBody.visualR * 10, 40);
+    cam.followDist += (targetDist - cam.followDist) * sp * 2;
+    _offset.set(
       cam.followDist * Math.sin(cam.followPhi) * Math.cos(cam.followTheta),
       cam.followDist * Math.cos(cam.followPhi),
       cam.followDist * Math.sin(cam.followPhi) * Math.sin(cam.followTheta)
     );
-    camera.position.lerp(target.clone().add(offset), sp * 2);
+    _offset.add(target);
+    camera.position.lerp(_offset, sp * 2);
     camera.lookAt(target);
+    if (Math.abs(cam.followDist - targetDist) < 1) cam.isTransitioning = false;
   }
 }
